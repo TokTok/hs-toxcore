@@ -1,0 +1,11 @@
+/.idea
+/dist
+/out
+/*.iml
+/*.tix
+/*.fifo
+*.swp
+
+/.cabal-sandbox
+/cabal.sandbox.config
+/.*.stamp

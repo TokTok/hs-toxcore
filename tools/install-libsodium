@@ -1,0 +1,19 @@
+#!/bin/sh
+
+mkdir -p $HOME/.cabal/extra-dist
+
+rm -rf libsodium
+git clone --depth=1 https://github.com/jedisct1/libsodium
+cd libsodium
+
+git rev-parse HEAD > new-hash
+if diff new-hash $HOME/.cabal/extra-dist/libsodium.hash; then
+  rm new-hash
+  exit
+fi
+
+echo "Hashes differ => rebuilding"
+mv new-hash $HOME/.cabal/extra-dist/libsodium.hash
+sh autogen.sh
+./configure --prefix=$HOME/.cabal/extra-dist
+make install
