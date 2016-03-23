@@ -4,10 +4,16 @@ SOURCES := $(shell find src -name "*.*hs")
 
 -include ../tox-spec/pandoc.mk
 
-build: dist docs format lint
-	cabal build
+check: build
+	cabal test
+
+sut-check: build
 	ln -sf ../dist/build/test-client/test-client test/test-client
 	cabal test
+	rm test/test-client
+
+build: dist docs format lint
+	cabal build
 
 format: .format.stamp
 .format.stamp: $(SOURCES)

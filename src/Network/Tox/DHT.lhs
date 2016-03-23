@@ -23,10 +23,13 @@ Once the DHT public key of a friend is known, the DHT is used to find them and
 connect directly to them via UDP.
 
 \input{src/Network/Tox/DHT/Distance.lhs}
+\input{src/Network/Tox/DHT/KBuckets.lhs}
 
 \section{DHT node state}
 
-\input{src/Network/Tox/DHT/KBuckets.lhs}
+Every DHT stores a number of Node Infos of nodes that are close to its own DHT
+public key. It uses the k-buckets data structure for this, with the local DHT
+public key as the base key.
 
 \section{Self-organisation}
 
@@ -64,32 +67,28 @@ Only the UDP Protocol (IP Type \texttt{2} and \texttt{10}) are used in the DHT
 module when sending nodes with the packed node format.  This is because the TCP
 Protocol is used to send TCP relay information and the DHT is UDP only.
 
-For its close list toxcore calculates the index of the first bit in the given
-public key that does not match its DHT public key.  If the first or most
-significant bit of both public keys does not match, that index is 0, if the
-first bit matches but not the second bit, that index is 1 and so on.  For each
-index value, toxcore stores up to 8 nodes.  This is done to increase the speed
-at which peers are found.  Toxcore also stores the 8 nodes (Must be the same or
-smaller than the nodes toxcore stores for each index in its close list to make
-sure all the closest peers found will know the node being searched) closest to
-each of the public keys in its DHT friends list (or list of DHT public keys
-that it actively tries to find and connect to).  Toxcore pings every node in
-the lists every 60 seconds to see if they are alive.  It does not store itself
-in either list and does not send any requests to itself.  Nodes can be in more
-than one list for example if the DHT public key of the peer is very close to
-the DHT public key of a friend being searched.  It also sends get node requests
-to a random node (random makes it unpredictable, predictability or knowing
-which node a node will ping next could make some attacks that disrupt the
-network more easy as it adds a possible attack vector) in each of these lists
-of nodes every 20 seconds, with the search public key being its public key for
-the closest node and the public key being searched for being the ones in the
-DHT friends list.  Nodes are removed after 122 seconds of no response.  Nodes
-are added to the lists after a valid ping response or send node packet is
-received from them.  If the node is already present in the list it is updated
-if the IP address changed.  A node can only be added to a list if the list is
-not full or if the nodes DHT public key is closer than the DHT public key of at
-least one of the nodes in the list to the public key being searched with that
-list.  When a node is added to a full list, it will replace the furthest node.
+This is done to increase the speed at which peers are found.  Toxcore also
+stores the 8 nodes (Must be the same or smaller than the nodes toxcore stores
+for each index in its close list to make sure all the closest peers found will
+know the node being searched) closest to each of the public keys in its DHT
+friends list (or list of DHT public keys that it actively tries to find and
+connect to).  Toxcore pings every node in the lists every 60 seconds to see if
+they are alive.  It does not store itself in either list and does not send any
+requests to itself.  Nodes can be in more than one list for example if the DHT
+public key of the peer is very close to the DHT public key of a friend being
+searched.  It also sends get node requests to a random node (random makes it
+unpredictable, predictability or knowing which node a node will ping next could
+make some attacks that disrupt the network more easy as it adds a possible
+attack vector) in each of these lists of nodes every 20 seconds, with the
+search public key being its public key for the closest node and the public key
+being searched for being the ones in the DHT friends list.  Nodes are removed
+after 122 seconds of no response.  Nodes are added to the lists after a valid
+ping response or send node packet is received from them.  If the node is
+already present in the list it is updated if the IP address changed.  A node
+can only be added to a list if the list is not full or if the nodes DHT public
+key is closer than the DHT public key of at least one of the nodes in the list
+to the public key being searched with that list.  When a node is added to a
+full list, it will replace the furthest node.
 
 If the 32 nodes number where increased, it would increase the amount of packets
 needed to check if each of them are still alive which would increase the

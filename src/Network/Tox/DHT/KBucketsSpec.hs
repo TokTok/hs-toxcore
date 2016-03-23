@@ -44,6 +44,36 @@ spec = do
         `shouldBe`
         kBuckets
 
+  it "adding a node to an empty k-buckets always succeeds if baseKey <> nodeKey" $
+    property $ \baseKey nodeInfo ->
+      let
+        empty = KBuckets.empty baseKey
+        kBuckets = KBuckets.addNode empty nodeInfo
+      in
+      if baseKey == NodeInfo.publicKey nodeInfo then
+        kBuckets `shouldBe` empty
+      else
+        kBuckets `shouldNotBe` empty
+
+  it "removing a node twice has no effect" $
+    property $ \baseKey nodeInfo ->
+      let
+        empty        = KBuckets.empty baseKey
+        afterAdd     = KBuckets.addNode empty nodeInfo
+        afterRemove0 = KBuckets.removeNode afterAdd nodeInfo
+        afterRemove1 = KBuckets.removeNode afterRemove0 nodeInfo
+      in
+      afterRemove0 `shouldBe` afterRemove1
+
+  it "adding a node twice has no effect" $
+    property $ \baseKey nodeInfo ->
+      let
+        empty        = KBuckets.empty baseKey
+        afterAdd0    = KBuckets.addNode empty nodeInfo
+        afterAdd1    = KBuckets.addNode afterAdd0 nodeInfo
+      in
+      afterAdd0 `shouldBe` afterAdd1
+
   describe "KBucketEntry" $ do
     it "contains the same base key as the enclosing KBuckets" $
       property $ \kBuckets ->
