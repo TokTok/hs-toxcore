@@ -48,3 +48,5 @@ docs: ../tox-spec/spec.md
 		| perl -pe 'BEGIN{undef $$/} s/\`\`\` sourceCode\n.*?\`\`\`\n\n//sg'	\
 		>> $@
 	pandoc $(PANDOC_ARGS) -f $(FORMAT) -t $(FORMAT) $@ -o $@
+	if which mdl; then $(MAKE) -C ../tox-spec check; fi
+	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io; fi

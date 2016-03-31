@@ -3467,3 +3467,5 @@ The structure of a path node is the same as \texttt{Node Info}.
 
 This section indicates the end of the state file. This section doesn't have any
 content and thus it's length is 0.
+
+\input{src/Network/Tox/ExternalTest/Test.lhs}
