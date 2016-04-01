@@ -24,12 +24,7 @@ connect directly to them via UDP.
 
 \input{src/Network/Tox/DHT/Distance.lhs}
 \input{src/Network/Tox/DHT/KBuckets.lhs}
-
-\section{DHT node state}
-
-Every DHT stores a number of Node Infos of nodes that are close to its own DHT
-public key. It uses the k-buckets data structure for this, with the local DHT
-public key as the base key.
+\input{src/Network/Tox/DHT/DhtState.lhs}
 
 \section{Self-organisation}
 

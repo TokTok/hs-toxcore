@@ -18,7 +18,7 @@ spec = do
       ck1 `shouldBe` ck2
 
   it "computes the same combined key for pk1/sk2 and pk2/sk1" $
-    property $ \(KeyPair (sk1, pk1)) (KeyPair (sk2, pk2)) ->
+    property $ \(KeyPair sk1 pk1) (KeyPair sk2 pk2) ->
       let ck1 = CombinedKey.precompute sk1 pk2 in
       let ck2 = CombinedKey.precompute sk2 pk1 in
       ck1 `shouldBe` ck2

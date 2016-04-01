@@ -25,7 +25,7 @@ makeInputKey pos digit =
 
 getAllBuckets :: KBuckets -> [[KBuckets.KBucketEntry]]
 getAllBuckets kBuckets =
-  map (Set.toList . KBuckets.bucketNodes) (Map.elems (KBuckets.buckets kBuckets))
+  map (Map.elems . KBuckets.bucketNodes) (Map.elems (KBuckets.buckets kBuckets))
 
 
 spec :: Spec
@@ -60,8 +60,8 @@ spec = do
       let
         empty        = KBuckets.empty baseKey
         afterAdd     = KBuckets.addNode empty nodeInfo
-        afterRemove0 = KBuckets.removeNode afterAdd nodeInfo
-        afterRemove1 = KBuckets.removeNode afterRemove0 nodeInfo
+        afterRemove0 = KBuckets.removeNode afterAdd $ NodeInfo.publicKey nodeInfo
+        afterRemove1 = KBuckets.removeNode afterRemove0 $ NodeInfo.publicKey nodeInfo
       in
       afterRemove0 `shouldBe` afterRemove1
 

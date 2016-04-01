@@ -1,45 +1,53 @@
-COVERAGE = --enable-coverage
+CABAL_VER_NUM := $(shell cabal --numeric-version)
+CABAL_VER_MAJOR := $(shell echo $(CABAL_VER_NUM) | cut -f1 -d.)
+CABAL_VER_MINOR := $(shell echo $(CABAL_VER_NUM) | cut -f2 -d.)
+CABAL_GT_1_22 := $(shell [ $(CABAL_VER_MAJOR) -gt 1 -o \( $(CABAL_VER_MAJOR) -eq 1 -a $(CABAL_VER_MINOR) -ge 22 \) ] && echo true)
 
-SOURCES := $(shell find src -name "*.*hs")
+ifeq ($(CABAL_GT_1_22),true)
+COVERAGE = --enable-coverage
+else
+COVERAGE = --enable-library-coverage
+endif
+
+SOURCES	:= $(shell find src -name "*.*hs")
+DOCS	:= ../tox-spec/spec.md
 
 -include ../tox-spec/pandoc.mk
 
-check: build
+
+all: .build.stamp $(DOCS)
+
+
+check: .build.stamp $(wildcard test/*)
 	cabal test
 
-sut-check: build
+sut-check: .build.stamp
 	ln -sf ../dist/build/test-client/test-client test/test-client
 	cabal test
 	rm test/test-client
 
-build: dist docs format lint
-	cabal build
-
-format: .format.stamp
-.format.stamp: $(SOURCES)
-#	find src -name "*.hs" -exec hindent --style chris-done {} \;
-	tools/format-haskell -i src
-	@touch $@
-
-lint: .lint.stamp
-.lint.stamp: $(SOURCES)
-	hlint --cross src
-	@touch $@
-
-repl: build
+repl: .build.stamp
 	cabal repl
-
-dist:
-	cabal install --only-dependencies --enable-tests
-	cabal install stylish-haskell
-	cabal install hlint
-	cabal configure --enable-tests $(COVERAGE)
 
 clean:
 	cabal clean
+	rm -f $(wildcard .*.stamp)
 
-docs: ../tox-spec/spec.md
-../tox-spec/spec.md: src/Network/Tox.lhs $(shell find src -name "*.lhs") Makefile ../tox-spec/pandoc.mk
+
+build: .build.stamp
+.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp
+	cabal build
+	@touch $@
+
+configure: .configure.stamp
+.configure.stamp: .libsodium.stamp
+	cabal install --only-dependencies --enable-tests --extra-include-dirs=$(HOME)/.cabal/extra-dist/include --extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
+	cabal install stylish-haskell hlint
+	cabal configure --enable-tests $(COVERAGE)
+	@touch $@
+
+docs: $(DOCS)
+../tox-spec/spec.md: src/Network/Tox.lhs $(shell find src -name "*.lhs") ../tox-spec/pandoc.mk .pandoc.stamp
 	echo '% The Tox Reference' > $@
 	echo '' >> $@
 	pandoc $< $(PANDOC_ARGS)							\
@@ -50,3 +58,25 @@ docs: ../tox-spec/spec.md
 	pandoc $(PANDOC_ARGS) -f $(FORMAT) -t $(FORMAT) $@ -o $@
 	if which mdl; then $(MAKE) -C ../tox-spec check; fi
 	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io; fi
+
+
+pandoc: .pandoc.stamp
+.pandoc.stamp:
+	cabal install pandoc
+	@touch $@
+
+libsodium: .libsodium.stamp
+.libsodium.stamp: tools/install-libsodium
+	$<
+	@touch $@
+
+format: .format.stamp
+.format.stamp: $(SOURCES)
+	#find src -name "*.hs" -exec hindent --style chris-done {} \;
+	tools/format-haskell -i src
+	@touch $@
+
+lint: .lint.stamp
+.lint.stamp: $(SOURCES)
+	hlint --cross src
+	@touch $@

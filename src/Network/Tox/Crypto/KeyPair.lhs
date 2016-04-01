@@ -32,27 +32,29 @@ import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
  ------------------------------------------------------------------------------}
 
 
-newtype KeyPair = KeyPair (Key.SecretKey, Key.PublicKey)
+data KeyPair = KeyPair
+  { secretKey :: Key.SecretKey
+  , publicKey :: Key.PublicKey
+  }
   deriving (Eq, Show, Read)
 
 
 newKeyPair :: IO KeyPair
 newKeyPair = do
-  (secretKey, publicKey) <- Sodium.newKeypair
-  return $ KeyPair (Key secretKey, Key publicKey)
+  (sk, pk) <- Sodium.newKeypair
+  return $ KeyPair (Key sk) (Key pk)
 
 
 fromSecretKey :: Key.SecretKey -> KeyPair
-fromSecretKey secretKey =
+fromSecretKey sk =
   let
-    Key sk = secretKey
     skBytes = Sodium.encode sk
     Just skScalar = Sodium.decode skBytes
     pkGroupElement = Sodium.multBase skScalar
     pkBytes = Sodium.encode pkGroupElement
     Just pk = Sodium.decode pkBytes
   in
-  KeyPair (secretKey, Key pk)
+  KeyPair sk pk
 
 
 {-------------------------------------------------------------------------------

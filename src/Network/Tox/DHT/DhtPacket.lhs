@@ -76,7 +76,7 @@ instance Binary (DhtPacket payload) where
 
 
 encrypt :: KeyPair -> PublicKey -> Nonce -> PlainText payload -> DhtPacket payload
-encrypt (KeyPair (senderSecretKey, senderPublicKey')) receiverPublicKey nonce plainText =
+encrypt (KeyPair senderSecretKey senderPublicKey') receiverPublicKey nonce plainText =
   DhtPacket senderPublicKey' nonce $ Box.encrypt combinedKey nonce plainText
   where combinedKey = CombinedKey.precompute senderSecretKey receiverPublicKey
 
@@ -88,7 +88,7 @@ encode keyPair receiverPublicKey nonce payload =
 
 
 decrypt :: KeyPair -> DhtPacket payload -> Maybe (PlainText payload)
-decrypt (KeyPair (receiverSecretKey, _)) DhtPacket { senderPublicKey, encryptionNonce, encryptedPayload } =
+decrypt (KeyPair receiverSecretKey _) DhtPacket { senderPublicKey, encryptionNonce, encryptedPayload } =
   Box.decrypt combinedKey encryptionNonce encryptedPayload
   where combinedKey = CombinedKey.precompute receiverSecretKey senderPublicKey
 

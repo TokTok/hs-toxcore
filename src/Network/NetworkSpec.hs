@@ -35,10 +35,10 @@ zeroNonce :: Nonce
 zeroNonce = read "\"010203040506070809080706050403020102030405060708\""
 
 dhtKeyPair :: KeyPair
-dhtKeyPair = read "KeyPair (\"4c37a62d0a72a83b9e26390e1b5e5024dc3cbd19745c999c09525fefc074bcdc\",\"ad8611f27b1b11dbc7704025316102371088db8f97af54a9a4dfc5a6a8cd0f47\")"
+dhtKeyPair = read "KeyPair { secretKey = \"4c37a62d0a72a83b9e26390e1b5e5024dc3cbd19745c999c09525fefc074bcdc\", publicKey = \"ad8611f27b1b11dbc7704025316102371088db8f97af54a9a4dfc5a6a8cd0f47\" }"
 
 dhtPublicKey :: PublicKey
-KeyPair (_, dhtPublicKey) = dhtKeyPair
+KeyPair _ dhtPublicKey = dhtKeyPair
 
 
 targetKey :: PublicKey

@@ -361,13 +361,13 @@ Input:
   \texttt{8}      & Int           & Bucket size (k) \\
   \texttt{32}     & Public Key    & Base key \\
   \texttt{[0,]}   & [Node Info]   & Added nodes \\
-  \texttt{[0,]}   & [Node Info]   & Removed nodes \\
+  \texttt{[0,]}   & [Public Key]  & Removed node keys \\
 \end{tabular}
 
 The base key is the DHT public key of the simulated node. The added nodes is a
 list of nodes to consecutively add to the K-buckets. The removed nodes is a
-list of nodes to consecutively remove from the K-buckets after adding all nodes
-from the added nodes list.
+list of keys for which to consecutively remove the nodes from the K-buckets
+after adding all nodes from the added nodes list.
 
 Node Info is encoded with the packet node format.  Recall that all lists are
 prefixed with a 64 bit length encoded in big endian.
@@ -391,7 +391,7 @@ Each bucket is encoded as follows:
 \end{tabular}
 \begin{code}
 
-  KBucketNodes :: Test (Int, T.PublicKey, [T.NodeInfo], [T.NodeInfo]) [(T.KBucketIndex, [T.NodeInfo])]
+  KBucketNodes :: Test (Int, T.PublicKey, [T.NodeInfo], [T.PublicKey]) [(T.KBucketIndex, [T.NodeInfo])]
 
 deriving instance Show (Test input output)
 

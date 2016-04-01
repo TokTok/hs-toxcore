@@ -79,8 +79,8 @@ getResult = do
         Test.Success $ KBuckets.bucketIndex pk1 pk2
 
     ["KBucketNodes"] ->
-      runTest Test.KBucketNodes $ \(bucketSize, baseKey, nodes, removedNodes) ->
-        KBucketsExtSpec.testKBucketNodes bucketSize baseKey nodes removedNodes
+      runTest Test.KBucketNodes $ \(bucketSize, baseKey, nodes, removedKeys) ->
+        KBucketsExtSpec.testKBucketNodes bucketSize baseKey nodes removedKeys
 
     _ ->
       return $ encodeFailure $ "Unsupported test: " ++ command

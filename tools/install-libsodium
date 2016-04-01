@@ -1,6 +1,10 @@
 #!/bin/sh
 
+set -e -x
+
 mkdir -p $HOME/.cabal/extra-dist
+
+test -f $HOME/.cabal/extra-dist/lib/libsodium.a && exit
 
 rm -rf libsodium
 git clone --depth=1 https://github.com/jedisct1/libsodium
@@ -17,3 +21,6 @@ mv new-hash $HOME/.cabal/extra-dist/libsodium.hash
 sh autogen.sh
 ./configure --prefix=$HOME/.cabal/extra-dist
 make install
+
+cd -
+rm -rf libsodium

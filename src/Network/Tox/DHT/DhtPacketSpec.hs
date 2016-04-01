@@ -21,7 +21,7 @@ import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 encodeAndDecode :: (Binary a, Binary b) => KeyPair -> KeyPair -> Nonce -> a -> Maybe b
 encodeAndDecode senderKeyPair receiverKeyPair nonce payload =
   let
-    KeyPair (_, receiverPublicKey) = receiverKeyPair
+    KeyPair _ receiverPublicKey = receiverKeyPair
     packet = DhtPacket.encode senderKeyPair receiverPublicKey nonce payload
     packet' = Binary.runGet Binary.get $ Binary.runPut $ Binary.put packet
   in
@@ -51,8 +51,8 @@ spec = do
       encodeAndDecodeString senderKeyPair receiverKeyPair nonce payload `shouldBe` Just payload
 
   it "fails to decode packets with the wrong secret key" $
-    property $ \senderKeyPair (KeyPair (_, receiverPublicKey)) badSecretKey nonce payload ->
-      encodeAndDecodeString senderKeyPair (KeyPair (badSecretKey, receiverPublicKey)) nonce payload `shouldBe` Nothing
+    property $ \senderKeyPair (KeyPair _ receiverPublicKey) badSecretKey nonce payload ->
+      encodeAndDecodeString senderKeyPair (KeyPair badSecretKey receiverPublicKey) nonce payload `shouldBe` Nothing
 
   it "fails to decode packets with the wrong payload type (Partial)" $
     property $ \senderKeyPair receiverKeyPair nonce payload ->

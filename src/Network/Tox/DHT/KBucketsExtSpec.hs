@@ -10,13 +10,14 @@ import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import qualified Network.Tox.ExternalTest      as Test
 import qualified Network.Tox.ExternalTest.Test as Test (Result (..), Test (..))
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
+import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
 
-testKBucketNodes :: Int -> PublicKey -> [NodeInfo] -> [NodeInfo] -> Test.Result [(KBuckets.KBucketIndex, [NodeInfo])]
-testKBucketNodes _ baseKey nodes removedNodes =
+testKBucketNodes :: Int -> PublicKey -> [NodeInfo] -> [PublicKey] -> Test.Result [(KBuckets.KBucketIndex, [NodeInfo])]
+testKBucketNodes _ baseKey nodes removedKeys =
   let
     kBucketsAfterAdd = foldl KBuckets.addNode (KBuckets.empty baseKey) nodes
-    kBucketsAfterRemove = foldl KBuckets.removeNode kBucketsAfterAdd removedNodes
+    kBucketsAfterRemove = foldl KBuckets.removeNode kBucketsAfterAdd removedKeys
     result = KBuckets.getAllBuckets kBucketsAfterRemove
   in
   Test.Success result
@@ -41,6 +42,7 @@ spec = do
           case nodes of
             [] -> []
             _  -> take (abs toRemove `mod` length nodes) nodes
+        removedKeys = map NodeInfo.publicKey removedNodes
       in
-      Test.run Test.KBucketNodes (KBuckets.defaultBucketSize, baseKey, nodes, removedNodes) $
-        testKBucketNodes KBuckets.defaultBucketSize baseKey nodes removedNodes
+      Test.run Test.KBucketNodes (KBuckets.defaultBucketSize, baseKey, nodes, removedKeys) $
+        testKBucketNodes KBuckets.defaultBucketSize baseKey nodes removedKeys

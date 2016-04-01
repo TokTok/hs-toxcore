@@ -22,8 +22,7 @@ import           GHC.Generics                           (Generic)
 import qualified Network.Socket                         as Socket
 import           Network.Tox.Encoding                   (bitGet, bitPut)
 import           Network.Tox.NodeInfo.HostAddress       (HostAddress (..))
-import qualified Network.Tox.NodeInfo.HostAddress       as HostAddress (getHostAddressGetter,
-                                                                        putHostAddress)
+import qualified Network.Tox.NodeInfo.HostAddress       as HostAddress (getHostAddressGetter, putHostAddress)
 import           Network.Tox.NodeInfo.PortNumber        (PortNumber)
 import           Network.Tox.NodeInfo.TransportProtocol (TransportProtocol)
 import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)

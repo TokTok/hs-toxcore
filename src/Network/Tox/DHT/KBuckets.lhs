@@ -15,13 +15,13 @@ import           Control.Applicative           ((<$>), (<*>))
 import           Data.Binary                   (Binary)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
-import           Data.Set                      (Set)
-import qualified Data.Set                      as Set
 import           Data.Word                     (Word8)
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.DHT.Distance      as Distance
-import           Network.Tox.NodeInfo.NodeInfo (NodeInfo (..))
+import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
+import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
+import           Test.QuickCheck.Gen           (Gen)
 import qualified Test.QuickCheck.Gen           as Gen
 
 
@@ -79,17 +79,17 @@ that set, the last (greatest) element is the furthest away.
 
 
 newtype KBucket = KBucket
-  { bucketNodes :: Set KBucketEntry
+  { bucketNodes :: Map PublicKey KBucketEntry
   }
   deriving (Eq, Read, Show)
 
 
 emptyBucket :: KBucket
-emptyBucket = KBucket Set.empty
+emptyBucket = KBucket Map.empty
 
 
 bucketIsEmpty :: KBucket -> Bool
-bucketIsEmpty = Set.null . bucketNodes
+bucketIsEmpty = Map.null . bucketNodes
 
 
 data KBucketEntry = KBucketEntry
@@ -105,7 +105,13 @@ instance Ord KBucketEntry where
       (distance b)
     where
       distance entry =
-        Distance.xorDistance (entryBaseKey entry) (publicKey $ entryNode entry)
+        Distance.xorDistance
+          (entryBaseKey entry)
+          (NodeInfo.publicKey $ entryNode entry)
+
+
+entryPublicKey :: KBucketEntry -> PublicKey
+entryPublicKey = NodeInfo.publicKey . entryNode
 
 
 \end{code}
@@ -193,7 +199,7 @@ same effect as removing it once.
 
 addNode :: KBuckets -> NodeInfo -> KBuckets
 addNode kBuckets nodeInfo =
-  updateBucketForKey kBuckets (publicKey nodeInfo) $ \bucket ->
+  updateBucketForKey kBuckets (NodeInfo.publicKey nodeInfo) $ \bucket ->
     let
       -- The new entry.
       entry = KBucketEntry (baseKey kBuckets) nodeInfo
@@ -204,32 +210,28 @@ addNode kBuckets nodeInfo =
 
 addNodeToBucket :: Int -> KBucketEntry -> KBucket -> KBucket
 addNodeToBucket maxSize entry bucket =
-  KBucket $ truncateSet maxSize $ Set.insert entry $ bucketNodes bucket
+  KBucket $ truncateMap maxSize $ Map.insert (entryPublicKey entry) entry $ bucketNodes bucket
 
 
 
-truncateSet :: Ord a => Int -> Set a -> Set a
-truncateSet maxSize set =
-  if Set.size set <= maxSize then
-    set
+truncateMap :: Ord a => Int -> Map k a -> Map k a
+truncateMap maxSize m =
+  if Map.size m <= maxSize then
+    m
   else
-    -- Remove the greatest element until the set is small enough again.
-    truncateSet maxSize $ Set.deleteMax set
+    -- Remove the greatest element until the map is small enough again.
+    truncateMap maxSize $ Map.deleteMax m
 
 
-removeNodeFromBucket :: KBucketEntry -> KBucket -> KBucket
-removeNodeFromBucket entry bucket =
-  KBucket $ Set.delete entry $ bucketNodes bucket
+removeNodeFromBucket :: PublicKey -> KBucket -> KBucket
+removeNodeFromBucket publicKey bucket =
+  KBucket $ Map.delete publicKey $ bucketNodes bucket
 
 
-removeNode :: KBuckets -> NodeInfo -> KBuckets
-removeNode kBuckets nodeInfo =
-  updateBucketForKey kBuckets (publicKey nodeInfo) $ \bucket ->
-    let
-      -- The entry to remove.
-      entry = KBucketEntry (baseKey kBuckets) nodeInfo
-    in
-    removeNodeFromBucket entry bucket
+removeNode :: KBuckets -> PublicKey -> KBuckets
+removeNode kBuckets publicKey =
+  updateBucketForKey kBuckets publicKey $ \bucket ->
+    removeNodeFromBucket publicKey bucket
 
 
 {-------------------------------------------------------------------------------
@@ -241,10 +243,14 @@ removeNode kBuckets nodeInfo =
 
 getAllBuckets :: KBuckets -> [(KBucketIndex, [NodeInfo])]
 getAllBuckets KBuckets { buckets } =
-  map (\(index, bucket) -> (index, map entryNode $ Set.toList $ bucketNodes bucket)) (Map.toList buckets)
+  map (\(index, bucket) -> (index, map entryNode $ Map.elems $ bucketNodes bucket)) (Map.toList buckets)
+
+
+genKBuckets :: PublicKey -> Gen KBuckets
+genKBuckets publicKey =
+  foldl addNode (empty publicKey) <$> Gen.listOf arbitrary
 
 
 instance Arbitrary KBuckets where
-  arbitrary =
-    foldl addNode <$> (empty <$> arbitrary) <*> Gen.listOf arbitrary
+  arbitrary = arbitrary >>= genKBuckets
 \end{code}

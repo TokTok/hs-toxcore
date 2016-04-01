@@ -77,7 +77,7 @@ instance CryptoNumber Sodium.Nonce       where { encodedByteSize Proxy = Sodium.
 
 
 newtype Key a = Key a
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 type PublicKey   = Key Sodium.PublicKey
 type SecretKey   = Key Sodium.SecretKey
