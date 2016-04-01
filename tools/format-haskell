@@ -37,7 +37,7 @@ sub parse_file {
             $in_code = 0;
             push @docs, $_;
          } else {
-            push $code[0], $_;
+            push @{ $code[0] }, $_;
          }
       } else {
          push @docs, $_;
@@ -79,7 +79,7 @@ sub format_file {
          if (/^-- CODE BLOCK \d+$/) {
             push @blocks, [];
          } else {
-            push $blocks[$#blocks], $_;
+            push @{ $blocks[$#blocks] }, $_;
          }
       }
 
