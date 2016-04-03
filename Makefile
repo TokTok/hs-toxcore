@@ -10,20 +10,22 @@ COVERAGE = --enable-library-coverage
 endif
 
 SOURCES	:= $(shell find src -name "*.*hs")
+
+ifneq ($(wildcard ../tox-spec/pandoc.mk),)
 DOCS	:= ../tox-spec/spec.md
+include ../tox-spec/pandoc.mk
+endif
 
--include ../tox-spec/pandoc.mk
 
-
-all: .build.stamp $(DOCS)
+all: check $(DOCS)
 
 
 check: .build.stamp $(wildcard test/*)
-	cabal test
+	cabal test | grep -v '^Writing: '
 
 sut-check: .build.stamp
 	ln -sf ../dist/build/test-client/test-client test/test-client
-	cabal test
+	cabal test | grep -v '^Writing: '
 	rm test/test-client
 
 repl: .build.stamp

@@ -38,7 +38,7 @@ import           Data.Aeson                             (FromJSON, ToJSON)
 import           Data.Binary                            (Binary)
 import           Data.Word                              (Word32)
 import           GHC.Generics                           (Generic)
-import qualified Network.Tox.Crypto.Key                 as T (PublicKey)
+import qualified Network.Tox.Crypto.Key                 as T (Nonce, PublicKey)
 import qualified Network.Tox.Crypto.Text                as T (PlainText)
 import qualified Network.Tox.DHT.KBuckets               as T (KBucketIndex)
 import qualified Network.Tox.NodeInfo.HostAddress       as T (HostAddress)
@@ -264,9 +264,10 @@ explicit length is prefixed to the bytes containing the binary encoding of the
 value.
 
 Output: The binary encoding of the \href{#deconstructed-values}{deconstructed
-value}.  On decoding failure, this test must return \texttt{Failure}.  If the
-SUT incorrectly determines that the byte array was a correct encoding of the
-data type, the test fails.
+value} in a \href{#success-result}{Success} message.  On decoding failure, this
+test must return \href{#failure-result}{Failure}.  If the SUT incorrectly
+determines that the byte array was a correct encoding of the data type, the
+test fails.
 
 \begin{code}
 
@@ -292,7 +293,8 @@ by \href{#basic-data-encoding}{data format}.
 All binary encodings of deconstructed values are self-delimiting, so an
 explicit length is not passed here.
 
-Output: The encoded value.
+Output: The encoded value in a \href{#success-result}{Success} message, not
+length-prefixed.
 \begin{code}
 
   BinaryEncode :: DataFormat a -> Test (Deconstruct a) a
@@ -311,17 +313,46 @@ Input:
   \texttt{32}   & Public Key    & Bob key \\
 \end{tabular}
 
-Output: A single byte containing
-\begin{tabular}{ll}
-  Value & When \\
+Output:
+\begin{tabular}{l|l|l}
+  Length        & Type          & \href{#success-result}{Contents} \\
   \hline
-  0x00 & distance(Origin, Alice) < distance(Origin, Bob) \\
-  0x01 & the distances are equal \\
-  0x02 & distance(Origin, Alice) > distance(Origin, Bob). \\
+  \texttt{1}    & Ordering      & Less, Equal, or Greater \\
+\end{tabular}
+
+The ordering value is encoded as follows:
+\begin{tabular}{l|l|l}
+  Value   & Encoding & When \\
+  \hline
+  Less    & 0x00     & distance(Origin, Alice) < distance(Origin, Bob) \\
+  Equal   & 0x01     & the distances are equal \\
+  Greater & 0x02     & distance(Origin, Alice) > distance(Origin, Bob). \\
 \end{tabular}
 \begin{code}
 
   Distance :: Test (T.PublicKey, T.PublicKey, T.PublicKey) Ordering
+
+\end{code}
+\subsection{Test: Nonce Increment}
+
+Checks whether the function to increment a nonce works correctly.
+
+Input: A 24-byte nonce.
+\begin{tabular}{l|l|l}
+  Length        & Type          & \href{#test-protocol}{Contents} \\
+  \hline
+  \texttt{24}   & Nonce         & Base nonce \\
+\end{tabular}
+
+Output:
+\begin{tabular}{l|l|l}
+  Length        & Type          & \href{#success-result}{Contents} \\
+  \hline
+  \texttt{24}   & Nonce         & Base nonce + 1 \\
+\end{tabular}
+\begin{code}
+
+  NonceIncrement :: Test T.Nonce T.Nonce
 
 \end{code}
 \subsection{Test: K-Bucket Index}
@@ -336,15 +367,17 @@ Input: Two public keys for Self and Other.
   \texttt{32}   & Public Key    & Node key \\
 \end{tabular}
 
-Output:
+Output: either \texttt{Nothing} or \texttt{Just i} in a
+\href{#success-result}{Success} message.
+
 \begin{tabular}{l|l|l}
-  Length & Value & When \\
+  Length     & Value            & When \\
   \hline
-  \texttt{1} & 0x00             & Base key == Node key \\
-  \texttt{2} & 0x01, \texttt{n} & otherwise \\
+  \texttt{1} & 0x00             & Base key == Node key: \texttt{Nothing} \\
+  \texttt{2} & 0x01, \texttt{i} & otherwise: \texttt{Just i} \\
 \end{tabular}
 
-The value of \texttt{n} is the k-bucket index of the Node key in a k-buckets
+The value of \texttt{i} is the k-bucket index of the Node key in a k-buckets
 instance with the given Base key.
 \begin{code}
 
@@ -375,7 +408,7 @@ prefixed with a 64 bit length encoded in big endian.
 Output: The buckets, sorted by bucket index. Empty buckets should not appear in
 this list.
 \begin{tabular}{l|l|l}
-  Length          & Type          & Contents \\
+  Length          & Type          & \href{#success-result}{Contents} \\
   \hline
   \texttt{8}      & Int           & Length of bucket list \\
   \texttt{[0,]}   & [Bucket]      & The bucket list \\
@@ -409,13 +442,15 @@ data.
 data Result a
 
 \end{code}
+\subsection{Failure Result}
+
 In case of error, a \texttt{Failure} message is returned with an UTF-8 encoded
 failure message.
 
 \begin{tabular}{l|l|l}
   Length            & Type            & Contents \\
   \hline
-  \texttt{1}        & \texttt{Tag}    & 0x00 \\
+  \texttt{1}        & \texttt{Tag}    & 0x00 (Failure) \\
   \texttt{8}        & \texttt{Int}    & length \\
   \texttt{\$length} & \texttt{String} & error message \\
 \end{tabular}
@@ -424,27 +459,31 @@ failure message.
   = Failure String
 
 \end{code}
+\subsection{Success Result}
+
 In case of success, a \texttt{Success} message with an arbitrary piece of data
 is returned, depending on the test name in the input.
 
 \begin{tabular}{l|l|l}
   Length            & Type            & Contents \\
   \hline
-  \texttt{1}        & \texttt{Tag}    & 0x01 \\
-  \texttt{[0,]}     & \texttt{Bytes}  & Result data \\
+  \texttt{1}        & \texttt{Tag}    & 0x01 (Success) \\
+  \texttt{[0,]}     & \texttt{Bytes}  & Payload \\
 \end{tabular}
 \begin{code}
 
   | Success a
 
 \end{code}
+\subsection{Skipped Result}
+
 Tests can be skipped by returning a \texttt{Skipped} message. These tests will
 be ignored and reported as successful.
 
 \begin{tabular}{l|l|l}
   Length            & Type            & Contents \\
   \hline
-  \texttt{1}        & \texttt{Tag}    & 0x02 \\
+  \texttt{1}        & \texttt{Tag}    & 0x02 (Skipped) \\
 \end{tabular}
 \begin{code}
 

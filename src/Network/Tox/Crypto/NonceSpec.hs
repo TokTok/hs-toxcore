@@ -22,11 +22,16 @@ spec = do
       nonce2 <- Nonce.newNonce
       nonce1 `shouldNotBe` nonce2
 
-  it "generates a different nonce with 'nudge' for arbitrary nonces" $
-    property $ \nonce ->
-      Nonce.nudge nonce `shouldNotBe` nonce
+  describe "nudge" $
+    it "generates a different nonce for arbitrary nonces" $
+      property $ \nonce ->
+        Nonce.nudge nonce `shouldNotBe` nonce
 
   describe "increment" $ do
+    it "generates a different nonce for arbitrary nonces" $
+      property $ \nonce ->
+        Nonce.increment nonce `shouldNotBe` nonce
+
     it "increments a 0 nonce to 1" $
       let nonce = read "\"000000000000000000000000000000000000000000000000\"" in
       let nonce' = read "\"000000000000000000000000000000000000000000000001\"" in

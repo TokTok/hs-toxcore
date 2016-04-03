@@ -11,10 +11,11 @@ import           Data.Binary.Get                 (Get, runGetOrFail)
 import           Data.Binary.Put                 (runPut)
 import qualified Data.ByteString.Lazy            as LazyByteString
 import           Data.List.Split                 (splitOn)
+import qualified Network.Tox.Crypto.Nonce        as Nonce (increment)
 import qualified Network.Tox.Crypto.Text         as Text (decode)
-import qualified Network.Tox.DHT.Distance        as Distance
-import qualified Network.Tox.DHT.KBuckets        as KBuckets
-import qualified Network.Tox.DHT.KBucketsExtSpec as KBucketsExtSpec
+import qualified Network.Tox.DHT.Distance        as Distance (xorDistance)
+import qualified Network.Tox.DHT.KBuckets        as KBuckets (bucketIndex)
+import qualified Network.Tox.DHT.KBucketsExtSpec as KBucketsExtSpec (testKBucketNodes)
 import qualified Network.Tox.ExternalTest.Test   as Test (DataFormat (..),
                                                           Result (..),
                                                           Test (..), TestInput,
@@ -73,6 +74,10 @@ getResult = do
         Test.Success $
           compare (Distance.xorDistance origin alice)
                   (Distance.xorDistance origin bob)
+
+    ["NonceIncrement"] ->
+      runTest Test.NonceIncrement $ \nonce ->
+        Test.Success $ Nonce.increment nonce
 
     ["KBucketIndex"] ->
       runTest Test.KBucketIndex $ \(pk1, pk2) ->

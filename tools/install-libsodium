@@ -4,7 +4,8 @@ set -e -x
 
 mkdir -p $HOME/.cabal/extra-dist
 
-test -f $HOME/.cabal/extra-dist/lib/libsodium.a && exit
+if test -f $HOME/.cabal/extra-dist/lib/libsodium.a; then exit; fi
+if pkg-config libsodium; then exit; fi
 
 rm -rf libsodium
 git clone --depth=1 https://github.com/jedisct1/libsodium
