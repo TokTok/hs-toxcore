@@ -34,13 +34,16 @@ testDirectory :: String
 testDirectory = "test"
 
 
-getResult :: Binary a => ByteString.ByteString -> Either String a
+getResult :: (Show a, Binary a) => ByteString.ByteString -> Either String a
 getResult bytes =
   finish $ Binary.pushChunk (Binary.runGetIncremental get) bytes
   where
     finish = \case
-      Binary.Done _ _ result ->
-        Right result
+      Binary.Done rest offset result ->
+        if ByteString.null rest then
+          Right result
+        else
+          Left $ "Unexpected extra data after result payload (" ++ show offset ++ " bytes, parsed as `" ++ show result ++ "´): " ++ show (Base16.encode rest)
       Binary.Partial next ->
         finish $ next Nothing
       Binary.Fail _ _ msg ->
