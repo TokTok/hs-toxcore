@@ -34,17 +34,17 @@ testDirectory :: String
 testDirectory = "test"
 
 
-getResult :: Binary a => ByteString.ByteString -> IO a
+getResult :: Binary a => ByteString.ByteString -> Either String a
 getResult bytes =
   finish $ Binary.pushChunk (Binary.runGetIncremental get) bytes
   where
     finish = \case
       Binary.Done _ _ result ->
-        return result
+        Right result
       Binary.Partial next ->
         finish $ next Nothing
       Binary.Fail _ _ msg ->
-        fail $ msg ++ " while reading input: " ++ show (Base16.encode bytes)
+        Left $ msg ++ " while reading input: " ++ show (Base16.encode bytes)
 
 
 makeProc :: FilePath -> IO (IO.Handle, IO.Handle, ProcessHandle)
@@ -100,13 +100,15 @@ run test input expected = do
       LazyByteString.hPut procInWrite inputData
       IO.hFlush procInWrite
 
-      actual <- ByteString.hGetContents procOutRead >>= getResult
+      actualOrError <- getResult <$> ByteString.hGetContents procOutRead
 
-      case (actual, expected) of
-        (Test.Skipped, _) ->
+      case (actualOrError, expected) of
+        (Right Test.Skipped, _) ->
           -- Test skipped = success.
           return ()
-        (Test.Failure actualMsg, Test.Failure expectedMsg) ->
+        (Right (Test.Failure actualMsg), Test.Failure expectedMsg) ->
           actualMsg `shouldContain` expectedMsg
-        _ ->
+        (Left failureMsg, _) ->
+          expectationFailure failureMsg
+        (Right actual, _) ->
           actual `shouldBe` expected

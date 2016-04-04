@@ -3,6 +3,7 @@ module Network.NetworkSpec where
 
 import           Test.Hspec
 
+import           Control.Monad                   (unless)
 import           Data.Binary                     (Binary)
 import qualified Data.Binary                     as Binary (get, put)
 import qualified Data.Binary.Get                 as Binary (runGet)
@@ -88,13 +89,14 @@ dhtLoop sock = do
 
 spec :: Spec
 spec =
-  it "should receive ping responses" $
-    -- Set up socket.
-    Socket.withSocketsDo $ do
-      sock <- Socket.socket Socket.AF_INET Socket.Datagram 0
-      Socket.bindSocket sock (Socket.SockAddrInet (toxPort + 1) Socket.iNADDR_ANY)
+  unless True $
+    it "should receive ping responses" $
+      -- Set up socket.
+      Socket.withSocketsDo $ do
+        sock <- Socket.socket Socket.AF_INET Socket.Datagram 0
+        Socket.bindSocket sock (Socket.SockAddrInet (toxPort + 1) Socket.iNADDR_ANY)
 
-      --sendPacket sock dhtKeyPair zeroNonce targetAddr PacketKind.PingRequest PingRequest
-      sendPacket sock dhtKeyPair zeroNonce targetAddr PacketKind.NodesRequest $ NodesRequest dhtPublicKey
+        --sendPacket sock dhtKeyPair zeroNonce targetAddr PacketKind.PingRequest PingRequest
+        sendPacket sock dhtKeyPair zeroNonce targetAddr PacketKind.NodesRequest $ NodesRequest dhtPublicKey
 
-      dhtLoop sock
+        dhtLoop sock
