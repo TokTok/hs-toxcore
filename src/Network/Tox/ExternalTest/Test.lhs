@@ -36,7 +36,7 @@ import           Control.Applicative                    (Applicative, pure,
                                                          (<*>))
 import           Data.Aeson                             (FromJSON, ToJSON)
 import           Data.Binary                            (Binary)
-import           Data.Word                              (Word32)
+import           Data.Word                              (Word32, Word8)
 import           GHC.Generics                           (Generic)
 import qualified Network.Tox.Crypto.Key                 as T (Nonce, PublicKey)
 import qualified Network.Tox.Crypto.Text                as T (PlainText)
@@ -72,10 +72,16 @@ data DataFormat a where
 
 \end{code}
 A \texttt{String} is a \texttt{List} of bytes containing the UTF-8 encoded
-character string.
+code points making up the string.
 \begin{code}
 
   String     :: DataFormat String
+
+\end{code}
+A \texttt{Byte String} is a \texttt{List} of bytes.
+\begin{code}
+
+  ByteString :: DataFormat [Word8]
 
 \end{code}
 \texttt{Word32} is a 32 bit unsigned integer that is encoded in big endian.
@@ -138,12 +144,13 @@ deconstruct function is the identity function.
   deconstruct = id
 
 \end{code}
-The types \texttt{Word32} and \texttt{String} have no special deconstructed
-type and are just used as-is.
+The types \texttt{Word32}, \texttt{String}, and \texttt{Byte String} have no
+special deconstructed type and are just used as-is.
 \begin{code}
 
 instance Construct Word32
 instance Construct String
+instance Construct [Word8]
 
 \end{code}
 

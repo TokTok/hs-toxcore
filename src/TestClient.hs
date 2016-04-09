@@ -59,6 +59,7 @@ getResult = do
       case dataFormat of
         "Word32"     -> runBinaryDecode Test.Word32
         "String"     -> runBinaryDecode Test.String
+        "ByteString" -> runBinaryDecode Test.ByteString
         "NodeInfo"   -> runBinaryDecode Test.NodeInfo
         _ -> return $ encodeFailure $ "Unsupported data format: " ++ command
 
@@ -66,6 +67,7 @@ getResult = do
       case dataFormat of
         "Word32"     -> runBinaryEncode Test.Word32
         "String"     -> runBinaryEncode Test.String
+        "ByteString" -> runBinaryEncode Test.ByteString
         "NodeInfo"   -> runBinaryEncode Test.NodeInfo
         _ -> return $ encodeFailure $ "Unsupported data format: " ++ command
 

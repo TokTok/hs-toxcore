@@ -36,3 +36,4 @@ spec :: Spec
 spec = do
   externalEncodingSpec Test.Word32
   externalEncodingSpec Test.String
+  externalEncodingSpec Test.ByteString
