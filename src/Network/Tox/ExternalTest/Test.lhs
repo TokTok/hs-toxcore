@@ -23,6 +23,7 @@ The meaning of that data depends on the test name.
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE ConstraintKinds    #-}
 {-# LANGUAGE DefaultSignatures  #-}
+{-# LANGUAGE DeriveFunctor      #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE FlexibleContexts   #-}
 {-# LANGUAGE FlexibleInstances  #-}
@@ -496,7 +497,7 @@ be ignored and reported as successful.
 
   | Skipped
 
-  deriving (Eq, Read, Show, Generic)
+  deriving (Eq, Read, Show, Generic, Functor)
 
 instance Binary   a => Binary   (Result a)
 instance ToJSON   a => ToJSON   (Result a)
@@ -519,12 +520,6 @@ type TestInput a =
   , Arbitrary a, Arbitrary (Deconstruct a)
   , Construct a
   )
-
-
-instance Functor Result where
-  fmap f (Success x  ) = Success $ f x
-  fmap _ (Failure msg) = Failure msg
-  fmap _  Skipped      = Skipped
 
 
 instance Applicative Result where
