@@ -64,22 +64,27 @@ import qualified Test.QuickCheck.Gen                    as Gen
 The test protocol uses a limited and well-defined set of types. Their binary
 encodings are specified here.
 
-\texttt{List}s are encoded as 64 bit length (big endian encoded) followed by
-each element concatenated.
+In the \texttt{BinaryDecode} and \texttt{BinaryEncode} tests, the test name is
+followed by a data format name. The test runner will run both the decode and
+encode tests for each data format listed here.
+
+All lists are encoded as 64 bit length (big endian encoded) followed by each
+element concatenated. List is a parameterised type and as such is not used in
+tests directly.
 
 \begin{code}
 
 data DataFormat a where
 
 \end{code}
-A \texttt{String} is a \texttt{List} of bytes containing the UTF-8 encoded
-code points making up the string.
+\texttt{String}: Strings are lists of bytes containing the UTF-8
+encoded code points making up the string.
 \begin{code}
 
   String     :: DataFormat String
 
 \end{code}
-A \texttt{Byte String} is a \texttt{List} of bytes.
+\texttt{ByteString}: A Byte String is a list of 8 bit bytes.
 \begin{code}
 
   ByteString :: DataFormat [Word8]
@@ -91,7 +96,7 @@ A \texttt{Byte String} is a \texttt{List} of bytes.
   Word32     :: DataFormat Word32
 
 \end{code}
-\texttt{Node Info} is encoded in the
+\texttt{NodeInfo}: Node Info is encoded in the
 \href{#node-info-packed-node-format}{packed node format}.
 \begin{code}
 

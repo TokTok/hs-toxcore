@@ -48,7 +48,7 @@ configure: .configure.stamp
 	cabal configure --enable-tests $(COVERAGE)
 	@touch $@
 
-docs: $(DOCS)
+doc: $(DOCS)
 ../tox-spec/spec.md: src/Network/Tox.lhs $(shell find src -name "*.lhs") ../tox-spec/pandoc.mk .pandoc.stamp
 	echo '% The Tox Reference' > $@
 	echo '' >> $@
