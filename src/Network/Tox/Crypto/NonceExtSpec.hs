@@ -22,7 +22,7 @@ spec =
       Test.run Test.NonceIncrement nonce $
         Test.Success $ Nonce.increment nonce
 
-    it "increments a max nonce to 0" $
+    it "increments a max nonce to 0 (overflow/wraparound)" $
       let nonce = read "\"ffffffffffffffffffffffffffffffffffffffffffffffff\"" in
       Test.run Test.NonceIncrement nonce $
         Test.Success $ Nonce.increment nonce

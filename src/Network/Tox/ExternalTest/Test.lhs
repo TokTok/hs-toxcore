@@ -1,8 +1,8 @@
 \chapter{Test protocol}
 
-The test framework consists of a model implementation and a test runner. A
+The test framework consists of a model implementation and a test runner.  A
 “system under test” (SUT) is a protocol implementation that is tested by the
-test runner. The SUT is presented to the test runner as a standalone executable
+test runner.  The SUT is presented to the test runner as a standalone executable
 that communicates with it using pipes.
 
 The test runner and SUT both implement the binary test protocol.
@@ -61,15 +61,15 @@ import qualified Test.QuickCheck.Gen                    as Gen
 
 \section{Basic data encoding}
 
-The test protocol uses a limited and well-defined set of types. Their binary
+The test protocol uses a limited and well-defined set of types.  Their binary
 encodings are specified here.
 
 In the \texttt{BinaryDecode} and \texttt{BinaryEncode} tests, the test name is
-followed by a data format name. The test runner will run both the decode and
+followed by a data format name.  The test runner will run both the decode and
 encode tests for each data format listed here.
 
 All lists are encoded as 64 bit length (big endian encoded) followed by each
-element concatenated. List is a parameterised type and as such is not used in
+element concatenated.  List is a parameterised type and as such is not used in
 tests directly.
 
 \begin{code}
@@ -84,7 +84,7 @@ encoded code points making up the string.
   String     :: DataFormat String
 
 \end{code}
-\texttt{ByteString}: A Byte String is a list of 8 bit bytes.
+\texttt{ByteString}: A ByteString is a list of 8 bit bytes.
 \begin{code}
 
   ByteString :: DataFormat [Word8]
@@ -150,7 +150,7 @@ deconstruct function is the identity function.
   deconstruct = id
 
 \end{code}
-The types \texttt{Word32}, \texttt{String}, and \texttt{Byte String} have no
+The types \texttt{Word32}, \texttt{String}, and \texttt{ByteString} have no
 special deconstructed type and are just used as-is.
 \begin{code}
 
@@ -177,7 +177,7 @@ values.
 \end{tabular}
 
 The transport protocol flag (\texttt{is_tcp}) is \texttt{False} (0x00) for UDP
-or \texttt{True} (0x01) for TCP. The address family flag is \texttt{False} for
+or \texttt{True} (0x01) for TCP.  The address family flag is \texttt{False} for
 IPv4 or \texttt{True} for IPv6.
 
 \begin{code}
@@ -240,7 +240,7 @@ This test always succeeds, also with no data.
 \end{code}
 \subsection{Test: Skipped Test}
 
-This test must be skipped, also with no data. If the SUT always returns
+This test must be skipped, also with no data.  If the SUT always returns
 Success or Failure, the test fails.
 
 \begin{tabular}{l|l|l}
@@ -266,11 +266,13 @@ Input:
   \texttt{[0,]}     & Bytes         & Binary encoding of value \\
 \end{tabular}
 
-This test is parameterised by a \href{#basic-data-encoding}{data format}. The
-data format is part of the test name string. The test name "BinaryDecode" is
-followed by a space and the data format name (e.g. "Word32", "NodeInfo", ...).
-Thus, the actual length is \texttt{12 + 1 + n} where \texttt{n} is the length
-of the data format name.
+This test is parameterised by a \href{#basic-data-encoding}{data format}.  The
+data format is part of the test name string.  The test name "BinaryDecode" is
+followed by a space and the data format name (e.g. \texttt{"Word32"},
+\texttt{"NodeInfo"}, ...).  Thus, the actual length is \texttt{12 + 1 + n} where
+\texttt{n} is the length of the data format name.  The actual test name is then
+for example \texttt{"BinaryDecode NodeInfo"}.  Every data format listed in the
+binary data encoding section is tested in both BinaryDecode and BinaryEncode.
 
 Not all binary encodings in the Tox protocol are self-delimiting, so an
 explicit length is prefixed to the bytes containing the binary encoding of the
@@ -410,15 +412,15 @@ Input:
   \texttt{[0,]}   & [Public Key]  & Removed node keys \\
 \end{tabular}
 
-The base key is the DHT public key of the simulated node. The added nodes is a
-list of nodes to consecutively add to the K-buckets. The removed nodes is a
+The base key is the DHT public key of the simulated node.  The added nodes is a
+list of nodes to consecutively add to the K-buckets.  The removed nodes is a
 list of keys for which to consecutively remove the nodes from the K-buckets
 after adding all nodes from the added nodes list.
 
 Node Info is encoded with the packet node format.  Recall that all lists are
 prefixed with a 64 bit length encoded in big endian.
 
-Output: The buckets, sorted by bucket index. Empty buckets should not appear in
+Output: The buckets, sorted by bucket index.  Empty buckets should not appear in
 this list.
 \begin{tabular}{l|l|l}
   Length          & Type          & \href{#success-result}{Contents} \\
@@ -446,7 +448,7 @@ deriving instance Show (Test input output)
 
 \section{Result}
 
-The Result type is written to stdout by the SUT. It is a single byte for
+The Result type is written to stdout by the SUT.  It is a single byte for
 Failure (0x00), Success (0x01), and Skipped (0x02), followed by the result
 data.
 
@@ -490,7 +492,7 @@ is returned, depending on the test name in the input.
 \end{code}
 \subsection{Skipped Result}
 
-Tests can be skipped by returning a \texttt{Skipped} message. These tests will
+Tests can be skipped by returning a \texttt{Skipped} message.  These tests will
 be ignored and reported as successful.
 
 \begin{tabular}{l|l|l}
@@ -567,6 +569,6 @@ instance (Arbitrary a) => Arbitrary (Result a) where
 
 \end{code}
 
-All tests are ran with randomly generated inputs. The test runner has a
-\verb!--seed! parameter to set the random seed to a fixed value. This helps
+All tests are ran with randomly generated inputs.  The test runner has a
+\verb!--seed! parameter to set the random seed to a fixed value.  This helps
 make tests reproducible.
