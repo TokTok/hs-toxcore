@@ -241,9 +241,9 @@ removeNode kBuckets publicKey =
  ------------------------------------------------------------------------------}
 
 
-getAllBuckets :: KBuckets -> [(KBucketIndex, [NodeInfo])]
-getAllBuckets KBuckets { buckets } =
-  map (\(index, bucket) -> (index, map entryNode $ Map.elems $ bucketNodes bucket)) (Map.toList buckets)
+getAllNodes :: KBuckets -> [NodeInfo]
+getAllNodes KBuckets { buckets } =
+  concatMap (map entryNode . Map.elems . bucketNodes) (Map.elems buckets)
 
 
 genKBuckets :: PublicKey -> Gen KBuckets

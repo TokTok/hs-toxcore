@@ -13,12 +13,12 @@ import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
 
-testKBucketNodes :: Int -> PublicKey -> [NodeInfo] -> [PublicKey] -> Test.Result [(KBuckets.KBucketIndex, [NodeInfo])]
+testKBucketNodes :: Int -> PublicKey -> [NodeInfo] -> [PublicKey] -> Test.Result [NodeInfo]
 testKBucketNodes _ baseKey nodes removedKeys =
   let
     kBucketsAfterAdd = foldl KBuckets.addNode (KBuckets.empty baseKey) nodes
     kBucketsAfterRemove = foldl KBuckets.removeNode kBucketsAfterAdd removedKeys
-    result = KBuckets.getAllBuckets kBucketsAfterRemove
+    result = KBuckets.getAllNodes kBucketsAfterRemove
   in
   Test.Success result
 

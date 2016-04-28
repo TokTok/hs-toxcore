@@ -19,15 +19,15 @@ import qualified Network.Tox.ExternalTest.Test as Test (DataFormat (..),
 
 externalEncodingSpec :: Test.TestInput fmt => Test.DataFormat fmt -> Spec
 externalEncodingSpec fmt = do
-  it "should handle invalid encodings as failures" $
+  it ("should handle invalid encodings as failures: " ++ show fmt) $
     property $ \plainText ->
       Test.run (Test.BinaryDecode fmt) plainText $ Test.eraseFailure $ Test.deconstruct <$> Text.decode plainText
 
-  it "re-encodes values correctly" $
+  it ("re-encodes values correctly: " ++ show fmt) $
     property $ \expected ->
       Test.run (Test.BinaryDecode fmt) (Text.encode $ Test.construct expected) $ Test.Success expected
 
-  it "encodes values correctly" $
+  it ("encodes values correctly: " ++ show fmt) $
     property $ \expected ->
       Test.run (Test.BinaryEncode fmt) expected $ Test.Success (Test.construct expected)
 

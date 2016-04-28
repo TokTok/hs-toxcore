@@ -1,5 +1,5 @@
 language: haskell
-ghc: 7.8
+ghc: 7.10
 
 cache:
   directories:
@@ -18,7 +18,7 @@ install:
 script:
   - cabal configure --enable-tests --enable-library-coverage
   - cabal build
-  - cabal test
+  - cabal test --test-option=--seed=0
 
 after_script:
 #  - cabal sandbox init

@@ -420,26 +420,16 @@ after adding all nodes from the added nodes list.
 Node Info is encoded with the packet node format.  Recall that all lists are
 prefixed with a 64 bit length encoded in big endian.
 
-Output: The buckets, sorted by bucket index.  Empty buckets should not appear in
-this list.
+Output: A list of all nodes in the K-buckets.
 \begin{tabular}{l|l|l}
   Length          & Type          & \href{#success-result}{Contents} \\
   \hline
-  \texttt{8}      & Int           & Length of bucket list \\
-  \texttt{[0,]}   & [Bucket]      & The bucket list \\
-\end{tabular}
-
-Each bucket is encoded as follows:
-\begin{tabular}{l|l|l}
-  Length          & Type          & Contents \\
-  \hline
-  \texttt{1}      & Int           & Bucket index \\
-  \texttt{8}      & Int           & Length of nodes list \\
-  \texttt{[0,]}   & [Node Info]   & Nodes in the bucket (nodes list) \\
+  \texttt{8}      & Int           & Length of node list \\
+  \texttt{[0,]}   & [Node Info]   & The node list \\
 \end{tabular}
 \begin{code}
 
-  KBucketNodes :: Test (Int, T.PublicKey, [T.NodeInfo], [T.PublicKey]) [(T.KBucketIndex, [T.NodeInfo])]
+  KBucketNodes :: Test (Int, T.PublicKey, [T.NodeInfo], [T.PublicKey]) [T.NodeInfo]
 
 deriving instance Show (Test input output)
 
