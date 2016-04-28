@@ -1,5 +1,5 @@
 language: haskell
-ghc: 7.10
+ghc: 7.8
 
 cache:
   directories:
@@ -10,7 +10,7 @@ before_install:
   - tools/install-libsodium
 
 install:
-  - cabal install hpc-coveralls
+  - cabal install hpc-coveralls pandoc
   - cabal install --only-dependencies --enable-tests --extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib:$LD_LIBRARY_PATH
   - ln -s ../dist/build/test-client/test-client test/test-client

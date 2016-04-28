@@ -35,5 +35,5 @@ externalEncodingSpec fmt = do
 spec :: Spec
 spec = do
   externalEncodingSpec Test.Word32
-  externalEncodingSpec Test.String
+  --externalEncodingSpec Test.String
   externalEncodingSpec Test.ByteString

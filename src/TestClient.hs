@@ -6,6 +6,7 @@
 module Main (main) where
 
 import           Control.Applicative             ((<$>))
+import           Control.Exception               (ErrorCall, catch)
 import           Data.Binary                     (Binary, get, put)
 import           Data.Binary.Get                 (Get, runGetOrFail)
 import           Data.Binary.Put                 (runPut)
@@ -95,7 +96,9 @@ getResult = do
 
 main :: IO ()
 main =
-  LazyByteString.getContents >>= writeResult . runGetOrFail getResult
+  (LazyByteString.getContents >>= writeResult . runGetOrFail getResult)
+  `catch` \e ->
+    LazyByteString.putStr $ encodeFailure $ "Unexpected exception: " ++ show (e :: ErrorCall)
   where
     writeResult = \case
       (Left  (_, _, msg)) ->
