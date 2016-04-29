@@ -59,7 +59,7 @@ doc: $(DOCS)
 		>> $@
 	pandoc $(PANDOC_ARGS) -f $(FORMAT) -t $(FORMAT) $@ -o $@
 	if which mdl; then $(MAKE) -C ../tox-spec check; fi
-	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io; fi
+	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io push; fi
 
 
 pandoc: .pandoc.stamp

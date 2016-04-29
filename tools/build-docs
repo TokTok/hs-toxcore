@@ -1,0 +1,32 @@
+#!/usr/bin/env perl
+
+my $INPUT  = "src/Network/Tox.lhs";
+my $OUTPUT = "tox-spec.md";
+
+my $FORMAT = join "", (
+   "markdown_github",
+   "-hard_line_breaks",
+   "-native_spans",
+   "-raw_html",
+   "+tex_math_dollars",
+   "-tex_math_single_backslash",
+);
+
+my @PANDOC_ARGS = (
+   "--no-tex-ligatures",
+   "--atx-headers",
+   "--columns=79",
+);
+
+my @pandoc = ("pandoc", $INPUT, @PANDOC_ARGS, "-f", "latex+lhs", "-t", $FORMAT);
+my $markdown = `@pandoc`;
+$markdown =~ s/``` sourceCode\n.*?```\n\n//sg;
+
+{
+   open my $fh, '>', $OUTPUT;
+   print $fh "% The Tox Reference\n\n";
+   print $fh $markdown;
+}
+
+system "pandoc", @PANDOC_ARGS, "-f", $FORMAT, "-t", $FORMAT, $OUTPUT, "-o", $OUTPUT;
+system "mdl", "-w", "-s", ".md-style.rb", $OUTPUT;

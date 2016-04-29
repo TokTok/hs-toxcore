@@ -1,13 +1,18 @@
+# Build products.
 /.idea
 /dist
 /out
 /*.iml
 /*.tix
 /*.fifo
+/.*.stamp
 
 /.cabal-sandbox
 /cabal.sandbox.config
-/.*.stamp
 
+# Generated.
+/tox-spec.md
+
+# Temporary files.
 *~
 *.swp
