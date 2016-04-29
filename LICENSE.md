@@ -1,4 +1,6 @@
-This software is licensed under [AGPL-v3.0](licenses/gnu-agpl-v3.0.md).
+Copyright © 2016 The TokTok Project. All Rights Reserved.
 
-Parts of the documentation used in the software are additionally licensed
-under [MIT](licenses/mit.md) and Copyright © 2016 irungentoo.
+The Documentation is the Markdown text extracted from the Software. The
+extracted Documentation is licensed under [MIT](licenses/mit.md).
+
+Contact Iphigenia Df <iphydf@gmail.com> for individual licenses.
