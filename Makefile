@@ -16,6 +16,10 @@ DOCS	:= ../tox-spec/spec.md
 include ../tox-spec/pandoc.mk
 endif
 
+ifneq ($(shell which pdflatex),)
+DOCS	:= spec.pdf
+endif
+
 
 all: check $(DOCS)
 
@@ -60,6 +64,9 @@ doc: $(DOCS)
 	pandoc $(PANDOC_ARGS) -f $(FORMAT) -t $(FORMAT) $@ -o $@
 	if which mdl; then $(MAKE) -C ../tox-spec check; fi
 	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io push; fi
+
+spec.pdf: ../tox-spec/spec.md
+	pandoc $(PANDOC_ARGS) -f $(FORMAT) -t latex $< -o $@
 
 
 pandoc: .pandoc.stamp

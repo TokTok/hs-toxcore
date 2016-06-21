@@ -15,14 +15,16 @@ import           Control.Applicative           ((<$>), (<*>))
 import           Data.Binary                   (Binary)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
+import           Data.Ord                      (comparing)
 import           Data.Word                     (Word8)
+import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
+import           Test.QuickCheck.Gen           (Gen)
+import qualified Test.QuickCheck.Gen           as Gen
+
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
-import           Test.QuickCheck.Gen           (Gen)
-import qualified Test.QuickCheck.Gen           as Gen
 
 
 {-------------------------------------------------------------------------------
@@ -99,10 +101,7 @@ data KBucketEntry = KBucketEntry
   deriving (Eq, Read, Show)
 
 instance Ord KBucketEntry where
-  compare a b =
-    compare
-      (distance a)
-      (distance b)
+  compare = comparing distance
     where
       distance entry =
         Distance.xorDistance
@@ -144,7 +143,7 @@ bucketIndex pk1 pk2 =
 
 \end{code}
 
-\subsection{Updating k-buckets}
+\subsection{Manipulating k-buckets}
 
 Any update or lookup operation on a k-buckets instance that involves a single
 node requires us to first compute the bucket index for that node.  An update
@@ -209,29 +208,39 @@ addNode kBuckets nodeInfo =
 
 
 addNodeToBucket :: Int -> KBucketEntry -> KBucket -> KBucket
-addNodeToBucket maxSize entry bucket =
-  KBucket $ truncateMap maxSize $ Map.insert (entryPublicKey entry) entry $ bucketNodes bucket
-
+addNodeToBucket maxSize entry =
+  KBucket . truncateMap maxSize . Map.insert (entryPublicKey entry) entry . bucketNodes
 
 
 truncateMap :: Ord a => Int -> Map k a -> Map k a
-truncateMap maxSize m =
-  if Map.size m <= maxSize then
-    m
-  else
-    -- Remove the greatest element until the map is small enough again.
-    truncateMap maxSize $ Map.deleteMax m
+truncateMap maxSize m
+  | Map.size m <= maxSize = m
+  | otherwise =
+      -- Remove the greatest element until the map is small enough again.
+      truncateMap maxSize $ Map.deleteMax m
 
 
 removeNodeFromBucket :: PublicKey -> KBucket -> KBucket
-removeNodeFromBucket publicKey bucket =
-  KBucket $ Map.delete publicKey $ bucketNodes bucket
+removeNodeFromBucket publicKey =
+  KBucket . Map.delete publicKey . bucketNodes
 
 
 removeNode :: KBuckets -> PublicKey -> KBuckets
 removeNode kBuckets publicKey =
   updateBucketForKey kBuckets publicKey $ \bucket ->
     removeNodeFromBucket publicKey bucket
+
+\end{code}
+
+Iteration order of a k-buckets instance is in order of distance from the base
+key.  I.e. the first node seen in iteration is the closest, and the last node
+is the furthest away in terms of the distance metric.
+
+\begin{code}
+
+foldNodes :: (a -> NodeInfo -> a) -> a -> KBuckets -> a
+foldNodes f x =
+  foldl f x . concatMap (map entryNode . Map.elems . bucketNodes) . Map.elems . buckets
 
 
 {-------------------------------------------------------------------------------
@@ -242,8 +251,8 @@ removeNode kBuckets publicKey =
 
 
 getAllNodes :: KBuckets -> [NodeInfo]
-getAllNodes KBuckets { buckets } =
-  concatMap (map entryNode . Map.elems . bucketNodes) (Map.elems buckets)
+getAllNodes =
+  concatMap (map entryNode . Map.elems . bucketNodes) . Map.elems . buckets
 
 
 genKBuckets :: PublicKey -> Gen KBuckets
