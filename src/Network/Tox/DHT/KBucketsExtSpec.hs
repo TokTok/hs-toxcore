@@ -16,8 +16,8 @@ import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 testKBucketNodes :: Int -> PublicKey -> [NodeInfo] -> [PublicKey] -> Test.Result [NodeInfo]
 testKBucketNodes _ baseKey nodes removedKeys =
   let
-    kBucketsAfterAdd = foldl KBuckets.addNode (KBuckets.empty baseKey) nodes
-    kBucketsAfterRemove = foldl KBuckets.removeNode kBucketsAfterAdd removedKeys
+    kBucketsAfterAdd = foldl (flip KBuckets.addNode) (KBuckets.empty baseKey) nodes
+    kBucketsAfterRemove = foldl (flip KBuckets.removeNode) kBucketsAfterAdd removedKeys
     result = KBuckets.getAllNodes kBucketsAfterRemove
   in
   Test.Success result

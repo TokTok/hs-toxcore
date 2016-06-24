@@ -40,7 +40,7 @@ spec = do
 
   it "does not accept adding a NodeInfo with the baseKey as publicKey" $
     property $ \kBuckets nodeInfo ->
-      KBuckets.addNode kBuckets nodeInfo { NodeInfo.publicKey = KBuckets.baseKey kBuckets }
+      KBuckets.addNode nodeInfo { NodeInfo.publicKey = KBuckets.baseKey kBuckets } kBuckets
         `shouldBe`
         kBuckets
 
@@ -48,7 +48,7 @@ spec = do
     property $ \baseKey nodeInfo ->
       let
         empty = KBuckets.empty baseKey
-        kBuckets = KBuckets.addNode empty nodeInfo
+        kBuckets = KBuckets.addNode nodeInfo empty
       in
       if baseKey == NodeInfo.publicKey nodeInfo then
         kBuckets `shouldBe` empty
@@ -59,9 +59,9 @@ spec = do
     property $ \baseKey nodeInfo ->
       let
         empty        = KBuckets.empty baseKey
-        afterAdd     = KBuckets.addNode empty nodeInfo
-        afterRemove0 = KBuckets.removeNode afterAdd $ NodeInfo.publicKey nodeInfo
-        afterRemove1 = KBuckets.removeNode afterRemove0 $ NodeInfo.publicKey nodeInfo
+        afterAdd     = KBuckets.addNode nodeInfo empty
+        afterRemove0 = KBuckets.removeNode (NodeInfo.publicKey nodeInfo) afterAdd
+        afterRemove1 = KBuckets.removeNode (NodeInfo.publicKey nodeInfo) afterRemove0
       in
       afterRemove0 `shouldBe` afterRemove1
 
@@ -69,8 +69,8 @@ spec = do
     property $ \baseKey nodeInfo ->
       let
         empty        = KBuckets.empty baseKey
-        afterAdd0    = KBuckets.addNode empty nodeInfo
-        afterAdd1    = KBuckets.addNode afterAdd0 nodeInfo
+        afterAdd0    = KBuckets.addNode nodeInfo empty
+        afterAdd1    = KBuckets.addNode nodeInfo afterAdd0
       in
       afterAdd0 `shouldBe` afterAdd1
 

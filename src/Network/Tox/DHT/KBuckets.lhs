@@ -196,8 +196,8 @@ same effect as removing it once.
 \begin{code}
 
 
-addNode :: KBuckets -> NodeInfo -> KBuckets
-addNode kBuckets nodeInfo =
+addNode :: NodeInfo -> KBuckets -> KBuckets
+addNode nodeInfo kBuckets =
   updateBucketForKey kBuckets (NodeInfo.publicKey nodeInfo) $ \bucket ->
     let
       -- The new entry.
@@ -225,8 +225,8 @@ removeNodeFromBucket publicKey =
   KBucket . Map.delete publicKey . bucketNodes
 
 
-removeNode :: KBuckets -> PublicKey -> KBuckets
-removeNode kBuckets publicKey =
+removeNode :: PublicKey -> KBuckets -> KBuckets
+removeNode publicKey kBuckets =
   updateBucketForKey kBuckets publicKey $ \bucket ->
     removeNodeFromBucket publicKey bucket
 
@@ -257,7 +257,7 @@ getAllNodes =
 
 genKBuckets :: PublicKey -> Gen KBuckets
 genKBuckets publicKey =
-  foldl addNode (empty publicKey) <$> Gen.listOf arbitrary
+  foldl (flip addNode) (empty publicKey) <$> Gen.listOf arbitrary
 
 
 instance Arbitrary KBuckets where

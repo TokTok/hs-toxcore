@@ -70,7 +70,7 @@ empty keyPair =
 A DHT Search Entry contains a k-buckets instance, which serves the same purpose
 as the Close List, but the base key is the searched node's Public Key. Once the
 searched node is found, it is also stored in the Search Entry. Recall that
-k-buckets never contain a Node Info for the base key, so it must be stored
+k-buckets never contain a node info for the base key, so it must be stored
 outside the k-buckets instance.
 
 \begin{code}
@@ -96,31 +96,30 @@ emptySearchEntry =
 
 \subsection{Manipulating the DHT node state}
 
-Adding a search node to the DHT node state creates an empty entry in the Search
+Adding a search key to the DHT node state creates an empty entry in the Search
 Nodes list. If a search entry for the public key already existed, the "add"
 operation has no effect.
 
 \begin{code}
 
-addSearchNode :: DhtState -> PublicKey -> DhtState
-addSearchNode dhtState@DhtState { dhtSearchList } searchKey =
-  let
+addSearchKey :: PublicKey -> DhtState -> DhtState
+addSearchKey searchKey dhtState@DhtState { dhtSearchList } =
+  dhtState { dhtSearchList = updatedSearchList }
+  where
     searchEntry =
       Map.findWithDefault (emptySearchEntry searchKey) searchKey dhtSearchList
     updatedSearchList =
       Map.insert searchKey searchEntry dhtSearchList
-  in
-  dhtState { dhtSearchList = updatedSearchList }
 
 \end{code}
 
-Removing a search node removes its search entry and all associated data
+Removing a search key removes its search entry and all associated data
 structures from memory.
 
 \begin{code}
 
-removeSearchNode :: DhtState -> PublicKey -> DhtState
-removeSearchNode dhtState@DhtState { dhtSearchList } searchKey =
+removeSearchKey :: PublicKey -> DhtState -> DhtState
+removeSearchKey searchKey dhtState@DhtState { dhtSearchList } =
   dhtState { dhtSearchList = Map.delete searchKey dhtSearchList }
 
 \end{code}
@@ -142,62 +141,70 @@ foldNodes =
 
 \end{code}
 
-Adding and removing a node (Node Info) to the state is done by adding or
-removing the node to each k-bucket in the state, i.e. the close list and all
-the k-buckets in the search entries.
+The size of the DHT state is defined to be the number of node infos it
+contains. Node infos contained multiple times, e.g. as part of the close list
+and as part of various search entries, are counted as many times as they
+appear.
+
+Search keys do not directly count towards the state size. The state size is
+relevant to later pruning algorithms that decide when to remove a node info and
+when to request a ping from stale nodes. Search keys, once added, are never
+automatically pruned.
 
 \begin{code}
 
+size :: DhtState -> Int
+size = foldNodes (flip $ const (1 +)) 0
+
+
 updateSearchNode :: PublicKey -> Maybe NodeInfo -> DhtState -> DhtState
 updateSearchNode publicKey nodeInfo dhtState@DhtState { dhtSearchList } =
-  dhtState { dhtSearchList = Map.adjust update publicKey dhtSearchList }
+  dhtState
+    { dhtSearchList = Map.adjust update publicKey dhtSearchList
+    }
   where
     update entry = entry { searchNode = nodeInfo }
 
 
-mapBuckets :: DhtState -> (KBuckets -> KBuckets) -> DhtState
-mapBuckets dhtState@DhtState { dhtCloseList, dhtSearchList } f =
-  let
-    mappedKBuckets   = f dhtCloseList
-    mappedSearchList = Map.map updateSearchBucket dhtSearchList
-  in
+mapBuckets :: (KBuckets -> KBuckets) -> DhtState -> DhtState
+mapBuckets f dhtState@DhtState { dhtCloseList, dhtSearchList } =
   dhtState
-    { dhtCloseList  = mappedKBuckets
-    , dhtSearchList = mappedSearchList
+    { dhtCloseList  = f dhtCloseList
+    , dhtSearchList = Map.map updateSearchBucket dhtSearchList
     }
-
   where
     updateSearchBucket entry@DhtSearchEntry { searchKBuckets } =
       entry { searchKBuckets = f searchKBuckets }
 
 \end{code}
 
-When adding a node to the state, the search entry for the node's public key, if
-it exists, is updated to contain the new Node Info. All k-buckets that already
-contain the node will also be updated. See the k-buckets specification for the
-update algorithm.
+Adding a node info to the state is done by adding the node to each k-bucket in
+the state, i.e. the close list and all the k-buckets in the search entries.
+
+When adding a node info to the state, the search entry for the node's public
+key, if it exists, is updated to contain the new node info. All k-buckets that
+already contain the node info will also be updated. See the k-buckets
+specification for the update algorithm.
 
 \begin{code}
 
-addNode :: DhtState -> NodeInfo -> DhtState
-addNode dhtState nodeInfo =
-  updateSearchNode (NodeInfo.publicKey nodeInfo) (Just nodeInfo) $
-    mapBuckets dhtState $ flip KBuckets.addNode nodeInfo
+addNode :: NodeInfo -> DhtState -> DhtState
+addNode nodeInfo =
+  updateSearchNode (NodeInfo.publicKey nodeInfo) (Just nodeInfo)
+  . mapBuckets (KBuckets.addNode nodeInfo)
 
 \end{code}
 
-Removing a node from the state unsets the Node Info in the search entry, if
-such exists. The search entry itself is not removed. All k-buckets that
-contained the node will no longer contain it after removing the node from the
-state. The only reference to the node's public key will be the search entry, if
-it exists.
+Removing a node info from the state removes it from all k-buckets. If a search
+entry for the removed node's public key existed, the node info in that search
+entry is unset. The search entry itself is not removed.
 
 \begin{code}
 
-removeNode :: DhtState -> PublicKey -> DhtState
-removeNode dhtState publicKey =
-  updateSearchNode publicKey Nothing $
-    mapBuckets dhtState $ flip KBuckets.removeNode publicKey
+removeNode :: PublicKey -> DhtState -> DhtState
+removeNode publicKey =
+  updateSearchNode publicKey Nothing
+  . mapBuckets (KBuckets.removeNode publicKey)
 
 
 {-------------------------------------------------------------------------------
