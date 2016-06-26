@@ -26,6 +26,7 @@ import qualified Data.Binary.Bits.Put      as Bits
 import qualified Data.Binary.Get           as Bytes
 import qualified Data.Binary.Put           as Bytes
 import           Data.Bits                 (shiftL, shiftR, (.&.), (.|.))
+import qualified Data.IP                   as IP
 import           Data.List                 as List
 import           Data.List.Split           as List
 import           Data.Maybe                (listToMaybe, mapMaybe)
@@ -55,80 +56,15 @@ instance ToJSON HostAddress
 instance FromJSON HostAddress
 
 
-word8sToIPv4 :: (Word8, Word8, Word8, Word8) -> Socket.HostAddress
-word8sToIPv4 (byte0, byte1, byte2, byte3) =
-  let
-    bytes = zip [0..] $ map (fromInteger . toInteger) [byte0, byte1, byte2, byte3]
-    shifted = map (\(index, byte) -> byte `shiftL` (8 * index)) bytes
-    word = foldl (.|.) 0 shifted
-  in
-  word
-
-
-ipv4ToWord8s :: Socket.HostAddress -> (Word8, Word8, Word8, Word8)
-ipv4ToWord8s addr =
-  ( toWord8   (addr .&. 0x000000ff)
-  , toWord8 $ (addr .&. 0x0000ff00) `shiftR` 8
-  , toWord8 $ (addr .&. 0x00ff0000) `shiftR` (8 * 2)
-  , toWord8 $ (addr .&. 0xff000000) `shiftR` (8 * 3)
-  )
-  where
-    toWord8 = fromInteger . toInteger
-
-
-word16sToIPv6 :: (Word16, Word16, Word16, Word16, Word16, Word16, Word16, Word16) -> Socket.HostAddress6
-word16sToIPv6 (word0, word1, word2, word3, word4, word5, word6, word7) =
-  ( pairToWord32 (word0, word1)
-  , pairToWord32 (word2, word3)
-  , pairToWord32 (word4, word5)
-  , pairToWord32 (word6, word7)
-  )
-
-  where
-    pairToWord32 (lo, hi) = toWord32 lo .|. (toWord32 hi `shiftL` 16)
-    toWord32 = fromInteger . toInteger
-
-
-ipv6ToWord16s :: Socket.HostAddress6 -> (Word16, Word16, Word16, Word16, Word16, Word16, Word16, Word16)
-ipv6ToWord16s (addr0, addr1, addr2, addr3) =
-  ( toWord16   (addr0 .&. 0x0000ffff)
-  , toWord16 $ (addr0 .&. 0xffff0000) `shiftR` 16
-  , toWord16   (addr1 .&. 0x0000ffff)
-  , toWord16 $ (addr1 .&. 0xffff0000) `shiftR` 16
-  , toWord16   (addr2 .&. 0x0000ffff)
-  , toWord16 $ (addr2 .&. 0xffff0000) `shiftR` 16
-  , toWord16   (addr3 .&. 0x0000ffff)
-  , toWord16 $ (addr3 .&. 0xffff0000) `shiftR` 16
-  )
-  where
-    toWord16 = fromInteger . toInteger
-
-
 instance Show HostAddress where
-  show (IPv4 addr) =
-    let (byte0, byte1, byte2, byte3) = ipv4ToWord8s addr in
-    show $ List.intercalate "." $ map show [byte0, byte1, byte2, byte3]
-
-  show (IPv6 addr) =
-    let (word0, word1, word2, word3, word4, word5, word6, word7) = ipv6ToWord16s addr in
-    show $ List.intercalate ":" $ map (`showHex` "") [word0, word1, word2, word3, word4, word5, word6, word7]
+  show (IPv4 addr) = show $ IP.fromHostAddress addr
+  show (IPv6 addr) = show $ IP.fromHostAddress6 addr
 
 
 instance Read HostAddress where
-  readPrec = do
-    text <- readPrec
-    if ':' `elem` text then
-      case mapMaybe (listToMaybe . map fst . readHex) $ List.splitOn ":" text of
-        [word0, word1, word2, word3, word4, word5, word6, word7] ->
-          return $ IPv6 $ word16sToIPv6 (word0, word1, word2, word3, word4, word5, word6, word7)
-        _ ->
-          fail $ "Could not parse as IP address: " ++ text
-    else
-      case map read $ List.splitOn "." text of
-        [byte0, byte1, byte2, byte3] ->
-          return $ IPv4 $ word8sToIPv4 (byte0, byte1, byte2, byte3)
-        _ ->
-          fail $ "Could not parse as IP address: " ++ text
+  readPrec = flip fmap readPrec $ \case
+    IP.IPv4 ipv4 -> IPv4 $ IP.toHostAddress ipv4
+    IP.IPv6 ipv6 -> IPv6 $ IP.toHostAddress6 ipv6
 
 
 getHostAddressGetter :: Bits.BitGet (Bytes.Get HostAddress)

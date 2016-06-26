@@ -7,6 +7,7 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Data.Proxy                    (Proxy (..))
+import           Text.Groom                    (groom)
 
 import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
@@ -74,13 +75,23 @@ spec = do
         in
         afterAdd1 `shouldBe` afterAdd2
 
-    it "and adding a node info for it will contain the node info twice" $
+    it "and adding a different node info will make the state contain the node info twice" $
+      property $ \dhtState searchKey nodeInfo ->
+        let
+          afterAddSearchKey = DhtState.addSearchKey searchKey dhtState
+          afterAddNode = DhtState.addNode nodeInfo afterAddSearchKey
+        in
+        DhtState.size afterAddNode `shouldBe`
+          if searchKey == NodeInfo.publicKey nodeInfo
+          then 1
+          else 2
+
+    it "and adding a node info for it will not add it to the search entry's k-buckets" $
       property $ \dhtState nodeInfo ->
         let
           afterAddSearchKey =
             DhtState.addSearchKey (NodeInfo.publicKey nodeInfo) dhtState
           afterAddNode =
             DhtState.addNode nodeInfo afterAddSearchKey
-        in do
-        print afterAddNode
-        DhtState.size afterAddNode `shouldBe` 2
+        in
+        DhtState.size afterAddNode `shouldBe` 1

@@ -186,6 +186,10 @@ key, if it exists, is updated to contain the new node info. All k-buckets that
 already contain the node info will also be updated. See the k-buckets
 specification for the update algorithm.
 
+Recall that a k-buckets instance will never contain the node info for its base
+key. Thus, when adding a node info for which a search entry exists, that node
+info will not be added to the search entry's k-buckets instance.
+
 \begin{code}
 
 addNode :: NodeInfo -> DhtState -> DhtState

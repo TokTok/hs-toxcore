@@ -50,10 +50,9 @@ spec = do
         empty = KBuckets.empty baseKey
         kBuckets = KBuckets.addNode nodeInfo empty
       in
-      if baseKey == NodeInfo.publicKey nodeInfo then
-        kBuckets `shouldBe` empty
-      else
-        kBuckets `shouldNotBe` empty
+      if baseKey == NodeInfo.publicKey nodeInfo
+      then kBuckets `shouldBe` empty
+      else kBuckets `shouldNotBe` empty
 
   it "removing a node twice has no effect" $
     property $ \baseKey nodeInfo ->
@@ -103,10 +102,9 @@ spec = do
           d = Distance.xorDistance k1
           i = KBuckets.bucketIndex k1
         in
-        if d k2 <= d k3 then
-          i k2 >= i k3
-        else
-          i k2 <= i k3
+        if d k2 <= d k3
+        then i k2 >= i k3
+        else i k2 <= i k3
 
     it "produces indices 0..255 for each bit set in the key" $
       let

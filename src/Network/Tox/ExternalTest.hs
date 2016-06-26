@@ -28,6 +28,7 @@ import qualified System.IO                     as IO (Handle, hClose, hFlush,
 import           System.Process                (ProcessHandle, StdStream (..),
                                                 createProcess, proc, std_err,
                                                 std_in, std_out, waitForProcess)
+import           Text.Printf                   (printf)
 
 
 testDirectory :: String
@@ -40,10 +41,13 @@ getResult bytes =
   where
     finish = \case
       Binary.Done rest offset result ->
-        if ByteString.null rest then
-          Right result
-        else
-          Left $ "Unexpected extra data after result payload (" ++ show offset ++ " bytes, parsed as `" ++ show result ++ "´): " ++ show (Base16.encode rest)
+        if ByteString.null rest
+        then Right result
+        else Left $
+          printf "Unexpected extra data after result payload (%d bytes, parsed as `%s´): %s"
+            offset
+            (show result)
+            (show $ Base16.encode rest)
       Binary.Partial next ->
         finish $ next Nothing
       Binary.Fail _ _ msg ->

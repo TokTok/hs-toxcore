@@ -167,10 +167,9 @@ updateBucketForIndex kBuckets@KBuckets { buckets } index f =
     updatedBucket = f $ Map.findWithDefault emptyBucket index buckets
     -- Replace old bucket with updated bucket or delete if empty.
     updatedBuckets =
-      if bucketIsEmpty updatedBucket then
-        Map.delete index buckets
-      else
-        Map.insert index updatedBucket buckets
+      if bucketIsEmpty updatedBucket
+      then Map.delete index buckets
+      else Map.insert index updatedBucket buckets
   in
   kBuckets { buckets = updatedBuckets }
 

@@ -36,7 +36,9 @@ library
     , bytestring
     , containers
     , directory
+    , groom
     , integer-gmp
+    , iproute
     , network
     , process
     , saltine
@@ -65,7 +67,9 @@ executable test-client
     , bytestring
     , containers
     , directory
+    , groom
     , integer-gmp
+    , iproute
     , network
     , process
     , saltine
@@ -94,7 +98,9 @@ test-suite test-tox
     , bytestring
     , containers
     , directory
+    , groom
     , integer-gmp
+    , iproute
     , network
     , process
     , saltine
