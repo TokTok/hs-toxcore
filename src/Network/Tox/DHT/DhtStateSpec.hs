@@ -6,9 +6,11 @@ import           Debug.Trace
 import           Test.Hspec
 import           Test.QuickCheck
 
+import           Control.Monad                 (unless)
 import           Data.Proxy                    (Proxy (..))
 import           Text.Groom                    (groom)
 
+import qualified Network.Tox.Crypto.KeyPair    as KeyPair
 import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
@@ -20,13 +22,33 @@ spec :: Spec
 spec = do
   readShowSpec (Proxy :: Proxy DhtState)
 
-  describe "adding a node" $ do
+  it "the state can never contain itself" $
+    property $ \keyPair nodeInfo ->
+      let
+        dhtState = DhtState.empty keyPair
+        afterAdd = DhtState.addNode
+          nodeInfo { NodeInfo.publicKey = KeyPair.publicKey keyPair }
+          dhtState
+      in
+      afterAdd `shouldBe` dhtState
+
+  it "the node can never search for itself" $
+    property $ \dhtState ->
+      let
+        afterAdd = DhtState.addSearchKey
+          (KeyPair.publicKey $ DhtState.dhtKeyPair dhtState)
+          dhtState
+      in
+      afterAdd `shouldBe` dhtState
+
+  describe "adding a node that was not yet contained" $ do
     it "should result in a different state" $
       property $ \dhtState nodeInfo ->
         let
           afterAdd = DhtState.addNode nodeInfo dhtState
         in
-        afterAdd `shouldNotBe` dhtState
+        unless (DhtState.containsNode (NodeInfo.publicKey nodeInfo) dhtState) $
+          afterAdd `shouldNotBe` dhtState
 
     it "and removing it yields the same state" $
       property $ \dhtState nodeInfo ->
@@ -34,8 +56,18 @@ spec = do
           afterAdd    = DhtState.addNode nodeInfo dhtState
           afterRemove = DhtState.removeNode (NodeInfo.publicKey nodeInfo) afterAdd
         in
-        afterRemove `shouldBe` dhtState
+        unless (DhtState.containsNode (NodeInfo.publicKey nodeInfo) dhtState) $
+          afterRemove `shouldBe` dhtState
 
+    it "should make the state size increase by 1" $
+      property $ \dhtState nodeInfo ->
+        let
+          afterAdd = DhtState.addNode nodeInfo dhtState
+        in
+        unless (DhtState.containsNode (NodeInfo.publicKey nodeInfo) dhtState) $
+          DhtState.size afterAdd `shouldBe` DhtState.size dhtState
+
+  describe "adding a node" $
     it "and adding it again does not change the state twice" $
       property $ \dhtState nodeInfo ->
         let
@@ -43,13 +75,6 @@ spec = do
           afterAdd2 = DhtState.addNode nodeInfo afterAdd1
         in
         afterAdd1 `shouldBe` afterAdd2
-
-    it "should make the state size equal to 1" $
-      property $ \dhtState nodeInfo ->
-        let
-          afterAdd = DhtState.addNode nodeInfo dhtState
-        in
-        DhtState.size afterAdd `shouldBe` 1
 
   describe "adding a search node" $ do
     it "should result in a different state" $
@@ -75,23 +100,13 @@ spec = do
         in
         afterAdd1 `shouldBe` afterAdd2
 
-    it "and adding a different node info will make the state contain the node info twice" $
-      property $ \dhtState searchKey nodeInfo ->
-        let
-          afterAddSearchKey = DhtState.addSearchKey searchKey dhtState
-          afterAddNode = DhtState.addNode nodeInfo afterAddSearchKey
-        in
-        DhtState.size afterAddNode `shouldBe`
-          if searchKey == NodeInfo.publicKey nodeInfo
-          then 1
-          else 2
-
     it "and adding a node info for it will not add it to the search entry's k-buckets" $
       property $ \dhtState nodeInfo ->
         let
-          afterAddSearchKey =
-            DhtState.addSearchKey (NodeInfo.publicKey nodeInfo) dhtState
-          afterAddNode =
-            DhtState.addNode nodeInfo afterAddSearchKey
+          afterAddSearchKey = DhtState.addSearchKey
+            (NodeInfo.publicKey nodeInfo)
+            dhtState
         in
-        DhtState.size afterAddNode `shouldBe` 1
+        DhtState.size (DhtState.addNode nodeInfo afterAddSearchKey)
+        `shouldBe`
+        DhtState.size (DhtState.addNode nodeInfo dhtState)

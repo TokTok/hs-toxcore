@@ -62,7 +62,7 @@ instance Show HostAddress where
 
 
 instance Read HostAddress where
-  readPrec = flip fmap readPrec $ \case
+  readPrec = (<$> readPrec) $ \case
     IP.IPv4 ipv4 -> IPv4 $ IP.toHostAddress ipv4
     IP.IPv6 ipv6 -> IPv6 $ IP.toHostAddress6 ipv6
 

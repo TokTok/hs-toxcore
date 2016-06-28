@@ -36,7 +36,7 @@ spec = do
     property $ \kBuckets ->
       case map length $ getAllBuckets kBuckets of
         []    -> return ()
-        sizes -> maximum sizes `shouldSatisfy` (KBuckets.bucketSize kBuckets >=)
+        sizes -> maximum sizes `shouldSatisfy` (<= KBuckets.bucketSize kBuckets)
 
   it "does not accept adding a NodeInfo with the baseKey as publicKey" $
     property $ \kBuckets nodeInfo ->

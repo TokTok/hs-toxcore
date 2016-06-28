@@ -5,10 +5,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Network.Tox.DHT.DhtState where
 
-import           Control.Applicative           ((<$>), (<*>))
+import           Control.Applicative           ((<$>), (<*>), (<|>))
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
-import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
+import qualified Data.Maybe                    as Maybe
+import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
 import qualified Test.QuickCheck.Gen           as Gen
 
 import           Network.Tox.Crypto.Key        (PublicKey)
@@ -122,6 +123,11 @@ removeSearchKey :: PublicKey -> DhtState -> DhtState
 removeSearchKey searchKey dhtState@DhtState { dhtSearchList } =
   dhtState { dhtSearchList = Map.delete searchKey dhtSearchList }
 
+
+containsSearchKey :: PublicKey -> DhtState -> Bool
+containsSearchKey searchKey =
+  Map.member searchKey . dhtSearchList
+
 \end{code}
 
 The iteration order over the DHT state is to first process the Close List
@@ -155,6 +161,18 @@ automatically pruned.
 
 size :: DhtState -> Int
 size = foldNodes (flip $ const (1 +)) 0
+
+\end{code}
+
+The bucket count of the state is the number of k-buckets instances. An empty
+state contains one k-buckets instance. For each added search key, it contains
+one additional k-buckets instance. Thus, the number of search keys is one less
+than the bucket count.
+
+\begin{code}
+
+bucketCount :: DhtState -> Int
+bucketCount = foldBuckets (flip $ const (1 +)) 0
 
 
 updateSearchNode :: PublicKey -> Maybe NodeInfo -> DhtState -> DhtState
@@ -211,6 +229,11 @@ removeNode publicKey =
   . mapBuckets (KBuckets.removeNode publicKey)
 
 
+containsNode :: PublicKey -> DhtState -> Bool
+containsNode publicKey =
+  foldNodes (\a x -> a || NodeInfo.publicKey x == publicKey) False
+
+
 {-------------------------------------------------------------------------------
  -
  - :: Tests.
@@ -220,6 +243,20 @@ removeNode publicKey =
 
 instance Arbitrary DhtState where
   arbitrary =
-    empty <$> arbitrary
+    initialise <$> arbitrary <*> arbitrary <*> arbitrary
+    where
+      initialise :: KeyPair -> [NodeInfo] -> [PublicKey] -> DhtState
+      initialise kp nis =
+        foldl (flip addSearchKey) (foldl (flip addNode) (empty kp) nis)
+
+  shrink dhtState =
+    Maybe.maybeToList shrunkNode ++ Maybe.maybeToList shrunkSearchKey
+    where
+      -- Remove the first node we can find in the state.
+      shrunkNode = do
+        firstPK <- NodeInfo.publicKey <$> foldNodes (\a x -> a <|> Just x) Nothing dhtState
+        return $ removeNode firstPK dhtState
+
+      shrunkSearchKey = Nothing
 
 \end{code}
