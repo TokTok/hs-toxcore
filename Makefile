@@ -44,6 +44,7 @@ clean:
 
 build: .build.stamp
 .build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp
+	rm -f $(wildcard *.tix)
 	$(CABAL) build
 	@touch $@
 

@@ -3,12 +3,12 @@
 module Network.Tox.Crypto.CombinedKeySpec where
 
 import           Control.Monad.IO.Class         (liftIO)
+import           Network.Tox.RPC                (runClient)
 import           Test.Hspec
 import           Test.QuickCheck
 
 import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
 import           Network.Tox.Crypto.KeyPair     (KeyPair (..))
-import           Network.Tox.RPC                (runClient)
 
 
 spec :: Spec

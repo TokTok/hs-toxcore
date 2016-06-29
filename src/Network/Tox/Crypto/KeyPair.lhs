@@ -13,7 +13,8 @@ standard group element and the Secret Key.  See the
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE Trustworthy    #-}
 module Network.Tox.Crypto.KeyPair where
 
 import           Control.Applicative            ((<$>))
@@ -22,6 +23,7 @@ import qualified Crypto.Saltine.Core.Box        as Sodium (newKeypair)
 import qualified Crypto.Saltine.Core.ScalarMult as Sodium (multBase)
 import           Network.Tox.Crypto.Key         (Key (..))
 import qualified Network.Tox.Crypto.Key         as Key
+import qualified Network.Tox.RPC                as RPC
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 
@@ -39,10 +41,28 @@ data KeyPair = KeyPair
   deriving (Eq, Show, Read)
 
 
+instance RPC.MessagePack KeyPair where
+  toObject KeyPair { secretKey, publicKey } = RPC.toObject
+    ( ("secretKey", secretKey)
+    , ("publicKey", publicKey)
+    )
+
+  fromObject obj = case RPC.fromObject obj of
+    Just ( ("secretKey", secretKey)
+         , ("publicKey", publicKey)
+         ) ->
+      Just $ KeyPair secretKey publicKey
+    _ -> Nothing
+
+
 newKeyPair :: IO KeyPair
 newKeyPair = do
   (sk, pk) <- Sodium.newKeypair
   return $ KeyPair (Key sk) (Key pk)
+
+newKeyPairC :: RPC.Client KeyPair
+newKeyPairS :: RPC.Method IO
+(newKeyPairC, newKeyPairS) = RPC.stubs "KeyPair.newKeyPair" RPC.ioFun0 newKeyPair
 
 
 fromSecretKey :: Key.SecretKey -> KeyPair
@@ -55,6 +75,10 @@ fromSecretKey sk =
     Just pk = Sodium.decode pkBytes
   in
   KeyPair sk pk
+
+fromSecretKeyC :: Key.SecretKey -> RPC.Client KeyPair
+fromSecretKeyS :: RPC.Method IO
+(fromSecretKeyC, fromSecretKeyS) = RPC.stubs "KeyPair.fromSecretKey" RPC.fun1 fromSecretKey
 
 
 {-------------------------------------------------------------------------------

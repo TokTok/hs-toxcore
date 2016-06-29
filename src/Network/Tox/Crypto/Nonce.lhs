@@ -23,10 +23,15 @@ import qualified Crypto.Saltine.Class    as Sodium (decode, encode, nudge)
 import qualified Crypto.Saltine.Core.Box as Sodium (newNonce)
 import qualified Data.ByteString         as ByteString
 import           Network.Tox.Crypto.Key
+import qualified Network.Tox.RPC         as RPC
 
 
 newNonce :: IO Nonce
 newNonce = Key <$> Sodium.newNonce
+
+newNonceC :: RPC.Client Nonce
+newNonceS :: RPC.Method IO
+(newNonceC, newNonceS) = RPC.stubs "KeyPair.newNonce" RPC.ioFun0 newNonce
 
 
 reverseNonce :: Nonce -> Nonce
@@ -43,4 +48,9 @@ nudge =
 increment :: Nonce -> Nonce
 increment =
   reverseNonce . nudge . reverseNonce
+
+incrementC :: Nonce -> RPC.Client Nonce
+incrementS :: RPC.Method IO
+(incrementC, incrementS) = RPC.stubs "KeyPair.increment" RPC.fun1 increment
+
 \end{code}

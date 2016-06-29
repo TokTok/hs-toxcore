@@ -2,6 +2,8 @@
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.KeyPairSpec where
 
+import           Control.Monad.IO.Class         (liftIO)
+import           Network.Tox.RPC                (runClient)
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -21,41 +23,41 @@ spec = do
 
   describe "newKeyPair" $ do
 
-    it "generates different key pairs on subsequent calls" $ do
-      kp1 <- KeyPair.newKeyPair
-      kp2 <- KeyPair.newKeyPair
-      kp1 `shouldNotBe` kp2
+    it "generates different key pairs on subsequent calls" $ runClient $ do
+      kp1 <- KeyPair.newKeyPairC
+      kp2 <- KeyPair.newKeyPairC
+      liftIO $ kp1 `shouldNotBe` kp2
 
-    it "generates different secret keys on subsequent calls" $ do
-      KeyPair sk1 _ <- KeyPair.newKeyPair
-      KeyPair sk2 _ <- KeyPair.newKeyPair
-      sk1 `shouldNotBe` sk2
+    it "generates different secret keys on subsequent calls" $ runClient $ do
+      KeyPair sk1 _ <- KeyPair.newKeyPairC
+      KeyPair sk2 _ <- KeyPair.newKeyPairC
+      liftIO $ sk1 `shouldNotBe` sk2
 
-    it "generates different public keys on subsequent calls" $ do
-      KeyPair _ pk1 <- KeyPair.newKeyPair
-      KeyPair _ pk2 <- KeyPair.newKeyPair
-      pk1 `shouldNotBe` pk2
+    it "generates different public keys on subsequent calls" $ runClient $ do
+      KeyPair _ pk1 <- KeyPair.newKeyPairC
+      KeyPair _ pk2 <- KeyPair.newKeyPairC
+      liftIO $ pk1 `shouldNotBe` pk2
 
-    it "generates a public key that is different from the secret key" $ do
-      KeyPair (Key.Key sk) (Key.Key pk) <- KeyPair.newKeyPair
-      Sodium.encode pk `shouldNotBe` Sodium.encode sk
+    it "generates a public key that is different from the secret key" $ runClient $ do
+      KeyPair (Key.Key sk) (Key.Key pk) <- KeyPair.newKeyPairC
+      liftIO $ Sodium.encode pk `shouldNotBe` Sodium.encode sk
 
   describe "fromSecretKey" $ do
 
     it "doesn't modify the secret key" $
-      property $ \sk ->
-        let KeyPair sk' _ = KeyPair.fromSecretKey sk in
-        sk' `shouldBe` sk
+      property $ \sk -> runClient $ do
+        KeyPair sk' _ <- KeyPair.fromSecretKeyC sk
+        liftIO $ sk' `shouldBe` sk
 
     it "never computes a public key that is equal to the secret key" $
-      property $ \sk ->
-        let KeyPair _ (Key.Key pk) = KeyPair.fromSecretKey sk in
-        Sodium.encode pk `shouldNotBe` Sodium.encode sk
+      property $ \sk -> runClient $ do
+        KeyPair _ (Key.Key pk) <- KeyPair.fromSecretKeyC sk
+        liftIO $ Sodium.encode pk `shouldNotBe` Sodium.encode sk
 
     it "computes a usable public key from an invalid secret key" $
-      property $ \plainText nonce ->
-        let
-          KeyPair sk pk = KeyPair.fromSecretKey $ read "\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\""
-          ck = CombinedKey.precompute sk pk
-        in
-        Box.decrypt ck nonce (Box.encrypt ck nonce plainText) `shouldBe` Just plainText
+      property $ \plainText nonce -> runClient $ do
+        KeyPair sk pk <- KeyPair.fromSecretKeyC $ read "\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\""
+        ck <- CombinedKey.precomputeC sk pk
+        encrypted <- Box.encryptC ck nonce plainText
+        decrypted <- Box.decryptC ck nonce encrypted
+        liftIO $ decrypted `shouldBe` Just plainText
