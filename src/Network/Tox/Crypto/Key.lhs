@@ -7,6 +7,7 @@
 module Network.Tox.Crypto.Key where
 
 import           Control.Applicative               ((<$>))
+import           Control.Monad                     ((>=>))
 import qualified Crypto.Saltine.Class              as Sodium (IsEncoding,
                                                               decode, encode)
 import qualified Crypto.Saltine.Core.Box           as Sodium (CombinedKey,
@@ -26,6 +27,7 @@ import qualified Data.ByteString                   as ByteString
 import qualified Data.ByteString.Base16            as Base16
 import qualified Data.ByteString.Char8             as Char8
 import qualified Data.ByteString.Lazy              as LazyByteString
+import           Data.MessagePack.Object           (MessagePack (..))
 import           Data.Proxy                        (Proxy (..))
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Arbitrary         as Arbitrary
@@ -137,6 +139,10 @@ instance CryptoNumber a => ToJSON (Key a) where
 
 instance CryptoNumber a => FromJSON (Key a) where
   parseJSON value = fst . Base16.decode . Char8.pack <$> Aeson.parseJSON value >>= decode
+
+instance CryptoNumber a => MessagePack (Key a) where
+  toObject = toObject . Sodium.encode
+  fromObject = fromObject >=> Sodium.decode
 
 
 {-------------------------------------------------------------------------------

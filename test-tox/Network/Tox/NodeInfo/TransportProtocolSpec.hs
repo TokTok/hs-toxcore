@@ -17,4 +17,4 @@ spec = do
   binarySpec (Proxy :: Proxy TransportProtocol)
   readShowSpec (Proxy :: Proxy TransportProtocol)
 
-  bitEncodingSpec (Proxy :: Proxy TransportProtocol)
+  --bitEncodingSpec (Proxy :: Proxy TransportProtocol)

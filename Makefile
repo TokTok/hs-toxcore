@@ -9,7 +9,9 @@ else
 COVERAGE = --enable-library-coverage
 endif
 
-SOURCES	:= $(shell find src -name "*.*hs")
+CABAL := cabal --require-sandbox
+
+SOURCES	:= $(shell find src test-server test-tox -name "*.*hs")
 
 ifneq ($(wildcard ../tox-spec/pandoc.mk),)
 DOCS	:= ../tox-spec/spec.md
@@ -21,31 +23,48 @@ all: check $(DOCS)
 
 
 check: .build.stamp $(wildcard test/*)
-	cabal test | grep -v '^Writing: '
+	dist/build/test-server/test-server & echo $$! > .server.pid
+	$(CABAL) test | grep -v '^Writing: '
+	kill `cat .server.pid`
+	rm .server.pid
 
 sut-check: .build.stamp
 	ln -sf ../dist/build/test-client/test-client test/test-client
-	cabal test | grep -v '^Writing: '
+	$(CABAL) test | grep -v '^Writing: '
 	rm test/test-client
 
 repl: .build.stamp
-	cabal repl
+	$(CABAL) repl
 
 clean:
-	cabal clean
-	rm -f $(wildcard .*.stamp)
+	$(CABAL) clean
+	-test -f .server.pid && kill `cat .server.pid`
+	rm -f $(wildcard .*.stamp) .server.pid
 
 
 build: .build.stamp
 .build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp
-	cabal build
+	$(CABAL) build
 	@touch $@
 
 configure: .configure.stamp
-.configure.stamp: .libsodium.stamp
-	cabal install --only-dependencies --enable-tests --extra-include-dirs=$(HOME)/.cabal/extra-dist/include --extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
-	cabal install stylish-haskell hlint
-	cabal configure --enable-tests $(COVERAGE)
+.configure.stamp: .libsodium.stamp .msgpack.stamp
+	$(CABAL) configure --enable-tests $(COVERAGE)
+	@touch $@
+
+.msgpack.stamp: .sandbox.stamp
+	git clone https://github.com/iphydf/msgpack-haskell
+	$(CABAL) install					\
+		msgpack-haskell/msgpack/msgpack.cabal		\
+		msgpack-haskell/msgpack-rpc/msgpack-rpc.cabal
+	rm -rf msgpack-haskell
+	@touch $@
+
+.sandbox.stamp:
+	cabal update
+	cabal sandbox init
+	cabal --ignore-sandbox install stylish-haskell hlint
+	$(CABAL) install --only-dependencies --enable-tests --extra-include-dirs=$(HOME)/.cabal/extra-dist/include --extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 	@touch $@
 
 doc: $(DOCS)
@@ -63,7 +82,7 @@ doc: $(DOCS)
 
 pandoc: .pandoc.stamp
 .pandoc.stamp:
-	cabal install pandoc
+	cabal --ignore-sandbox install pandoc
 	@touch $@
 
 libsodium: .libsodium.stamp

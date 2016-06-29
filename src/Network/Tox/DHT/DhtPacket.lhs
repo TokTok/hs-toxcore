@@ -54,18 +54,18 @@ import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
  ------------------------------------------------------------------------------}
 
 
-data DhtPacket payload = DhtPacket
+data DhtPacket = DhtPacket
   { senderPublicKey  :: PublicKey
   , encryptionNonce  :: Nonce
-  , encryptedPayload :: CipherText payload
+  , encryptedPayload :: CipherText
   }
   deriving (Eq, Read, Show, Generic)
 
-instance ToJSON (DhtPacket payload)
-instance FromJSON (DhtPacket payload)
+instance ToJSON DhtPacket
+instance FromJSON DhtPacket
 
 
-instance Binary (DhtPacket payload) where
+instance Binary DhtPacket where
   put DhtPacket { senderPublicKey, encryptionNonce, encryptedPayload = CipherText bytes } = do
     put senderPublicKey
     put encryptionNonce
@@ -75,25 +75,25 @@ instance Binary (DhtPacket payload) where
     DhtPacket <$> get <*> get <*> (CipherText . LazyByteString.toStrict <$> getRemainingLazyByteString)
 
 
-encrypt :: KeyPair -> PublicKey -> Nonce -> PlainText payload -> DhtPacket payload
+encrypt :: KeyPair -> PublicKey -> Nonce -> PlainText -> DhtPacket
 encrypt (KeyPair senderSecretKey senderPublicKey') receiverPublicKey nonce plainText =
   DhtPacket senderPublicKey' nonce $ Box.encrypt combinedKey nonce plainText
   where combinedKey = CombinedKey.precompute senderSecretKey receiverPublicKey
 
 
-encode :: Binary payload => KeyPair -> PublicKey -> Nonce -> payload -> DhtPacket payload
+encode :: Binary payload => KeyPair -> PublicKey -> Nonce -> payload -> DhtPacket
 encode keyPair receiverPublicKey nonce payload =
   encrypt keyPair receiverPublicKey nonce
     $ PlainText $ LazyByteString.toStrict $ runPut $ put payload
 
 
-decrypt :: KeyPair -> DhtPacket payload -> Maybe (PlainText payload)
+decrypt :: KeyPair -> DhtPacket -> Maybe PlainText
 decrypt (KeyPair receiverSecretKey _) DhtPacket { senderPublicKey, encryptionNonce, encryptedPayload } =
   Box.decrypt combinedKey encryptionNonce encryptedPayload
   where combinedKey = CombinedKey.precompute receiverSecretKey senderPublicKey
 
 
-decode :: Binary payload => KeyPair -> DhtPacket payload -> Maybe payload
+decode :: Binary payload => KeyPair -> DhtPacket -> Maybe payload
 decode keyPair packet = do
   PlainText bytes <- decrypt keyPair packet
   case pushChunk (runGetIncremental get) bytes of
@@ -109,7 +109,7 @@ decode keyPair packet = do
  ------------------------------------------------------------------------------}
 
 
-instance Arbitrary (DhtPacket payload) where
+instance Arbitrary DhtPacket where
   arbitrary =
     DhtPacket <$> arbitrary <*> arbitrary <*> arbitrary
 \end{code}

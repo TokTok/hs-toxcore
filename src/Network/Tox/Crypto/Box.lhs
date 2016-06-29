@@ -7,8 +7,10 @@ module Network.Tox.Crypto.Box where
 
 import           Control.Applicative     ((<$>))
 import qualified Crypto.Saltine.Core.Box as Sodium (boxAfterNM, boxOpenAfterNM)
+
 import           Network.Tox.Crypto.Key  (CombinedKey, Key (..), Nonce)
 import           Network.Tox.Crypto.Text (CipherText (..), PlainText (..))
+import qualified Network.Tox.RPC         as RPC
 
 
 {-------------------------------------------------------------------------------
@@ -27,9 +29,13 @@ public key and then use the encryption function for the transformation.
 
 \begin{code}
 
-encrypt :: CombinedKey -> Nonce -> PlainText a -> CipherText a
+encrypt :: CombinedKey -> Nonce -> PlainText -> CipherText
 encrypt (Key ck) (Key nonce) (PlainText bytes) =
   CipherText $ Sodium.boxAfterNM ck nonce bytes
+
+encryptC :: CombinedKey -> Nonce -> PlainText -> RPC.Client CipherText
+encryptS :: RPC.Method IO
+(encryptC, encryptS) = RPC.stubs "Box.encrypt" RPC.fun3 encrypt
 
 \end{code}
 
@@ -42,9 +48,13 @@ the correct functions.
 
 \begin{code}
 
-decrypt :: CombinedKey -> Nonce -> CipherText a -> Maybe (PlainText a)
+decrypt :: CombinedKey -> Nonce -> CipherText -> Maybe PlainText
 decrypt (Key ck) (Key nonce) (CipherText bytes) =
   PlainText <$> Sodium.boxOpenAfterNM ck nonce bytes
+
+decryptC :: CombinedKey -> Nonce -> CipherText -> RPC.Client (Maybe PlainText)
+decryptS :: RPC.Method IO
+(decryptC, decryptS) = RPC.stubs "Box.decrypt" RPC.fun3 decrypt
 
 \end{code}
 

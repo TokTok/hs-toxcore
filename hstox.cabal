@@ -1,4 +1,4 @@
-name:                 Tox
+name:                 hstox
 synopsis:             A Tox protocol implementation in Haskell
 version:              0.0.1
 cabal-version:        >= 1.10
@@ -14,7 +14,7 @@ description:          A Tox protocol implementation in Haskell
 
 source-repository head
   type: git
-  location: git://github.com/iphydf/hstox.git
+  location: https://github.com/iphydf/hstox
 
 library
   default-language: Haskell2010
@@ -25,10 +25,7 @@ library
       -Werror
   build-depends:
       base < 5
-    , Cabal
-    , cabal-test-quickcheck
     , QuickCheck
-    , hspec
     , aeson >= 0.10
     , base16-bytestring
     , binary
@@ -36,76 +33,88 @@ library
     , bytestring
     , containers
     , directory
-    , groom
+    , hspec
     , integer-gmp
     , iproute
+    , msgpack
+    , msgpack-rpc >= 1.0.0
     , network
     , process
     , saltine
     , split
     , tagged
+    , transformers
   exposed-modules:
+      Network.Tox
+      Network.Tox.Crypto
+      Network.Tox.Crypto.Box
+      Network.Tox.Crypto.CombinedKey
+      Network.Tox.Crypto.Key
+      Network.Tox.Crypto.KeyPair
+      Network.Tox.Crypto.Nonce
+      Network.Tox.Crypto.Text
+      Network.Tox.DHT
+      Network.Tox.DHT.DhtPacket
+      Network.Tox.DHT.DhtState
       Network.Tox.DHT.Distance
+      Network.Tox.DHT.KBuckets
+      Network.Tox.DHT.NodesRequest
+      Network.Tox.DHT.NodesResponse
+      Network.Tox.DHT.PingPacket
+      Network.Tox.DHT.RpcPacket
+      Network.Tox.Encoding
+      Network.Tox.NodeInfo
+      Network.Tox.NodeInfo.HostAddress
+      Network.Tox.NodeInfo.NodeInfo
+      Network.Tox.NodeInfo.PortNumber
+      Network.Tox.NodeInfo.SocketAddress
+      Network.Tox.NodeInfo.TransportProtocol
+      Network.Tox.Protocol
+      Network.Tox.Protocol.Packet
+      Network.Tox.Protocol.PacketKind
+      Network.Tox.RPC
 
-executable test-client
+executable test-server
   default-language: Haskell2010
   hs-source-dirs:
-      src
+      test-server
   ghc-options:
       -Wall
       -Werror
   build-depends:
       base < 5
-    , Cabal
-    , cabal-test-quickcheck
-    , QuickCheck
-    , hspec
-    , aeson >= 0.10
-    , base16-bytestring
-    , binary
-    , binary-bits
-    , bytestring
-    , containers
-    , directory
-    , groom
-    , integer-gmp
-    , iproute
-    , network
-    , process
-    , saltine
-    , split
-    , tagged
+    , hstox
+    , msgpack-rpc >= 1.0.0
   main-is:
-      TestClient.hs
+      TestServer.hs
 
 test-suite test-tox
   default-language: Haskell2010
   hs-source-dirs:
-      src
+      test-tox
   ghc-options:
       -Wall
       -Werror
   build-depends:
       base < 5
-    , Cabal
-    , cabal-test-quickcheck
     , QuickCheck
-    , hspec
     , aeson >= 0.10
-    , base16-bytestring
+    , hstox
     , binary
     , binary-bits
-    , bytestring
     , containers
+    , saltine
+    , transformers
+    , network
+    , msgpack-rpc >= 1.0.0
+    , base16-bytestring
+    , bytestring
+    , Cabal
+    , cabal-test-quickcheck
     , directory
     , groom
-    , integer-gmp
-    , iproute
-    , network
+    , hspec
     , process
-    , saltine
-    , split
-    , tagged
   type:
       exitcode-stdio-1.0
   main-is:

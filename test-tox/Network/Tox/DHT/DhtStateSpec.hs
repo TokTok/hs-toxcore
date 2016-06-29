@@ -32,45 +32,31 @@ spec = do
       in
       afterAdd `shouldBe` dhtState
 
-  it "the node can never search for itself" $
-    property $ \dhtState ->
-      let
-        afterAdd = DhtState.addSearchKey
-          (KeyPair.publicKey $ DhtState.dhtKeyPair dhtState)
-          dhtState
-      in
-      afterAdd `shouldBe` dhtState
-
   describe "adding a node that was not yet contained" $ do
     it "should result in a different state" $
-      property $ \dhtState nodeInfo ->
+      property $ \keyPair nodeInfo ->
         let
+          dhtState = DhtState.empty keyPair
           afterAdd = DhtState.addNode nodeInfo dhtState
         in
         unless (DhtState.containsNode (NodeInfo.publicKey nodeInfo) dhtState) $
           afterAdd `shouldNotBe` dhtState
 
     it "and removing it yields the same state" $
-      property $ \dhtState nodeInfo ->
+      property $ \keyPair nodeInfo ->
         let
+          dhtState    = DhtState.empty keyPair
           afterAdd    = DhtState.addNode nodeInfo dhtState
           afterRemove = DhtState.removeNode (NodeInfo.publicKey nodeInfo) afterAdd
         in
         unless (DhtState.containsNode (NodeInfo.publicKey nodeInfo) dhtState) $
           afterRemove `shouldBe` dhtState
 
-    it "should make the state size increase by 1" $
-      property $ \dhtState nodeInfo ->
-        let
-          afterAdd = DhtState.addNode nodeInfo dhtState
-        in
-        unless (DhtState.containsNode (NodeInfo.publicKey nodeInfo) dhtState) $
-          DhtState.size afterAdd `shouldBe` DhtState.size dhtState
-
   describe "adding a node" $
     it "and adding it again does not change the state twice" $
-      property $ \dhtState nodeInfo ->
+      property $ \keyPair nodeInfo ->
         let
+          dhtState  = DhtState.empty keyPair
           afterAdd1 = DhtState.addNode nodeInfo dhtState
           afterAdd2 = DhtState.addNode nodeInfo afterAdd1
         in
@@ -78,31 +64,35 @@ spec = do
 
   describe "adding a search node" $ do
     it "should result in a different state" $
-      property $ \dhtState publicKey ->
+      property $ \keyPair publicKey ->
         let
+          dhtState = DhtState.empty keyPair
           afterAdd = DhtState.addSearchKey publicKey dhtState
         in
         afterAdd `shouldNotBe` dhtState
 
     it "and removing it yields the same state" $
-      property $ \dhtState publicKey ->
+      property $ \keyPair publicKey ->
         let
+          dhtState    = DhtState.empty keyPair
           afterAdd    = DhtState.addSearchKey publicKey dhtState
           afterRemove = DhtState.removeSearchKey publicKey afterAdd
         in
         afterRemove `shouldBe` dhtState
 
     it "and adding it again does not change the state twice" $
-      property $ \dhtState publicKey ->
+      property $ \keyPair publicKey ->
         let
+          dhtState  = DhtState.empty keyPair
           afterAdd1 = DhtState.addSearchKey publicKey dhtState
           afterAdd2 = DhtState.addSearchKey publicKey afterAdd1
         in
         afterAdd1 `shouldBe` afterAdd2
 
     it "and adding a node info for it will not add it to the search entry's k-buckets" $
-      property $ \dhtState nodeInfo ->
+      property $ \keyPair nodeInfo ->
         let
+          dhtState = DhtState.empty keyPair
           afterAddSearchKey = DhtState.addSearchKey
             (NodeInfo.publicKey nodeInfo)
             dhtState

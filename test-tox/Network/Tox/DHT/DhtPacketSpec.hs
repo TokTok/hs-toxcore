@@ -42,9 +42,9 @@ encodeIntAndDecodeNodeInfo = encodeAndDecode
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy (DhtPacket Int))
-  binarySpec (Proxy :: Proxy (DhtPacket Int))
-  readShowSpec (Proxy :: Proxy (DhtPacket Int))
+  jsonSpec (Proxy :: Proxy DhtPacket)
+  binarySpec (Proxy :: Proxy DhtPacket)
+  readShowSpec (Proxy :: Proxy DhtPacket)
 
   it "encodes and decodes packets" $
     property $ \senderKeyPair receiverKeyPair nonce payload ->

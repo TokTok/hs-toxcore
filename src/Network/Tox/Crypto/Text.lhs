@@ -25,6 +25,8 @@ import qualified Data.ByteString           as ByteString
 import qualified Data.ByteString.Base16    as Base16
 import qualified Data.ByteString.Char8     as Char8
 import qualified Data.ByteString.Lazy      as LazyByteString
+import           Data.MessagePack.Object   (MessagePack (..))
+import           Data.String               (IsString (..))
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import           Text.Read                 (readPrec)
 
@@ -36,44 +38,55 @@ import           Text.Read                 (readPrec)
  ------------------------------------------------------------------------------}
 
 
-newtype PlainText a = PlainText ByteString
+newtype PlainText = PlainText { unPlainText :: ByteString }
   deriving (Eq, Binary)
 
-instance Show (PlainText a) where
+instance Show PlainText where
   show (PlainText bytes) = show $ Base16.encode bytes
 
-instance Read (PlainText a) where
+instance Read PlainText where
   readPrec = PlainText . fst . Base16.decode <$> readPrec
 
-instance ToJSON (PlainText a) where
+instance ToJSON PlainText where
   toJSON (PlainText bytes) = Aeson.toJSON $ Char8.unpack $ Base16.encode bytes
 
-instance FromJSON (PlainText a) where
+instance FromJSON PlainText where
   parseJSON value = PlainText . fst . Base16.decode . Char8.pack <$> Aeson.parseJSON value
 
+instance MessagePack PlainText where
+  toObject = toObject . unPlainText
+  fromObject x = PlainText <$> fromObject x
 
-newtype CipherText a = CipherText ByteString
+instance IsString PlainText where
+  fromString = PlainText . fromString
+
+
+newtype CipherText = CipherText { unCipherText :: ByteString }
   deriving (Eq, Binary)
 
-instance Show (CipherText a) where
+instance Show CipherText where
   show (CipherText bytes) = show $ Base16.encode bytes
 
-instance Read (CipherText a) where
+instance Read CipherText where
   readPrec = CipherText . fst . Base16.decode <$> readPrec
 
-instance ToJSON (CipherText a) where
+instance ToJSON CipherText where
   toJSON (CipherText bytes) = Aeson.toJSON $ Char8.unpack $ Base16.encode bytes
 
-instance FromJSON (CipherText a) where
+instance FromJSON CipherText where
   parseJSON value = CipherText . fst . Base16.decode . Char8.pack <$> Aeson.parseJSON value
 
+instance MessagePack CipherText where
+  toObject = toObject . unCipherText
+  fromObject x = CipherText <$> fromObject x
 
-encode :: Binary a => a -> PlainText a
+
+encode :: Binary a => a -> PlainText
 encode =
   PlainText . LazyByteString.toStrict . runPut . put
 
 
-decode :: (Monad m, Binary a) => PlainText a -> m a
+decode :: (Monad m, Binary a) => PlainText -> m a
 decode (PlainText bytes) =
   finish $ pushChunk (runGetIncremental get) bytes
   where
@@ -90,10 +103,10 @@ decode (PlainText bytes) =
  ------------------------------------------------------------------------------}
 
 
-instance Arbitrary (PlainText a) where
+instance Arbitrary PlainText where
   arbitrary = fmap (PlainText . ByteString.pack) arbitrary
 
 
-instance Arbitrary (CipherText a) where
+instance Arbitrary CipherText where
   arbitrary = fmap (CipherText . ByteString.pack) arbitrary
 \end{code}
