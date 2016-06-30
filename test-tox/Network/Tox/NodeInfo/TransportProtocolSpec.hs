@@ -16,5 +16,4 @@ spec = do
   jsonSpec (Proxy :: Proxy TransportProtocol)
   binarySpec (Proxy :: Proxy TransportProtocol)
   readShowSpec (Proxy :: Proxy TransportProtocol)
-
-  --bitEncodingSpec (Proxy :: Proxy TransportProtocol)
+  bitEncodingSpec (Proxy :: Proxy TransportProtocol)

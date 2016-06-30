@@ -3,29 +3,34 @@
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.EncodingSpec where
 
+import           Control.Monad.IO.Class (liftIO)
+import qualified Network.Tox.RPC        as RPC
 import           Test.Hspec
-import           Test.QuickCheck      (Arbitrary, property)
+import           Test.QuickCheck        (Arbitrary, property)
 
-import qualified Data.Aeson           as Aeson
-import           Data.Binary          (Binary)
-import qualified Data.Binary          as Binary (get, put)
-import qualified Data.Binary.Bits.Get as Bits (BitGet, runBitGet)
-import qualified Data.Binary.Bits.Put as Bits (BitPut, runBitPut)
-import qualified Data.Binary.Get      as Binary (Decoder (..), Get, pushChunk,
-                                                 runGet, runGetIncremental)
-import qualified Data.Binary.Put      as Binary (Put, runPut)
-import qualified Data.ByteString      as ByteString
-import           Data.ByteString.Lazy (ByteString)
-import qualified Data.ByteString.Lazy as LazyByteString
-import           Data.Proxy           (Proxy (..))
-import           Data.Word            (Word8)
-import           Network.Tox.Encoding (BitEncoding, bitGet, bitPut, getBool,
-                                       putBool)
-import           Text.Read            (readMaybe)
+import qualified Data.Aeson             as Aeson
+import           Data.Binary            (Binary)
+import qualified Data.Binary            as Binary (get, put)
+import qualified Data.Binary.Bits.Get   as Bits (BitGet, runBitGet)
+import qualified Data.Binary.Bits.Put   as Bits (BitPut, runBitPut)
+import qualified Data.Binary.Get        as Binary (Decoder (..), Get, pushChunk,
+                                                   runGet, runGetIncremental)
+import qualified Data.Binary.Put        as Binary (Put, runPut)
+import qualified Data.ByteString        as ByteString
+import           Data.ByteString.Lazy   (ByteString)
+import qualified Data.ByteString.Lazy   as LazyByteString
+import           Data.Proxy             (Proxy (..))
+import           Data.Typeable          (Typeable)
+import           Data.Word              (Word8)
+
+import qualified Network.Tox.Binary     as Binary
+import           Network.Tox.Encoding   (BitEncoding, bitGet, bitPut, getBool,
+                                         putBool)
 
 
 spec :: Spec
-spec = --do
+spec = do
+  rpcSpec (Proxy :: Proxy Int)
   --binarySpec (Proxy :: Proxy Bool)
   binaryGetPutSpec "{get,put}Bool" getBool putBool
 
@@ -104,20 +109,12 @@ readShowSpec (Proxy :: Proxy a) =
   let
     showA = show :: a -> String
     readA = read :: String -> a
-    readMaybeA = readMaybe :: String -> Maybe a
   in
   describe "Read/Show" $ do
     it "encodes and decodes correctly" $
       property $ \expected ->
         let output = readA $ showA expected in
         output `shouldBe` expected
-
-    it "decodes arbitrary input to Nothing" $
-      property $ \string ->
-        let output = readMaybeA string in
-        output `shouldSatisfy` \case
-          Nothing -> True
-          Just _  -> True
 
 
 jsonSpec :: (Arbitrary a, Eq a, Show a, Aeson.FromJSON a, Aeson.ToJSON a) => Proxy a -> Spec
@@ -132,9 +129,30 @@ jsonSpec (Proxy :: Proxy a) =
         let output = fromJsonA $ toJsonA expected in
         output `shouldBe` Just expected
 
-    it "decodes arbitrary input to Nothing" $
-      property $ \bytes ->
-        let output = fromJsonA $ LazyByteString.pack bytes in
-        output `shouldSatisfy` \case
-          Nothing -> True
-          Just _  -> True
+
+rpcSpec :: (Arbitrary a, Eq a, Show a, Typeable a, Binary a, RPC.MessagePack a) => Proxy a -> Spec
+rpcSpec (Proxy :: Proxy a) =
+  let
+    encodeAC = Binary.encodeC :: a -> RPC.Client ByteString.ByteString
+    decodeAC = Binary.decodeC :: ByteString.ByteString -> RPC.Client (Maybe a)
+    encodeA  = Binary.encode  :: a -> ByteString.ByteString
+    decodeA  = Binary.decode  :: ByteString.ByteString -> Maybe a
+  in
+
+  describe "MessagePack" $ do
+    it "encodes and decodes correctly" $
+      property $ \expected -> RPC.runClient $ do
+        encoded <- encodeAC expected
+        decoded <- decodeAC encoded
+        liftIO $ decoded `shouldBe` Just expected
+
+    it "encodes arbitrary input correctly" $
+      property $ \expected -> RPC.runClient $ do
+        encoded <- encodeAC expected
+        liftIO $ encoded `shouldBe` encodeA expected
+
+    it "decodes arbitrary input correctly" $
+      property $ \bytes -> RPC.runClient $ do
+        let bs = ByteString.pack bytes
+        decoded <- decodeAC bs
+        liftIO $ decoded `shouldBe` decodeA bs

@@ -51,11 +51,13 @@ import           Data.Aeson                             (FromJSON, ToJSON)
 import           Data.Binary                            (Binary)
 import qualified Data.Binary                            as Binary (get, put)
 import           GHC.Generics                           (Generic)
+import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
+
 import           Network.Tox.Crypto.Key                 (PublicKey)
 import           Network.Tox.NodeInfo.SocketAddress     (SocketAddress)
 import qualified Network.Tox.NodeInfo.SocketAddress     as SocketAddress
 import           Network.Tox.NodeInfo.TransportProtocol (TransportProtocol)
-import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
+import qualified Network.Tox.RPC                        as RPC
 
 
 {-------------------------------------------------------------------------------
@@ -74,6 +76,9 @@ data NodeInfo = NodeInfo
 
 instance ToJSON NodeInfo
 instance FromJSON NodeInfo
+instance RPC.MessagePack NodeInfo where
+  toObject   = RPC.jsonToObject
+  fromObject = RPC.jsonFromObject
 
 
 instance Binary NodeInfo where

@@ -15,6 +15,7 @@ import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
 spec :: Spec
 spec = do
+  rpcSpec (Proxy :: Proxy NodeInfo)
   jsonSpec (Proxy :: Proxy NodeInfo)
   binarySpec (Proxy :: Proxy NodeInfo)
   readShowSpec (Proxy :: Proxy NodeInfo)

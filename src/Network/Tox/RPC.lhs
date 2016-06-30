@@ -17,11 +17,17 @@ module Network.Tox.RPC
   , stubs
   , runClient
   , runServer
+  , jsonToObject
+  , jsonFromObject
   ) where
 
+import           Control.Monad              ((>=>))
 import           Control.Monad.IO.Class     (liftIO)
 
+import qualified Data.Aeson                 as Aeson
+import qualified Data.Aeson.Types           as Aeson
 import qualified Data.MessagePack           as MessagePack
+import           Data.MessagePack.Aeson     (fromAeson, toAeson)
 import           Network.MessagePack.Client (Client)
 import qualified Network.MessagePack.Client as Client
 import           Network.MessagePack.Server (Server)
@@ -43,6 +49,14 @@ runClient = Client.execClient "localhost" 1234
 
 runServer :: [Server.Method IO] -> IO ()
 runServer = Server.serve port
+
+
+jsonToObject :: Aeson.ToJSON a => a -> MessagePack.Object
+jsonToObject = fromAeson . Aeson.toJSON
+
+
+jsonFromObject :: Aeson.FromJSON a => MessagePack.Object -> Maybe a
+jsonFromObject = toAeson >=> Aeson.parseMaybe Aeson.parseJSON
 
 
 fun1 :: (a -> result) -> a -> Server result

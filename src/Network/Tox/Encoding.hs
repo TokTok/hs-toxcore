@@ -2,10 +2,14 @@
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Encoding where
 
+import           Data.Binary          (Binary, get, put)
 import           Data.Binary.Bits.Get (BitGet)
 import           Data.Binary.Bits.Put (BitPut)
-import           Data.Binary.Get      (Get, getWord8)
-import           Data.Binary.Put      (Put, putWord8)
+import           Data.Binary.Get      (Decoder (..), Get, getWord8, pushChunk,
+                                       runGetIncremental)
+import           Data.Binary.Put      (Put, putWord8, runPut)
+import           Data.ByteString      (ByteString)
+import qualified Data.ByteString.Lazy as LazyByteString
 
 
 class BitEncoding a where
@@ -25,3 +29,18 @@ getBool = getWord8 >>=
 putBool :: Bool -> Put
 putBool False = putWord8 0x00
 putBool True  = putWord8 0x01
+
+
+encode :: Binary a => a -> ByteString
+encode =
+  LazyByteString.toStrict . runPut . put
+
+
+decode :: (Monad m, Binary a) => ByteString -> m a
+decode bytes =
+  finish $ pushChunk (runGetIncremental get) bytes
+  where
+    finish = \case
+      Done _ _ output -> return output
+      Fail _ _ msg    -> fail msg
+      Partial f       -> finish $ f Nothing

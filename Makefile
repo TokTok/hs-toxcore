@@ -22,16 +22,11 @@ endif
 all: check $(DOCS)
 
 
-check: .build.stamp $(wildcard test/*)
+check: .build.stamp
 	dist/build/test-server/test-server & echo $$! > .server.pid
 	$(CABAL) test | grep -v '^Writing: '
 	kill `cat .server.pid`
 	rm .server.pid
-
-sut-check: .build.stamp
-	ln -sf ../dist/build/test-client/test-client test/test-client
-	$(CABAL) test | grep -v '^Writing: '
-	rm test/test-client
 
 repl: .build.stamp
 	$(CABAL) repl
@@ -50,6 +45,7 @@ build: .build.stamp
 
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp .msgpack.stamp
+	$(CABAL) install --only-dependencies --enable-tests --extra-include-dirs=$(HOME)/.cabal/extra-dist/include --extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 	$(CABAL) configure --enable-tests $(COVERAGE)
 	@touch $@
 
@@ -57,15 +53,15 @@ configure: .configure.stamp
 	git clone https://github.com/iphydf/msgpack-haskell
 	$(CABAL) install					\
 		msgpack-haskell/msgpack/msgpack.cabal		\
-		msgpack-haskell/msgpack-rpc/msgpack-rpc.cabal
+		msgpack-haskell/msgpack-rpc/msgpack-rpc.cabal	\
+		msgpack-haskell/msgpack-aeson/msgpack-aeson.cabal
 	rm -rf msgpack-haskell
 	@touch $@
 
 .sandbox.stamp:
-	cabal update
+	cabal --ignore-sandbox update
 	cabal sandbox init
 	cabal --ignore-sandbox install stylish-haskell hlint
-	$(CABAL) install --only-dependencies --enable-tests --extra-include-dirs=$(HOME)/.cabal/extra-dist/include --extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 	@touch $@
 
 doc: $(DOCS)
@@ -93,7 +89,6 @@ libsodium: .libsodium.stamp
 
 format: .format.stamp
 .format.stamp: $(SOURCES)
-	#find src -name "*.hs" -exec hindent --style chris-done {} \;
 	tools/format-haskell -i src
 	@touch $@
 

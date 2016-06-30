@@ -37,6 +37,7 @@ library
     , integer-gmp
     , iproute
     , msgpack
+    , msgpack-aeson
     , msgpack-rpc >= 1.0.0
     , network
     , process
@@ -46,6 +47,7 @@ library
     , transformers
   exposed-modules:
       Network.Tox
+      Network.Tox.Binary
       Network.Tox.Crypto
       Network.Tox.Crypto.Box
       Network.Tox.Crypto.CombinedKey
