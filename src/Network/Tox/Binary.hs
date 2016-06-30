@@ -33,7 +33,7 @@ decodeC :: forall a. (Typeable a, Binary a, RPC.MessagePack a)
         => ByteString -> RPC.Client (Maybe a)
 decodeC = RPC.call "Binary.decode" $ typeName (Proxy :: Proxy a)
 
-decodeM :: (RPC.MessagePack a, Binary a) => Proxy a -> ByteString -> RPC.Server (Maybe RPC.Object)
+decodeM :: (Monad m, RPC.MessagePack a, Binary a) => Proxy a -> ByteString -> m (Maybe RPC.Object)
 decodeM (Proxy :: Proxy a) bs =
   return $ RPC.toObject <$> (decode bs :: Maybe a)
 
@@ -60,7 +60,8 @@ encodeC :: forall a. (Typeable a, Binary a, RPC.MessagePack a)
         => a -> RPC.Client ByteString
 encodeC = RPC.call "Binary.encode" $ typeName (Proxy :: Proxy a)
 
-encodeM :: (RPC.MessagePack a, Binary a) => Proxy a -> RPC.Object -> RPC.Server ByteString
+encodeM :: (Monad m, RPC.MessagePack a, Binary a)
+        => Proxy a -> RPC.Object -> m ByteString
 encodeM (Proxy :: Proxy a) obj =
   case (RPC.fromObject obj :: Maybe a) of
     Nothing -> fail $ "failed to decode from object: " ++ show obj
