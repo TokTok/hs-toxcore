@@ -13,6 +13,7 @@ standard group element and the Secret Key.  See the
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE DeriveGeneric  #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE Trustworthy    #-}
 module Network.Tox.Crypto.KeyPair where
@@ -21,10 +22,13 @@ import           Control.Applicative            ((<$>))
 import qualified Crypto.Saltine.Class           as Sodium (decode, encode)
 import qualified Crypto.Saltine.Core.Box        as Sodium (newKeypair)
 import qualified Crypto.Saltine.Core.ScalarMult as Sodium (multBase)
+import           Data.Aeson                     (FromJSON, ToJSON)
+import           GHC.Generics                   (Generic)
+import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
+
 import           Network.Tox.Crypto.Key         (Key (..))
 import qualified Network.Tox.Crypto.Key         as Key
 import qualified Network.Tox.RPC                as RPC
-import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 
 {-------------------------------------------------------------------------------
@@ -38,21 +42,14 @@ data KeyPair = KeyPair
   { secretKey :: Key.SecretKey
   , publicKey :: Key.PublicKey
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic)
 
 
+instance ToJSON KeyPair
+instance FromJSON KeyPair
 instance RPC.MessagePack KeyPair where
-  toObject KeyPair { secretKey, publicKey } = RPC.toObject
-    ( ("secretKey", secretKey)
-    , ("publicKey", publicKey)
-    )
-
-  fromObject obj = case RPC.fromObject obj of
-    Just ( ("secretKey", secretKey)
-         , ("publicKey", publicKey)
-         ) ->
-      Just $ KeyPair secretKey publicKey
-    _ -> Nothing
+  toObject   = RPC.jsonToObject
+  fromObject = RPC.jsonFromObject
 
 
 newKeyPair :: IO KeyPair

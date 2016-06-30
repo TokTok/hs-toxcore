@@ -8,7 +8,6 @@ import           Test.QuickCheck
 
 import           Control.Monad                 (unless)
 import           Data.Proxy                    (Proxy (..))
-import           Text.Groom                    (groom)
 
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
 import           Network.Tox.DHT.DhtState      (DhtState)

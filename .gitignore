@@ -1,10 +1,6 @@
 # Build products.
-/.idea
 /dist
-/out
-/*.iml
 /*.tix
-/*.fifo
 /.*.stamp
 
 /.cabal-sandbox

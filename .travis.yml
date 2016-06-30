@@ -6,22 +6,15 @@ cache:
     - $HOME/.cabal
     - $HOME/.ghc
 
-before_install:
-  - tools/install-libsodium
-
 install:
-  - cabal install hpc-coveralls pandoc
-  - cabal install --only-dependencies --enable-tests --extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib
-  - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib:$LD_LIBRARY_PATH
-  - ln -s ../dist/build/test-client/test-client test/test-client
-  - gem install mdl
+  - make configure
+  - cabal install hpc-coveralls
 
 script:
-  - cabal configure --enable-tests --enable-library-coverage
-  - cabal build
-  - cabal test --test-option=--seed=0
+  - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
+  - make check
   - tools/build-docs
   - git diff --exit-code
 
 after_script:
-  - hpc-coveralls test-tox
+  - hpc-coveralls hstox-0.0.1

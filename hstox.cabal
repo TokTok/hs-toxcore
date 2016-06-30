@@ -32,15 +32,12 @@ library
     , binary-bits
     , bytestring
     , containers
-    , directory
-    , hspec
     , integer-gmp
     , iproute
     , msgpack
     , msgpack-aeson
     , msgpack-rpc >= 1.0.0
     , network
-    , process
     , saltine
     , split
     , tagged
@@ -101,22 +98,17 @@ test-suite test-tox
       base < 5
     , QuickCheck
     , aeson >= 0.10
-    , hstox
+    , base16-bytestring
     , binary
     , binary-bits
+    , bytestring
     , containers
+    , hspec
+    , hstox
+    , msgpack-rpc >= 1.0.0
+    , network
     , saltine
     , transformers
-    , network
-    , msgpack-rpc >= 1.0.0
-    , base16-bytestring
-    , bytestring
-    , Cabal
-    , cabal-test-quickcheck
-    , directory
-    , groom
-    , hspec
-    , process
   type:
       exitcode-stdio-1.0
   main-is:

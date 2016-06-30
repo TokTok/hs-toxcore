@@ -41,15 +41,17 @@ The reason for these numbers is because the numbers on Linux for IPv4 and IPv6
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric  #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Trustworthy    #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE NamedFieldPuns     #-}
+{-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.NodeInfo where
 
 import           Control.Applicative                    ((<$>), (<*>))
 import           Data.Aeson                             (FromJSON, ToJSON)
 import           Data.Binary                            (Binary)
 import qualified Data.Binary                            as Binary (get, put)
+import           Data.Typeable                          (Typeable)
 import           GHC.Generics                           (Generic)
 import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
 
@@ -72,7 +74,7 @@ data NodeInfo = NodeInfo
   , address   :: SocketAddress
   , publicKey :: PublicKey
   }
-  deriving (Eq, Show, Read, Generic)
+  deriving (Eq, Show, Read, Generic, Typeable)
 
 instance ToJSON NodeInfo
 instance FromJSON NodeInfo

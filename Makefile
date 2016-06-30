@@ -4,12 +4,16 @@ CABAL_VER_MINOR := $(shell echo $(CABAL_VER_NUM) | cut -f2 -d.)
 CABAL_GT_1_22 := $(shell [ $(CABAL_VER_MAJOR) -gt 1 -o \( $(CABAL_VER_MAJOR) -eq 1 -a $(CABAL_VER_MINOR) -ge 22 \) ] && echo true)
 
 ifeq ($(CABAL_GT_1_22),true)
-COVERAGE = --enable-coverage
+COVERAGE	= --enable-coverage
+INIT_SANDBOX	= cabal sandbox init
+IGNORE_SANDBOX	= --ignore-sandbox
+REQUIRE_SANDBOX	= --require-sandbox
 else
-COVERAGE = --enable-library-coverage
+COVERAGE	= --enable-library-coverage
+INIT_SANDBOX	= @echo "No sandbox support"
+IGNORE_SANDBOX	=
+REQUIRE_SANDBOX	=
 endif
-
-CABAL := cabal --require-sandbox
 
 SOURCES	:= $(shell find src test-server test-tox -name "*.*hs")
 
@@ -19,20 +23,31 @@ include ../tox-spec/pandoc.mk
 endif
 
 
+CABAL_INSTALL =								\
+	cabal $(REQUIRE_SANDBOX) install				\
+		--enable-tests						\
+		--extra-include-dirs=$(HOME)/.cabal/extra-dist/include	\
+		--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib		\
+		aeson-0.11.1.4						\
+		msgpack-haskell/msgpack/msgpack.cabal			\
+		msgpack-haskell/msgpack-rpc/msgpack-rpc.cabal		\
+		msgpack-haskell/msgpack-aeson/msgpack-aeson.cabal
+
+
 all: check $(DOCS)
 
 
 check: .build.stamp
 	dist/build/test-server/test-server & echo $$! > .server.pid
-	$(CABAL) test | grep -v '^Writing: '
+	cabal $(REQUIRE_SANDBOX) test | grep -v '^Writing: '
 	kill `cat .server.pid`
 	rm .server.pid
 
 repl: .build.stamp
-	$(CABAL) repl
+	cabal $(REQUIRE_SANDBOX) repl
 
 clean:
-	$(CABAL) clean
+	cabal $(REQUIRE_SANDBOX) clean
 	-test -f .server.pid && kill `cat .server.pid`
 	rm -f $(wildcard .*.stamp) .server.pid
 
@@ -40,28 +55,23 @@ clean:
 build: .build.stamp
 .build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp
 	rm -f $(wildcard *.tix)
-	$(CABAL) build
+	cabal $(REQUIRE_SANDBOX) build
 	@touch $@
 
 configure: .configure.stamp
-.configure.stamp: .libsodium.stamp .msgpack.stamp
-	$(CABAL) install --only-dependencies --enable-tests --extra-include-dirs=$(HOME)/.cabal/extra-dist/include --extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
-	$(CABAL) configure --enable-tests $(COVERAGE)
-	@touch $@
-
-.msgpack.stamp: .sandbox.stamp
-	git clone https://github.com/iphydf/msgpack-haskell
-	$(CABAL) install					\
-		msgpack-haskell/msgpack/msgpack.cabal		\
-		msgpack-haskell/msgpack-rpc/msgpack-rpc.cabal	\
-		msgpack-haskell/msgpack-aeson/msgpack-aeson.cabal
+.configure.stamp: .libsodium.stamp .sandbox.stamp
+	happy -v | grep "1.19" || cabal $(IGNORE_SANDBOX) install haskell-src-exts happy
+	test -d msgpack-haskell || git clone https://github.com/iphydf/msgpack-haskell
+	$(CABAL_INSTALL) --only-dependencies hstox.cabal
+	$(CABAL_INSTALL)
 	rm -rf msgpack-haskell
+	cabal $(REQUIRE_SANDBOX) configure --enable-tests $(COVERAGE)
+	cabal $(IGNORE_SANDBOX) install stylish-haskell hlint
 	@touch $@
 
 .sandbox.stamp:
-	cabal --ignore-sandbox update
-	cabal sandbox init
-	cabal --ignore-sandbox install stylish-haskell hlint
+	cabal $(IGNORE_SANDBOX) update
+	$(INIT_SANDBOX)
 	@touch $@
 
 doc: $(DOCS)
@@ -79,7 +89,7 @@ doc: $(DOCS)
 
 pandoc: .pandoc.stamp
 .pandoc.stamp:
-	cabal --ignore-sandbox install pandoc
+	cabal $(IGNORE_SANDBOX) install pandoc
 	@touch $@
 
 libsodium: .libsodium.stamp
@@ -88,11 +98,11 @@ libsodium: .libsodium.stamp
 	@touch $@
 
 format: .format.stamp
-.format.stamp: $(SOURCES)
+.format.stamp: $(SOURCES) .configure.stamp
 	tools/format-haskell -i src
 	@touch $@
 
 lint: .lint.stamp
-.lint.stamp: $(SOURCES)
+.lint.stamp: $(SOURCES) .configure.stamp
 	hlint --cross src
 	@touch $@

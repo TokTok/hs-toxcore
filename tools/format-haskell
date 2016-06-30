@@ -1,12 +1,10 @@
 #!/usr/bin/env perl
 
 use strict;
-use warnings FATAL => 'all';
+no warnings;
 use utf8;
 
 use v5.10.1;
-no warnings 'experimental::smartmatch';
-no warnings 'uninitialized';
 
 use Data::Dumper;
 use File::Find;
