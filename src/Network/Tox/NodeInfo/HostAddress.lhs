@@ -33,6 +33,7 @@ import           Data.Maybe                (listToMaybe, mapMaybe)
 import           Data.Word                 (Word16, Word8)
 import           GHC.Generics              (Generic)
 import qualified Network.Socket            as Socket (HostAddress, HostAddress6)
+import           Network.Tox.RPC           (MessagePack)
 import           Numeric                   (readHex, showHex)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
@@ -54,16 +55,17 @@ data HostAddress
 instance Binary HostAddress
 instance ToJSON HostAddress
 instance FromJSON HostAddress
+instance MessagePack HostAddress
 
 
 instance Show HostAddress where
-  show (IPv4 addr) = show $ IP.fromHostAddress addr
+  show (IPv4 addr) = show $ IP.fromHostAddress  addr
   show (IPv6 addr) = show $ IP.fromHostAddress6 addr
 
 
 instance Read HostAddress where
   readPrec = (<$> readPrec) $ \case
-    IP.IPv4 ipv4 -> IPv4 $ IP.toHostAddress ipv4
+    IP.IPv4 ipv4 -> IPv4 $ IP.toHostAddress  ipv4
     IP.IPv6 ipv6 -> IPv6 $ IP.toHostAddress6 ipv6
 
 

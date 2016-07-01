@@ -25,6 +25,7 @@ import           Network.Tox.NodeInfo.HostAddress       (HostAddress (..))
 import qualified Network.Tox.NodeInfo.HostAddress       as HostAddress
 import           Network.Tox.NodeInfo.PortNumber        (PortNumber)
 import           Network.Tox.NodeInfo.TransportProtocol (TransportProtocol)
+import           Network.Tox.RPC                        (MessagePack)
 import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
 
 
@@ -41,6 +42,7 @@ data SocketAddress = SocketAddress HostAddress PortNumber
 instance Binary SocketAddress
 instance ToJSON SocketAddress
 instance FromJSON SocketAddress
+instance MessagePack SocketAddress
 
 
 putSocketAddress :: TransportProtocol -> SocketAddress -> Binary.Put

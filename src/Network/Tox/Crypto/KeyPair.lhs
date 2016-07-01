@@ -22,12 +22,12 @@ import           Control.Applicative            ((<$>))
 import qualified Crypto.Saltine.Class           as Sodium (decode, encode)
 import qualified Crypto.Saltine.Core.Box        as Sodium (newKeypair)
 import qualified Crypto.Saltine.Core.ScalarMult as Sodium (multBase)
-import           Data.Aeson                     (FromJSON, ToJSON)
 import           GHC.Generics                   (Generic)
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 import           Network.Tox.Crypto.Key         (Key (..))
 import qualified Network.Tox.Crypto.Key         as Key
+import           Network.Tox.RPC                (MessagePack)
 import qualified Network.Tox.RPC                as RPC
 
 
@@ -44,12 +44,7 @@ data KeyPair = KeyPair
   }
   deriving (Eq, Show, Read, Generic)
 
-
-instance ToJSON KeyPair
-instance FromJSON KeyPair
-instance RPC.MessagePack KeyPair where
-  toObject   = RPC.jsonToObject
-  fromObject = RPC.jsonFromObject
+instance MessagePack KeyPair
 
 
 newKeyPair :: IO KeyPair

@@ -22,6 +22,7 @@ import qualified Data.Binary.Bits.Get      as Bits (getBool)
 import qualified Data.Binary.Bits.Put      as Bits (putBool)
 import           GHC.Generics              (Generic)
 import           Network.Tox.Encoding      (BitEncoding, bitGet, bitPut)
+import           Network.Tox.RPC           (MessagePack)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 
@@ -40,6 +41,7 @@ data TransportProtocol
 instance Binary TransportProtocol
 instance ToJSON TransportProtocol
 instance FromJSON TransportProtocol
+instance MessagePack TransportProtocol
 
 instance BitEncoding TransportProtocol where
   bitGet = fmap (\case

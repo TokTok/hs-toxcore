@@ -1,6 +1,7 @@
 # Build products.
 /dist
 /*.tix
+/.*.pid
 /.*.stamp
 
 /.cabal-sandbox

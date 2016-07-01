@@ -20,6 +20,7 @@ library
   default-language: Haskell2010
   hs-source-dirs:
       src
+    , msgpack
   ghc-options:
       -Wall
       -Werror
@@ -30,19 +31,38 @@ library
     , base16-bytestring
     , binary
     , binary-bits
+    , binary-conduit
     , bytestring
+    , conduit
+    , conduit-extra
     , containers
+    , data-binary-ieee754
+    , deepseq
+    , exceptions
+    , hashable
     , integer-gmp
     , iproute
-    , msgpack
-    , msgpack-aeson
-    , msgpack-rpc >= 1.0.0
+    , monad-control
+    , mtl
     , network
     , saltine
+    , scientific
     , split
     , tagged
+    , text
     , transformers
+    , unordered-containers
+    , vector
   exposed-modules:
+      Data.MessagePack
+      Data.MessagePack.Aeson
+      Data.MessagePack.Assoc
+      Data.MessagePack.Class
+      Data.MessagePack.Get
+      Data.MessagePack.Object
+      Data.MessagePack.Put
+      Network.MessagePack.Client
+      Network.MessagePack.Server
       Network.Tox
       Network.Tox.Binary
       Network.Tox.Crypto
@@ -83,7 +103,6 @@ executable test-server
   build-depends:
       base < 5
     , hstox
-    , msgpack-rpc >= 1.0.0
   main-is:
       TestServer.hs
 
@@ -98,17 +117,21 @@ test-suite test-tox
       base < 5
     , QuickCheck
     , aeson >= 0.10
+    , async
     , base16-bytestring
     , binary
     , binary-bits
     , bytestring
     , containers
+    , hashable
     , hspec
     , hstox
-    , msgpack-rpc >= 1.0.0
+    , mtl
     , network
     , saltine
+    , text
     , transformers
+    , unordered-containers
   type:
       exitcode-stdio-1.0
   main-is:

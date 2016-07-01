@@ -59,7 +59,7 @@ import           Network.Tox.Crypto.Key                 (PublicKey)
 import           Network.Tox.NodeInfo.SocketAddress     (SocketAddress)
 import qualified Network.Tox.NodeInfo.SocketAddress     as SocketAddress
 import           Network.Tox.NodeInfo.TransportProtocol (TransportProtocol)
-import qualified Network.Tox.RPC                        as RPC
+import           Network.Tox.RPC                        (MessagePack)
 
 
 {-------------------------------------------------------------------------------
@@ -78,9 +78,7 @@ data NodeInfo = NodeInfo
 
 instance ToJSON NodeInfo
 instance FromJSON NodeInfo
-instance RPC.MessagePack NodeInfo where
-  toObject   = RPC.jsonToObject
-  fromObject = RPC.jsonFromObject
+instance MessagePack NodeInfo
 
 
 instance Binary NodeInfo where

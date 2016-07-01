@@ -27,11 +27,7 @@ CABAL_INSTALL =								\
 	cabal $(REQUIRE_SANDBOX) install				\
 		--enable-tests						\
 		--extra-include-dirs=$(HOME)/.cabal/extra-dist/include	\
-		--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib		\
-		aeson-0.11.1.4						\
-		msgpack-haskell/msgpack/msgpack.cabal			\
-		msgpack-haskell/msgpack-rpc/msgpack-rpc.cabal		\
-		msgpack-haskell/msgpack-aeson/msgpack-aeson.cabal
+		--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 
 
 all: check $(DOCS)
@@ -61,10 +57,7 @@ build: .build.stamp
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp .sandbox.stamp
 	happy -v | grep "1.19" || cabal $(IGNORE_SANDBOX) install haskell-src-exts happy
-	test -d msgpack-haskell || git clone https://github.com/iphydf/msgpack-haskell
 	$(CABAL_INSTALL) --only-dependencies hstox.cabal
-	$(CABAL_INSTALL)
-	rm -rf msgpack-haskell
 	cabal $(REQUIRE_SANDBOX) configure --enable-tests $(COVERAGE)
 	cabal $(IGNORE_SANDBOX) install stylish-haskell hlint
 	@touch $@
