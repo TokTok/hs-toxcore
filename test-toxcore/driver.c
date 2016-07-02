@@ -82,7 +82,7 @@ run_tests (int port)
 
       while (1)
         {
-          char buf[1];
+          char buf[64];
           int size = check_return (E_READ, read (comm_fd, buf, sizeof buf));
           if (size == 0)
             break;
