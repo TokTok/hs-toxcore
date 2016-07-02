@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Trustworthy         #-}
@@ -41,11 +42,13 @@ instance Arbitrary Foo where
     ]
 
 
+#if __GLASGOW_HASKELL__ >= 710
 instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (Map.Map k v) where
   arbitrary = Map.fromList <$> arbitrary
 
 instance Arbitrary v => Arbitrary (IntMap.IntMap v) where
   arbitrary = IntMap.fromList <$> arbitrary
+#endif
 
 instance (Hashable k, Eq k, Arbitrary k, Arbitrary v) => Arbitrary (HashMap.HashMap k v) where
   arbitrary = HashMap.fromList <$> arbitrary
