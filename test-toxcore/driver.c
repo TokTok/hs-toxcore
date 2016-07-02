@@ -25,20 +25,9 @@
 
 
 static int
-send_response (int comm_fd, msgpack_object res)
+send_response (int comm_fd, msgpack_sbuffer const *res)
 {
-  msgpack_sbuffer sbuf; /* buffer */
-  msgpack_sbuffer_init (&sbuf); /* initialize buffer */
-
-  msgpack_packer pk;    /* packer */
-  msgpack_packer_init (&pk, &sbuf, msgpack_sbuffer_write); /* initialize packer */
-
-  msgpack_pack_object (&pk, res);
-
-  check_return (E_WRITE, write (comm_fd, sbuf.data, sbuf.size));
-
-  msgpack_sbuffer_destroy (&sbuf);
-
+  check_return (E_WRITE, write (comm_fd, res->data, res->size));
   return E_OK;
 }
 
@@ -46,14 +35,16 @@ send_response (int comm_fd, msgpack_object res)
 static int
 handle_request (int comm_fd, msgpack_object req)
 {
-  msgpack_zone zone;
-  msgpack_zone_init (&zone, 128);
+  msgpack_sbuffer sbuf; /* buffer */
+  msgpack_sbuffer_init (&sbuf); /* initialize buffer */
 
-  msgpack_object res = { 0 };
-  call_method (&zone, &req, &res);
-  int r = send_response (comm_fd, res);
+  msgpack_packer res;    /* packer */
+  msgpack_packer_init (&res, &sbuf, msgpack_sbuffer_write); /* initialize packer */
 
-  msgpack_zone_destroy (&zone);
+  call_method (&req, &res);
+  int r = send_response (comm_fd, &sbuf);
+
+  msgpack_sbuffer_destroy (&sbuf);
 
   return r;
 }
