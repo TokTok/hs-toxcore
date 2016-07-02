@@ -2,6 +2,7 @@
 {-# LANGUAGE Safe       #-}
 module Main (main) where
 
+import           Control.Applicative            ((<$>))
 import           System.Environment             (getArgs)
 import           Text.Read                      (readMaybe)
 
