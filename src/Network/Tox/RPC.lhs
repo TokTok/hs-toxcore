@@ -15,6 +15,7 @@ module Network.Tox.RPC
   , fun3
   , ioFun0
   , stubs
+  , defaultPort
   , runClient
   , runServer
   , jsonToObject
@@ -39,16 +40,16 @@ import qualified Network.MessagePack.Server as Server
 stubs name fun method = (Client.call name, Server.method name (fun method))
 
 
-port :: Int
-port = 1234
+defaultPort :: Int
+defaultPort = 1234
 
 
 runClient :: Client a -> IO ()
-runClient = Client.execClient "localhost" 1234
+runClient = Client.execClient "localhost" defaultPort
 
 
-runServer :: [Server.Method IO] -> IO ()
-runServer = Server.serve port
+runServer :: Int -> [Server.Method IO] -> IO ()
+runServer = Server.serve
 
 
 jsonToObject :: Aeson.ToJSON a => a -> MessagePack.Object

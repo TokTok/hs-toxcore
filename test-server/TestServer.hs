@@ -1,5 +1,9 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE Safe       #-}
 module Main (main) where
+
+import           System.Environment             (getArgs)
+import           Text.Read                      (readMaybe)
 
 import qualified Network.Tox.RPC                as RPC
 
@@ -10,8 +14,8 @@ import qualified Network.Tox.Crypto.KeyPair     as KeyPair
 import qualified Network.Tox.Crypto.Nonce       as Nonce
 
 
-main :: IO ()
-main = RPC.runServer
+services :: [RPC.Method IO]
+services =
   [ Binary.decodeS
   , Binary.encodeS
   , Box.encryptS
@@ -22,3 +26,9 @@ main = RPC.runServer
   , Nonce.newNonceS
   , Nonce.incrementS
   ]
+
+
+main :: IO ()
+main = map readMaybe <$> getArgs >>= \case
+    [Just port] -> RPC.runServer port            services
+    _           -> RPC.runServer RPC.defaultPort services
