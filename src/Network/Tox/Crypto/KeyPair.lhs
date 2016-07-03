@@ -27,7 +27,7 @@ import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 import           Network.Tox.Crypto.Key         (Key (..))
 import qualified Network.Tox.Crypto.Key         as Key
-import           Network.Tox.RPC                (MessagePack)
+import           Network.Tox.RPC                (MessagePack (..))
 import qualified Network.Tox.RPC                as RPC
 
 
@@ -44,7 +44,11 @@ data KeyPair = KeyPair
   }
   deriving (Eq, Show, Read, Generic)
 
-instance MessagePack KeyPair
+instance MessagePack KeyPair where
+  toObject (KeyPair sk pk) = toObject (sk, pk)
+  fromObject obj = do
+    (sk, pk) <- fromObject obj
+    return $ KeyPair sk pk
 
 
 newKeyPair :: IO KeyPair
