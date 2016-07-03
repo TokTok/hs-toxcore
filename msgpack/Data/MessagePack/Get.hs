@@ -50,7 +50,7 @@ getBool =
   False <$ tag 0xC2 <|>
   True  <$ tag 0xC3
 
-getInt :: Get Int
+getInt :: Get Int64
 getInt =
   getWord8 >>= \case
     c | c .&. 0x80 == 0x00 ->

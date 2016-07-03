@@ -31,6 +31,7 @@ import           Data.Binary.Put     (putByteString, putWord16be, putWord32be,
                                       putWord64be, putWord8, putWord8)
 import           Data.Bits           ((.|.))
 import qualified Data.ByteString     as S
+import           Data.Int            (Int64)
 import qualified Data.Text           as T
 import qualified Data.Text.Encoding  as T
 import qualified Data.Vector         as V
@@ -45,10 +46,10 @@ putBool :: Bool -> Put
 putBool False = putWord8 0xC2
 putBool True  = putWord8 0xC3
 
-putInt :: Int -> Put
+putInt :: Int64 -> Put
 putInt n
   | -32 <= n && n <= 127 =
-    putWord8 $ fromIntegral n
+                     putWord8     (fromIntegral n)
   | 0 <= n && n < 0x100 =
     putWord8 0xCC >> putWord8     (fromIntegral n)
   | 0 <= n && n < 0x10000 =

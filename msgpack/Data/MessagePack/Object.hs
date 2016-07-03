@@ -9,6 +9,7 @@ import           Control.DeepSeq           (NFData (..))
 import           Data.Binary               (Binary (get, put), Get, Put)
 import qualified Data.ByteString           as S
 import qualified Data.ByteString.Lazy      as L
+import           Data.Int                  (Int64)
 import qualified Data.Text                 as T
 import qualified Data.Text.Lazy            as LT
 import           Data.Typeable             (Typeable)
@@ -28,7 +29,7 @@ data Object
     -- ^ represents nil
   | ObjectBool                  !Bool
     -- ^ represents true or false
-  | ObjectInt    {-# UNPACK #-} !Int
+  | ObjectInt    {-# UNPACK #-} !Int64
     -- ^ represents an integer
   | ObjectFloat  {-# UNPACK #-} !Float
     -- ^ represents a floating point number

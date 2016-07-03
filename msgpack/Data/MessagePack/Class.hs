@@ -56,13 +56,13 @@ class MessagePack a where
 
 -- integral instances
 
-toInt :: Integral a => a -> Int
+toInt :: Integral a => a -> Int64
 toInt = fromIntegral
 
-fromInt :: Integral a => Int -> a
+fromInt :: Integral a => Int64 -> a
 fromInt = fromIntegral
 
-instance MessagePack Int where
+instance MessagePack Int64 where
   toObject = ObjectInt
   fromObject = \case
     ObjectInt n -> Just n
@@ -71,7 +71,7 @@ instance MessagePack Int where
 instance MessagePack Int8   where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Int16  where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Int32  where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
-instance MessagePack Int64  where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
+instance MessagePack Int    where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 
 instance MessagePack Word8  where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Word16 where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
