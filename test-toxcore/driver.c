@@ -16,11 +16,11 @@
     _r; \
   })
 
-#define propagate(expr) __extension__ ({ \
+#define propagate(expr) do { \
     __typeof__ (expr) _r = (expr); \
     if (_r != E_OK) \
       return _r; \
-  })
+  } while (0)
 
 
 
@@ -51,6 +51,51 @@ handle_request (int comm_fd, msgpack_object req)
 
 
 static int
+communicate (int comm_fd)
+{
+  msgpack_unpacker unp;
+  msgpack_unpacker_init (&unp, 128);
+
+  while (1)
+    {
+      char buf[64];
+      int size = check_return (E_READ, read (comm_fd, buf, sizeof buf));
+      if (size == 0)
+        break;
+
+      if (msgpack_unpacker_buffer_capacity (&unp) < size)
+        {
+          if (!msgpack_unpacker_reserve_buffer (&unp, size))
+            return E_NOMEM;
+        }
+
+      memcpy (msgpack_unpacker_buffer (&unp), buf, size);
+      msgpack_unpacker_buffer_consumed (&unp, size);
+
+      msgpack_unpacked req;
+      msgpack_unpacked_init (&req);
+      switch (msgpack_unpacker_next (&unp, &req))
+        {
+          case MSGPACK_UNPACK_SUCCESS:
+            propagate (handle_request (comm_fd, req.data));
+            break;
+          case MSGPACK_UNPACK_EXTRA_BYTES:
+            printf ("EXTRA_BYTES\n");
+            break;
+          case MSGPACK_UNPACK_CONTINUE: break;
+          case MSGPACK_UNPACK_PARSE_ERROR: return E_PARSE;
+          case MSGPACK_UNPACK_NOMEM_ERROR: return E_NOMEM;
+        }
+      msgpack_unpacked_destroy (&req);
+    }
+
+  msgpack_unpacker_destroy (&unp);
+
+  return E_OK;
+}
+
+
+static int
 run_tests (int port)
 {
   int listen_fd = socket (AF_INET, SOCK_STREAM, 0);
@@ -67,44 +112,7 @@ run_tests (int port)
   while (1)
     {
       int comm_fd = check_return (E_ACCEPT, accept (listen_fd, NULL, NULL));
-
-      msgpack_unpacker unp;
-      msgpack_unpacker_init (&unp, 128);
-
-      while (1)
-        {
-          char buf[64];
-          int size = check_return (E_READ, read (comm_fd, buf, sizeof buf));
-          if (size == 0)
-            break;
-
-          if (msgpack_unpacker_buffer_capacity (&unp) < size)
-            {
-              if (!msgpack_unpacker_reserve_buffer (&unp, size))
-                return E_NOMEM;
-            }
-
-          memcpy (msgpack_unpacker_buffer (&unp), buf, size);
-          msgpack_unpacker_buffer_consumed (&unp, size);
-
-          msgpack_unpacked req;
-          msgpack_unpacked_init (&req);
-          switch (msgpack_unpacker_next (&unp, &req))
-            {
-              case MSGPACK_UNPACK_SUCCESS:
-                propagate (handle_request (comm_fd, req.data));
-                break;
-              case MSGPACK_UNPACK_EXTRA_BYTES:
-                printf ("EXTRA_BYTES\n");
-                break;
-              case MSGPACK_UNPACK_CONTINUE: break;
-              case MSGPACK_UNPACK_PARSE_ERROR: return E_PARSE;
-              case MSGPACK_UNPACK_NOMEM_ERROR: return E_NOMEM;
-            }
-          msgpack_unpacked_destroy (&req);
-        }
-
-      msgpack_unpacker_destroy (&unp);
+      propagate (communicate (comm_fd));
     }
 
   return E_OK;

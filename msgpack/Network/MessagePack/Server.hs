@@ -105,7 +105,7 @@ method :: MethodType m f
 method name body = Method name $ toBody body
 
 -- | Start RPC server with a set of RPC methods.
-serve :: (MonadBaseControl IO m, MonadIO m, MonadCatch m, MonadThrow m)
+serve :: (MonadBaseControl IO m, MonadIO m, MonadCatch m)
          => Int        -- ^ Port number
          -> [Method m] -- ^ list of methods
          -> m ()
