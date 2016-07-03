@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+
+use strict;
+
+my $server_pid;
+unless ($server_pid = fork) {
+   exec "dist/build/test-server/test-server";
+}
+
+my $client_pid;
+unless ($client_pid = fork) {
+   exec "dist/build/test-tox/test-tox";
+}
+
+waitpid $client_pid, 0;
+kill 2, $server_pid;

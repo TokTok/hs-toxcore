@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
 module Data.MessagePack.Object (Object (..)) where
 
@@ -15,6 +16,7 @@ import qualified Data.Text.Lazy            as LT
 import           Data.Typeable             (Typeable)
 import qualified Data.Vector               as V
 import           Data.Word                 (Word8)
+import           GHC.Generics              (Generic)
 import           Prelude                   hiding (putStr)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
@@ -46,13 +48,9 @@ data Object
   | ObjectExt    {-# UNPACK #-} !Word8 !S.ByteString
     -- ^ represents a tuple of an integer and a byte array where
     -- the integer represents type information and the byte array represents data.
-  deriving (Show, Eq, Ord, Typeable)
+  deriving (Show, Eq, Ord, Typeable, Generic)
 
-instance NFData Object where
-  rnf obj = case obj of
-    ObjectArray a -> rnf a
-    ObjectMap   m -> rnf m
-    _             -> ()
+instance NFData Object
 
 instance Binary Object where
   get = getObject

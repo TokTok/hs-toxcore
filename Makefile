@@ -5,14 +5,8 @@ CABAL_GT_1_22 := $(shell [ $(CABAL_VER_MAJOR) -gt 1 -o \( $(CABAL_VER_MAJOR) -eq
 
 ifeq ($(CABAL_GT_1_22),true)
 COVERAGE	= --enable-coverage
-INIT_SANDBOX	= cabal sandbox init
-IGNORE_SANDBOX	= --ignore-sandbox
-REQUIRE_SANDBOX	= --require-sandbox
 else
 COVERAGE	= --enable-library-coverage
-INIT_SANDBOX	= @echo "No sandbox support"
-IGNORE_SANDBOX	=
-REQUIRE_SANDBOX	=
 endif
 
 SOURCES	:= $(shell find src test-server test-tox -name "*.*hs")
@@ -36,15 +30,15 @@ check:
 
 check-%: .build.stamp
 	dist/build/test-$*/test-$* & echo $$! > .server.pid
-	cabal $(REQUIRE_SANDBOX) test | grep -v '^Writing: '
+	cabal test | grep -v '^Writing: '
 	kill `cat .server.pid`
 	rm .server.pid
 
 repl: .build.stamp
-	cabal $(REQUIRE_SANDBOX) repl
+	cabal repl
 
 clean:
-	cabal $(REQUIRE_SANDBOX) clean
+	cabal clean
 	-test -f .server.pid && kill `cat .server.pid`
 	rm -f $(wildcard .*.stamp) .server.pid
 
@@ -52,20 +46,15 @@ clean:
 build: .build.stamp
 .build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp
 	rm -f $(wildcard *.tix)
-	cabal $(REQUIRE_SANDBOX) build
+	cabal build
 	@touch $@
 
 configure: .configure.stamp
-.configure.stamp: .libsodium.stamp .sandbox.stamp
-	happy -v | grep "1.19" || cabal $(IGNORE_SANDBOX) install haskell-src-exts happy
-	cabal $(REQUIRE_SANDBOX) install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
-	cabal $(REQUIRE_SANDBOX) configure --enable-tests $(EXTRA_DIRS) $(COVERAGE)
-	cabal $(IGNORE_SANDBOX) install stylish-haskell hlint
-	@touch $@
-
-.sandbox.stamp:
-	cabal $(IGNORE_SANDBOX) update
-	$(INIT_SANDBOX)
+.configure.stamp: .libsodium.stamp
+	happy -v | grep "1.19" || cabal install haskell-src-exts happy
+	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
+	cabal configure --enable-tests $(EXTRA_DIRS) $(COVERAGE)
+	cabal install stylish-haskell hlint
 	@touch $@
 
 doc: $(DOCS)
@@ -83,7 +72,7 @@ doc: $(DOCS)
 
 pandoc: .pandoc.stamp
 .pandoc.stamp:
-	cabal $(IGNORE_SANDBOX) install pandoc
+	cabal install pandoc
 	@touch $@
 
 libsodium: .libsodium.stamp

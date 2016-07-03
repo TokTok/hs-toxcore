@@ -7,14 +7,20 @@ cache:
     - $HOME/.ghc
 
 install:
-  - make configure
+  - cabal install codecov-haskell
   - cabal install hpc-coveralls
+  - cabal configure --enable-library-coverage --extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib
+  - cabal install --only-dependencies
 
 script:
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
-  - make check
+  - cabal build
+  - tools/run-tests
   - tools/build-docs
   - git diff --exit-code
 
 after_script:
-  - hpc-coveralls hstox-0.0.1
+  - mkdir -p dist/hpc/tix/hstox
+  - hpc combine --exclude=Main --union test-server.tix test-tox.tix --output=dist/hpc/tix/hstox/hstox.tix
+  - codecov-haskell --exclude-dir=test-server --exclude-dir=test-tox --exclude-dir=test-toxcore hstox
+  - hpc-coveralls   --exclude-dir=test-server --exclude-dir=test-tox --exclude-dir=test-toxcore hstox
