@@ -25,7 +25,7 @@ spec = do
       liftIO $ nonce1 `shouldNotBe` nonce2
 
   describe "nudge" $
-    it "generates a different nonce for arbitrary nonces" $
+    it "creates a nonce that is different from the passed nonce" $
       property $ \nonce ->
         Nonce.nudge nonce `shouldNotBe` nonce
 
