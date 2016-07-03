@@ -31,7 +31,7 @@ newNonce = Key <$> Sodium.newNonce
 
 newNonceC :: RPC.Client Nonce
 newNonceS :: RPC.Method IO
-(newNonceC, newNonceS) = RPC.stubs "KeyPair.newNonce" RPC.ioFun0 newNonce
+(newNonceC, newNonceS) = RPC.stubs "Nonce.newNonce" RPC.ioFun0 newNonce
 
 
 reverseNonce :: Nonce -> Nonce
@@ -51,6 +51,6 @@ increment =
 
 incrementC :: Nonce -> RPC.Client Nonce
 incrementS :: RPC.Method IO
-(incrementC, incrementS) = RPC.stubs "KeyPair.increment" RPC.fun1 increment
+(incrementC, incrementS) = RPC.stubs "Nonce.increment" RPC.fun1 increment
 
 \end{code}

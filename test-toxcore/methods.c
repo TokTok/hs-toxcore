@@ -1,34 +1,37 @@
 #include "methods.h"
 
-#define MIN(a,b) ((a) < (b) ? a : b)
+#include "crypto_core.h"
 
 
-void
-call_method (msgpack_object const *req, msgpack_packer *res)
+bool
+call_method (msgpack_object_str name, msgpack_object_array args, msgpack_packer *res)
 {
-  printf ("Request: ");
-  msgpack_object_print (stdout, *req);
-  printf ("\n");
-
-  uint64_t msgid = req->via.array.ptr[1].via.u64;
-
-  msgpack_pack_array (res, 4);
-  msgpack_pack_uint8 (res, 1); // type = response
-  msgpack_pack_uint64 (res, msgid); // msgid
-  msgpack_pack_array (res, 0); // no error
-
-  msgpack_object_str name = req->via.array.ptr[2].via.str;
-#define NAME_IS(NAME) (memcmp (name.ptr, NAME, MIN (name.size, sizeof NAME)) == 0)
-  if (NAME_IS ("KeyPair.newNonce"))
+#define NAME_IS(NAME) name.size == sizeof NAME - 1 && memcmp (name.ptr, NAME, name.size) == 0
+  if (NAME_IS ("Nonce.newNonce"))
     {
-      printf ("Creating new nonce\n");
       uint8_t nonce[24] = { 0 };
-      nonce[0] = msgid;
+      new_nonce (nonce);
+      msgpack_pack_bin (res, sizeof nonce);
+      msgpack_pack_bin_body (res, nonce, sizeof nonce);
+    }
+  else if (NAME_IS ("Nonce.increment"))
+    {
+      if (args.ptr[0].type != MSGPACK_OBJECT_BIN) return false;
+      if (args.ptr[0].via.bin.size != 24        ) return false;
+
+      uint8_t nonce[24];
+      memcpy (nonce, args.ptr[0].via.bin.ptr, 24);
+      increment_nonce (nonce);
       msgpack_pack_bin (res, sizeof nonce);
       msgpack_pack_bin_body (res, nonce, sizeof nonce);
     }
   else
     {
-      msgpack_pack_object (res, *req);
+      // Default action: echo.
+      msgpack_pack_array (res, args.size);
+      for (size_t i = 0; i < args.size; i++)
+        msgpack_pack_object (res, args.ptr[i]);
     }
+
+  return true;
 }

@@ -1,0 +1,5 @@
+/*.dSYM
+/test-findings
+/test-inputs
+/test-program
+/test-program-asan

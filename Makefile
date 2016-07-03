@@ -33,8 +33,12 @@ CABAL_INSTALL =								\
 all: check $(DOCS)
 
 
-check: .build.stamp
-	dist/build/test-server/test-server & echo $$! > .server.pid
+check:
+	$(MAKE) check-server
+#	$(MAKE) check-toxcore
+
+check-%: .build.stamp
+	dist/build/test-$*/test-$* & echo $$! > .server.pid
 	cabal $(REQUIRE_SANDBOX) test | grep -v '^Writing: '
 	kill `cat .server.pid`
 	rm .server.pid

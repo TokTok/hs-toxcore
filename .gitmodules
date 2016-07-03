@@ -1,0 +1,9 @@
+[submodule "test-toxcore/msgpack-c"]
+	path = test-toxcore/msgpack-c
+	url = https://github.com/msgpack/msgpack-c
+[submodule "test-toxcore/libsodium"]
+	path = test-toxcore/libsodium
+	url = https://github.com/jedisct1/libsodium
+[submodule "test-toxcore/toxcore"]
+	path = test-toxcore/toxcore
+	url = https://github.com/irungentoo/toxcore
