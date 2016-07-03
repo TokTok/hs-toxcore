@@ -114,7 +114,7 @@ executable test-toxcore
       -std=gnu99
       -Wall
       -- -Werror
-  extra-libraries:  sodium
+  extra-libraries:  sodium, pthread
   include-dirs:
       test-toxcore/msgpack-c/include
       test-toxcore/toxcore/toxcore

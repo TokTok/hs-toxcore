@@ -3,19 +3,9 @@
 set -e
 
 # sodium
-git clone --depth=1 https://github.com/jedisct1/libsodium
-cd libsodium
+cd test-toxcore/libsodium
 sh autogen.sh
 ./configure --prefix=$PWD/_install
 make install
 mv _install/include/* /app/vendor/ghc-includes
 mv _install/lib/* /app/vendor/ghc-libs
-
-# msgpack
-git clone https://github.com/iphydf/msgpack-haskell
-cabal install                                   \
-  aeson-0.11.1.4                                \
-  msgpack-haskell/msgpack/msgpack.cabal         \
-  msgpack-haskell/msgpack-rpc/msgpack-rpc.cabal \
-  msgpack-haskell/msgpack-aeson/msgpack-aeson.cabal
-rm -rf msgpack-haskell
