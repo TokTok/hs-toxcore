@@ -15,6 +15,7 @@ import qualified Data.ByteString.Char8      as S
 import qualified Data.ByteString.Lazy.Char8 as L
 import           Data.Hashable              (Hashable)
 import qualified Data.HashMap.Strict        as HashMap
+import           Data.Int                   (Int64)
 import qualified Data.IntMap                as IntMap
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
@@ -69,7 +70,7 @@ mid :: MessagePack a => a -> a
 mid = Maybe.fromJust . unpack . pack
 
 
-intMid :: Int -> Int
+intMid :: Int64 -> Int64
 intMid = mid
 
 
