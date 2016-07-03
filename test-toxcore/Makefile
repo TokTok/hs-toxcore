@@ -1,8 +1,14 @@
 CFLAGS := -Imsgpack-c/include -Itoxcore/toxcore -lsodium
 SOURCES := $(wildcard *.c msgpack-c/src/*.c toxcore/toxcore/*.c)
 
+ifeq ($(wildcard test-findings/master/fuzzer_stats),)
+TEST_INPUTS := test-inputs
+else
+TEST_INPUTS := -
+endif
+
 check: test-program test-findings
-	afl-fuzz -i test-inputs -o test-findings -M master ./$<
+	afl-fuzz -i$(TEST_INPUTS) -o test-findings -M master ./$<
 
 slave%: test-program test-findings
 	afl-fuzz -i test-inputs -o test-findings -S slave$* ./$<

@@ -51,7 +51,32 @@ type_check (msgpack_packer *pk, msgpack_object req, int index, msgpack_object_ty
 
 
 static int
-handle_request (int write_fd, msgpack_object req)
+write_sample_input (msgpack_object req)
+{
+  msgpack_object_str name = req.via.array.ptr[2].via.str;
+  char filename[128] = "test-toxcore/test-inputs/";
+  memcpy (filename + strlen (filename), name.ptr, name.size);
+  memcpy (filename + strlen (filename) + name.size, ".mp", 4);
+
+  int fd = check_return (E_WRITE, open (filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR));
+  check_return (E_WRITE, ftruncate (fd, 0));
+
+  msgpack_sbuffer sbuf __attribute__ ((__cleanup__ (msgpack_sbuffer_destroy)));
+  msgpack_sbuffer_init (&sbuf);
+
+  msgpack_packer pk;
+  msgpack_packer_init (&pk, &sbuf, msgpack_sbuffer_write);
+
+  msgpack_pack_object (&pk, req);
+
+  check_return (E_WRITE, write (fd, sbuf.data, sbuf.size));
+
+  return E_OK;
+}
+
+
+static int
+handle_request (bool collect_samples, int write_fd, msgpack_object req)
 {
   msgpack_sbuffer sbuf __attribute__ ((__cleanup__ (msgpack_sbuffer_destroy))); /* buffer */
   msgpack_sbuffer_init (&sbuf); /* initialize buffer */
@@ -73,6 +98,9 @@ handle_request (int write_fd, msgpack_object req)
       msgpack_object_print (stdout, req);
       printf ("\n");
 
+      if (collect_samples)
+        propagate (write_sample_input (req));
+
       msgpack_pack_array (&pk, 4); // 4 elements in the array
       msgpack_pack_uint8 (&pk, 1); // 1. type = response
       msgpack_pack_uint64 (&pk, req.via.array.ptr[1].via.u64); // 2. msgid
@@ -86,7 +114,7 @@ handle_request (int write_fd, msgpack_object req)
 
 
 static int
-communicate (int read_fd, int write_fd)
+communicate (bool collect_samples, int read_fd, int write_fd)
 {
   msgpack_unpacker unp __attribute__ ((__cleanup__ (msgpack_unpacker_destroy)));
   msgpack_unpacker_init (&unp, 128);
@@ -110,7 +138,7 @@ communicate (int read_fd, int write_fd)
       switch (msgpack_unpacker_next (&unp, &req))
         {
           case MSGPACK_UNPACK_SUCCESS:
-            propagate (handle_request (write_fd, req.data));
+            propagate (handle_request (collect_samples, write_fd, req.data));
             break;
           case MSGPACK_UNPACK_EXTRA_BYTES:
             printf ("EXTRA_BYTES\n");
@@ -126,7 +154,7 @@ communicate (int read_fd, int write_fd)
 
 
 static int
-run_tests (int port)
+run_tests (bool collect_samples, int port)
 {
   int listen_fd = socket (AF_INET, SOCK_STREAM, 0);
 
@@ -136,13 +164,12 @@ run_tests (int port)
   servaddr.sin_port = htons (port);
 
   check_return (E_BIND, bind (listen_fd, (struct sockaddr *) &servaddr, sizeof servaddr));
-
   check_return (E_LISTEN, listen (listen_fd, 10));
 
   while (1)
     {
       int comm_fd = check_return (E_ACCEPT, accept (listen_fd, NULL, NULL));
-      propagate (communicate (comm_fd, comm_fd));
+      propagate (communicate (collect_samples, comm_fd, comm_fd));
     }
 
   return E_OK;
@@ -150,9 +177,9 @@ run_tests (int port)
 
 
 int
-test_main (int port)
+test_main (bool collect_samples, int port)
 {
-  int result = run_tests (port);
+  int result = run_tests (collect_samples, port);
   if (result == E_OK)
     return E_OK;
   return result | (errno << 8);
@@ -164,5 +191,5 @@ __attribute__ ((__weak__)) int main (int argc, char **argv);
 int
 main (int argc, char **argv)
 {
-  return communicate (STDIN_FILENO, STDOUT_FILENO);
+  return communicate (false, STDIN_FILENO, STDOUT_FILENO);
 }

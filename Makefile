@@ -22,12 +22,9 @@ DOCS	:= ../tox-spec/spec.md
 include ../tox-spec/pandoc.mk
 endif
 
-
-CABAL_INSTALL =								\
-	cabal $(REQUIRE_SANDBOX) install				\
-		--enable-tests						\
-		--extra-include-dirs=$(HOME)/.cabal/extra-dist/include	\
-		--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
+EXTRA_DIRS :=							\
+	--extra-include-dirs=$(HOME)/.cabal/extra-dist/include	\
+	--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 
 
 all: check $(DOCS)
@@ -61,8 +58,8 @@ build: .build.stamp
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp .sandbox.stamp
 	happy -v | grep "1.19" || cabal $(IGNORE_SANDBOX) install haskell-src-exts happy
-	$(CABAL_INSTALL) --only-dependencies hstox.cabal
-	cabal $(REQUIRE_SANDBOX) configure --enable-tests $(COVERAGE)
+	cabal $(REQUIRE_SANDBOX) install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
+	cabal $(REQUIRE_SANDBOX) configure --enable-tests $(EXTRA_DIRS) $(COVERAGE)
 	cabal $(IGNORE_SANDBOX) install stylish-haskell hlint
 	@touch $@
 

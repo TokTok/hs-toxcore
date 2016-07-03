@@ -7,9 +7,7 @@ mkdir -p $HOME/.cabal/extra-dist
 if test -f $HOME/.cabal/extra-dist/lib/libsodium.a; then exit; fi
 if pkg-config libsodium; then exit; fi
 
-rm -rf libsodium
-git clone --depth=1 https://github.com/jedisct1/libsodium
-cd libsodium
+cd test-toxcore/libsodium
 
 git rev-parse HEAD > new-hash
 if diff new-hash $HOME/.cabal/extra-dist/libsodium.hash; then
@@ -22,6 +20,3 @@ mv new-hash $HOME/.cabal/extra-dist/libsodium.hash
 sh autogen.sh
 ./configure --prefix=$HOME/.cabal/extra-dist
 make install
-
-cd -
-rm -rf libsodium

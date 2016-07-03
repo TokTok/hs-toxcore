@@ -7,7 +7,12 @@ import           Data.Bits     (shift, (.&.))
 
 #include "errors.h"
 
-foreign import ccall "test_main" c_test_main :: Int -> IO Int
+foreign import ccall "test_main" c_test_main :: Bool -> Int -> IO Int
+
+testMain :: Bool -> Int -> IO (Int, Int)
+testMain collectSamples port = do
+  result <- c_test_main collectSamples port
+  return (result .&. 0xff, shift result (-8))
 
 
 errorDesc :: Int -> String
@@ -25,6 +30,6 @@ errorDesc = \case
 
 main :: IO ()
 main = do
-  result <- c_test_main 1234
+  (result, errno) <- testMain True 1234
   when (result /= E_OK) $
-    putStrLn $ errorDesc (result .&. 0xff) ++ ", errno=" ++ show (shift result (-8))
+    putStrLn $ errorDesc result ++ ", errno=" ++ show errno
