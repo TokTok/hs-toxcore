@@ -29,7 +29,7 @@ typeName = Typeable.tyConName . Typeable.typeRepTyCon . Typeable.typeRep
 decode :: Binary a => ByteString -> Maybe a
 decode = Encoding.decode
 
-decodeC :: forall a. (Typeable a, Binary a, RPC.MessagePack a)
+decodeC :: forall a. (Typeable a, RPC.MessagePack a)
         => ByteString -> RPC.Client (Maybe a)
 decodeC = RPC.call "Binary.decode" $ typeName (Proxy :: Proxy a)
 
@@ -56,7 +56,7 @@ decodeS = RPC.method "Binary.decode" decodeF
 encode :: Binary a => a -> ByteString
 encode = Encoding.encode
 
-encodeC :: forall a. (Typeable a, Binary a, RPC.MessagePack a)
+encodeC :: forall a. (Typeable a, RPC.MessagePack a)
         => a -> RPC.Client ByteString
 encodeC = RPC.call "Binary.encode" $ typeName (Proxy :: Proxy a)
 

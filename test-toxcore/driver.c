@@ -127,3 +127,11 @@ test_main (int port)
     return E_OK;
   return result | (errno << 8);
 }
+
+__attribute__ ((__weak__)) int main (int argc, char **argv);
+
+int
+main (int argc, char **argv)
+{
+  return 0;
+}
