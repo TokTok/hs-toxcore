@@ -5,10 +5,11 @@ module Main (main) where
 
 import           Control.Monad (when)
 import           Data.Bits     (shift, (.&.))
+import           Data.Word     (Word16, Word32)
 
 #include "errors.h"
 
-foreign import ccall "test_main" c_test_main :: Bool -> Int -> IO Int
+foreign import ccall "test_main" c_test_main :: Bool -> Word16 -> IO Word32
 
 
 data Result = Result
@@ -19,10 +20,10 @@ data Result = Result
 
 testMain :: Bool -> Int -> IO Result
 testMain collectSamples port = do
-  result <- c_test_main collectSamples port
-  let line   = shift result (-16)
-  let errno  = shift result (- 8) .&. 0xff
-  let result =       result       .&. 0xff
+  result <- c_test_main collectSamples (fromIntegral port)
+  let line   = fromIntegral $ shift result (-16)
+  let errno  = fromIntegral $ shift result (- 8) .&. 0xff
+  let result = fromIntegral $       result       .&. 0xff
   return $ Result line result errno
 
 

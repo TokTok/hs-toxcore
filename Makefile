@@ -9,7 +9,7 @@ else
 COVERAGE	= --enable-library-coverage
 endif
 
-SOURCES	:= $(shell find src test-server test-tox -name "*.*hs")
+SOURCES	:= $(shell find src test-server test-tox test-toxcore -name "*.*hs" -or -name "*.c" -or -name "*.h")
 
 ifneq ($(wildcard ../tox-spec/pandoc.mk),)
 ifneq ($(shell which pandoc),)
@@ -32,7 +32,7 @@ check:
 
 check-%: .build.stamp
 	dist/build/test-$*/test-$* & echo $$! > .server.pid
-	cabal test | grep -v '^Writing: '
+	dist/build/test-tox/test-tox --seed=0
 	kill `cat .server.pid`
 	rm .server.pid
 

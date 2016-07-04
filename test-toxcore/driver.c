@@ -176,8 +176,8 @@ run_tests (bool collect_samples, int port)
 }
 
 
-int
-test_main (bool collect_samples, int port)
+uint32_t
+test_main (bool collect_samples, uint16_t port)
 {
   int result = run_tests (collect_samples, port);
   if (result == E_OK)
