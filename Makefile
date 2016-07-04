@@ -12,8 +12,10 @@ endif
 SOURCES	:= $(shell find src test-server test-tox -name "*.*hs")
 
 ifneq ($(wildcard ../tox-spec/pandoc.mk),)
+ifneq ($(shell which pandoc),)
 DOCS	:= ../tox-spec/spec.md
 include ../tox-spec/pandoc.mk
+endif
 endif
 
 EXTRA_DIRS :=							\
@@ -51,14 +53,13 @@ build: .build.stamp
 
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp
-	happy -v | grep "1.19" || cabal install haskell-src-exts happy
+	cabal update
 	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
 	cabal configure --enable-tests $(EXTRA_DIRS) $(COVERAGE)
-	cabal install stylish-haskell hlint
 	@touch $@
 
 doc: $(DOCS)
-../tox-spec/spec.md: src/Network/Tox.lhs $(shell find src -name "*.lhs") ../tox-spec/pandoc.mk .pandoc.stamp
+../tox-spec/spec.md: src/Network/Tox.lhs $(shell find src -name "*.lhs") ../tox-spec/pandoc.mk
 	echo '% The Tox Reference' > $@
 	echo '' >> $@
 	pandoc $< $(PANDOC_ARGS)							\
@@ -70,11 +71,6 @@ doc: $(DOCS)
 	if which mdl; then $(MAKE) -C ../tox-spec check; fi
 	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io push; fi
 
-pandoc: .pandoc.stamp
-.pandoc.stamp:
-	cabal install pandoc
-	@touch $@
-
 libsodium: .libsodium.stamp
 .libsodium.stamp: tools/install-libsodium
 	$<
@@ -82,10 +78,10 @@ libsodium: .libsodium.stamp
 
 format: .format.stamp
 .format.stamp: $(SOURCES) .configure.stamp
-	tools/format-haskell -i src
+	if which stylish-haskell; then tools/format-haskell -i src; fi
 	@touch $@
 
 lint: .lint.stamp
 .lint.stamp: $(SOURCES) .configure.stamp
-	hlint --cross src
+	if which hlint; then hlint --cross src; fi
 	@touch $@

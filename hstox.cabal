@@ -103,7 +103,7 @@ executable test-server
       base < 5
     , hstox
   main-is:
-      TestServer.hs
+      TestServer.lhs
 
 executable test-toxcore
   default-language: Haskell2010
