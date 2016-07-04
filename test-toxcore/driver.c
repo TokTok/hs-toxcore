@@ -58,7 +58,7 @@ write_sample_input (msgpack_object req)
   memcpy (filename + strlen (filename), name.ptr, name.size);
   memcpy (filename + strlen (filename) + name.size, ".mp", 4);
 
-  int fd = check_return (E_WRITE, open (filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR));
+  int fd = check_return (E_OPEN, open (filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR));
   check_return (E_WRITE, ftruncate (fd, 0));
 
   msgpack_sbuffer sbuf __attribute__ ((__cleanup__ (msgpack_sbuffer_destroy)));

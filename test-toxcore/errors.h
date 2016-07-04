@@ -4,5 +4,6 @@
 #define E_LISTEN  3
 #define E_ACCEPT  4
 #define E_PARSE   5
-#define E_READ    6
-#define E_WRITE   7
+#define E_OPEN    6
+#define E_READ    7
+#define E_WRITE   8

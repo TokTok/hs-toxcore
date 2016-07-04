@@ -34,6 +34,7 @@ errorDesc = \case
   E_LISTEN  -> "Error: listen failed"
   E_ACCEPT  -> "Error: accept failed"
   E_PARSE   -> "Error: unable to parse msgpack input"
+  E_OPEN    -> "Error: open failed"
   E_READ    -> "Error: read failed"
   E_WRITE   -> "Error: write failed"
   e         -> "Unknown error code: " ++ show e
