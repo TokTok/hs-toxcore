@@ -1,5 +1,6 @@
-{-# LANGUAGE CPP        #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE CPP            #-}
+{-# LANGUAGE LambdaCase     #-}
+{-# LANGUAGE NamedFieldPuns #-}
 module Main (main) where
 
 import           Control.Monad (when)
@@ -9,10 +10,20 @@ import           Data.Bits     (shift, (.&.))
 
 foreign import ccall "test_main" c_test_main :: Bool -> Int -> IO Int
 
-testMain :: Bool -> Int -> IO (Int, Int)
+
+data Result = Result
+  { line   :: Int
+  , result :: Int
+  , errno  :: Int
+  }
+
+testMain :: Bool -> Int -> IO Result
 testMain collectSamples port = do
   result <- c_test_main collectSamples port
-  return (result .&. 0xff, shift result (-8))
+  let line   = shift result (-16)
+  let errno  = shift result (- 8) .&. 0xff
+  let result =       result       .&. 0xff
+  return $ Result line result errno
 
 
 errorDesc :: Int -> String
@@ -30,6 +41,6 @@ errorDesc = \case
 
 main :: IO ()
 main = do
-  (result, errno) <- testMain True 1234
+  Result { line, result, errno } <- testMain True 1234
   when (result /= E_OK) $
-    putStrLn $ errorDesc result ++ ", errno=" ++ show errno
+    putStrLn $ errorDesc result ++ ", errno=" ++ show errno ++ ", line=" ++ show line
