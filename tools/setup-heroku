@@ -3,7 +3,7 @@
 set -e
 
 # sodium
-cd test-toxcore/libsodium
+cd test/toxcore/libsodium
 sh autogen.sh
 ./configure --prefix=$PWD/_install
 make install

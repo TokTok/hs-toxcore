@@ -109,7 +109,7 @@ readShowSpec (Proxy :: Proxy a) =
     showA = show :: a -> String
     readA = read :: String -> a
   in
-  describe "Read/Show" $ do
+  describe "Read/Show" $
     it "encodes and decodes correctly" $
       property $ \expected ->
         let output = readA $ showA expected in

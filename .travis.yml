@@ -16,13 +16,13 @@ install:
 script:
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
   - cabal build
-  - tools/run-tests server
+  - tools/run-tests hstox
   - tools/run-tests toxcore
   - tools/build-docs
   - git diff --exit-code
 
 after_script:
   - mkdir -p dist/hpc/tix/hstox
-  - hpc combine --exclude=Main --union test-server.tix test-tox.tix --output=dist/hpc/tix/hstox/hstox.tix
-  - codecov-haskell --exclude-dir=test-server --exclude-dir=test-tox --exclude-dir=test-toxcore hstox
-  - hpc-coveralls   --exclude-dir=test-server --exclude-dir=test-tox --exclude-dir=test-toxcore hstox
+  - hpc combine --exclude=Main --union testsuite.tix test-hstox.tix --output=dist/hpc/tix/hstox/hstox.tix
+  - codecov-haskell --exclude-dir=test --exclude-dir=src/testsuite hstox
+  - hpc-coveralls   --exclude-dir=test --exclude-dir=src/testsuite hstox

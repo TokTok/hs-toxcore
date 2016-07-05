@@ -57,10 +57,10 @@ has exactly one human-readable representation, and a mapping exists from the
 human-readable representation to the control character.  Therefore, the use of
 Unicode Control Characters (U+240x) is not permitted without additional marker.
 
-\input{src/Network/Tox/Crypto.lhs}
-\input{src/Network/Tox/NodeInfo.lhs}
-\input{src/Network/Tox/Protocol.lhs}
-\input{src/Network/Tox/DHT.lhs}
+\input{src/tox/Network/Tox/Crypto.lhs}
+\input{src/tox/Network/Tox/NodeInfo.lhs}
+\input{src/tox/Network/Tox/Protocol.lhs}
+\input{src/tox/Network/Tox/DHT.lhs}
 
 \chapter{LAN discovery}
 
@@ -3482,4 +3482,4 @@ means that the integers stored in these nodes are stored in Big Endian as well.
 This section indicates the end of the state file. This section doesn't have any
 content and thus it's length is 0.
 
-\input{test-server/TestServer.lhs}
+\input{test/hstox/TestServer.lhs}

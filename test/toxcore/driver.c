@@ -61,7 +61,7 @@ static int
 write_sample_input (msgpack_object req)
 {
   msgpack_object_str name = req.via.array.ptr[2].via.str;
-  char filename[128] = "test-toxcore/test-inputs/";
+  char filename[128] = "test/toxcore/test-inputs/";
   memcpy (filename + strlen (filename), name.ptr, name.size);
   memcpy (filename + strlen (filename) + name.size, ".mp", 4);
 

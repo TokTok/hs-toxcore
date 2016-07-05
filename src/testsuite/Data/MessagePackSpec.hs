@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Trustworthy         #-}
@@ -43,13 +42,17 @@ instance Arbitrary Foo where
     ]
 
 
-#if __GLASGOW_HASKELL__ >= 710
-instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (Map.Map k v) where
-  arbitrary = Map.fromList <$> arbitrary
+newtype Map k v = Map (Map.Map k v) deriving (Eq, Show, Generic)
+newtype IntMap v = IntMap (IntMap.IntMap v) deriving (Eq, Show, Generic)
 
-instance Arbitrary v => Arbitrary (IntMap.IntMap v) where
-  arbitrary = IntMap.fromList <$> arbitrary
-#endif
+instance (Ord k, MessagePack k, MessagePack v) => MessagePack (Map k v)
+instance MessagePack v => MessagePack (IntMap v)
+
+instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (Map k v) where
+  arbitrary = Map . Map.fromList <$> arbitrary
+
+instance Arbitrary v => Arbitrary (IntMap v) where
+  arbitrary = IntMap . IntMap.fromList <$> arbitrary
 
 instance (Hashable k, Eq k, Arbitrary k, Arbitrary v) => Arbitrary (HashMap.HashMap k v) where
   arbitrary = HashMap.fromList <$> arbitrary
@@ -111,7 +114,7 @@ spec = do
     let sizes = [0xf, 0x10, 0x1f, 0x20, 0xff, 0x100, 0xffff, 0x10000]
 
     it "map encodings" $ do
-      let rt n = let a = IntMap.fromList $ [(x, -x) | x <- [0..n]] in a `shouldBe` mid a
+      let rt n = let a = IntMap $ IntMap.fromList [(x, -x) | x <- [0..n]] in a `shouldBe` mid a
       mapM_ rt sizes
 
     it "list encodings" $ do
@@ -195,9 +198,9 @@ spec = do
     it "Assoc [(string, int)]" $
       property $ \(a :: Assoc [(String, Int)]) -> a `shouldBe` mid a
     it "Map String Int" $
-      property $ \(a :: Map.Map String Int) -> a `shouldBe` mid a
+      property $ \(a :: Map String Int) -> a `shouldBe` mid a
     it "IntMap Int" $
-      property $ \(a :: IntMap.IntMap Int) -> a `shouldBe` mid a
+      property $ \(a :: IntMap Int) -> a `shouldBe` mid a
     it "HashMap String Int" $
       property $ \(a :: HashMap.HashMap String Int) -> a `shouldBe` mid a
     it "maybe int" $

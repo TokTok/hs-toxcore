@@ -9,8 +9,7 @@ else
 ENABLE_COVERAGE	= --enable-library-coverage
 endif
 
-DIRS	:= msgpack src test-server test-tox test-toxcore
-SOURCES	:= $(shell find $(DIRS) -name "*.*hs" -or -name "*.c" -or -name "*.h")
+SOURCES	:= $(shell find src test -name "*.*hs" -or -name "*.c" -or -name "*.h")
 
 ifneq ($(wildcard ../tox-spec/pandoc.mk),)
 ifneq ($(shell which pandoc),)
@@ -28,7 +27,7 @@ all: check $(DOCS)
 
 
 check:
-	$(MAKE) check-server
+	$(MAKE) check-hstox
 	$(MAKE) check-toxcore
 
 check-%: .build.stamp
@@ -56,7 +55,7 @@ configure: .configure.stamp
 	@touch $@
 
 doc: $(DOCS)
-../tox-spec/spec.md: src/Network/Tox.lhs $(shell find src -name "*.lhs") ../tox-spec/pandoc.mk
+../tox-spec/spec.md: src/tox/Network/Tox.lhs $(shell find src -name "*.lhs") ../tox-spec/pandoc.mk
 	echo '% The Tox Reference' > $@
 	echo '' >> $@
 	pandoc $< $(PANDOC_ARGS)							\

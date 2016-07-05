@@ -22,9 +22,9 @@ The DHT public key of a friend is found using the \href{#onion}{onion} module.
 Once the DHT public key of a friend is known, the DHT is used to find them and
 connect directly to them via UDP.
 
-\input{src/Network/Tox/DHT/Distance.lhs}
-\input{src/Network/Tox/DHT/KBuckets.lhs}
-\input{src/Network/Tox/DHT/DhtState.lhs}
+\input{src/tox/Network/Tox/DHT/Distance.lhs}
+\input{src/tox/Network/Tox/DHT/KBuckets.lhs}
+\input{src/tox/Network/Tox/DHT/DhtState.lhs}
 
 \section{Self-organisation}
 
@@ -39,20 +39,20 @@ public keys closest to X.  Eventually the peer will find the peers in the DHT
 that are the closest to that peer and, if that peer is online, they will find
 them.
 
-\input{src/Network/Tox/DHT/DhtPacket.lhs}
+\input{src/tox/Network/Tox/DHT/DhtPacket.lhs}
 
 \section{RPC Services}
 
-\input{src/Network/Tox/DHT/RpcPacket.lhs}
-\input{src/Network/Tox/DHT/PingPacket.lhs}
+\input{src/tox/Network/Tox/DHT/RpcPacket.lhs}
+\input{src/tox/Network/Tox/DHT/PingPacket.lhs}
 
 \subsection{Nodes Service}
 
 The Nodes Service is used to query another DHT node for up to 4 nodes they know
 that are the closest to a requested node.
 
-\input{src/Network/Tox/DHT/NodesRequest.lhs}
-\input{src/Network/Tox/DHT/NodesResponse.lhs}
+\input{src/tox/Network/Tox/DHT/NodesRequest.lhs}
+\input{src/tox/Network/Tox/DHT/NodesResponse.lhs}
 
 \subsection{Packed node format}
 

@@ -259,13 +259,13 @@ instance (GMessagePack a, GMessagePack b) => GMessagePack (a :*: b) where
     (:*:) <$> gFromObject a <*> gFromObject b
 
 instance (GMessagePack a, GMessagePack b) => GMessagePack (a :+: b) where
-  gToObject (L1 x) = toObject (False, gToObject x)
-  gToObject (R1 x) = toObject (True , gToObject x)
+  gToObject (L1 x) = toObject (True , gToObject x)
+  gToObject (R1 x) = toObject (False, gToObject x)
   gFromObject o = do
-    (choice, x) <- fromObject o
-    case choice of
-      False -> L1 <$> gFromObject x
-      True  -> R1 <$> gFromObject x
+    (isLeft, x) <- fromObject o
+    if isLeft
+      then L1 <$> gFromObject x
+      else R1 <$> gFromObject x
 
 instance GMessagePack a => GMessagePack (M1 t c a) where
   gToObject (M1 x) = gToObject x

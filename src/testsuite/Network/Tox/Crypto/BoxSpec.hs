@@ -11,7 +11,7 @@ import qualified Network.Tox.Crypto.Box as Box
 
 
 spec :: Spec
-spec = do
+spec =
   it "should decrypt encrypted data" $
     property $ \combinedKey nonce plainText -> runTest $ do
       cipherText <- Box.encryptC combinedKey nonce plainText

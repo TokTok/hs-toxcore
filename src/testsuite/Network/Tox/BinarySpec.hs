@@ -14,7 +14,7 @@ import qualified Network.Tox.RPC        as RPC
 
 
 spec :: Spec
-spec = do
+spec =
   it "should decode encoded data" $ do
     encoded <- Binary.encodeM (Proxy :: Proxy String) (RPC.toObject "hello")
     decoded <- Binary.decodeM (Proxy :: Proxy String) encoded

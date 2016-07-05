@@ -4,9 +4,12 @@ use strict;
 
 use IO::Socket::INET;
 
+
 my $SUT = shift @ARGV or die "Usage: run-tests <server|toxcore> [args...]\n";
 my $server = "dist/build/test-$SUT/test-$SUT";
-die "$SUT is not a valid SUT. Choose one of [server, toxcore]\n" unless -f $server;
+
+my @valid_suts = map { m|/([^/]*)| } <test/*>;
+die "$SUT is not a valid SUT. Choose one of [@valid_suts]\n" unless -f $server;
 
 my $server_pid;
 $SIG{INT} = sub { kill 2, $server_pid };
@@ -15,4 +18,4 @@ unless ($server_pid = fork) {
    exec "dist/build/test-$SUT/test-$SUT";
 }
 
-system "dist/build/test-tox/test-tox", @ARGV;
+system "dist/build/testsuite/testsuite", @ARGV;

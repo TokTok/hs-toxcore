@@ -92,4 +92,4 @@ without computing the complete integral value.  This works, because as soon as
 an ordering decision can be made in the most significant bits, further bits
 won't influence that decision.
 
-\input{test-tox/Network/Tox/DHT/DistanceSpec.lhs}
+\input{src/testsuite/Network/Tox/DHT/DistanceSpec.lhs}
