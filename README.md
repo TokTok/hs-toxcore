@@ -5,3 +5,5 @@
 [![Codecov](https://codecov.io/gh/TokTok/hstox/branch/master/graph/badge.svg)](https://codecov.io/gh/TokTok/hstox)
 
 Haskell Tox implementation.
+
+Foo.
