@@ -3,16 +3,31 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Network.Tox.Binary where
 
-import           Control.Applicative           ((<$>))
-import           Data.Binary                   (Binary)
-import           Data.ByteString               (ByteString)
-import           Data.Proxy                    (Proxy (..))
-import           Data.Typeable                 (Typeable)
-import qualified Data.Typeable                 as Typeable
+import           Control.Applicative                    ((<$>))
+import           Data.Binary                            (Binary)
+import           Data.ByteString                        (ByteString)
+import           Data.Proxy                             (Proxy (..))
+import           Data.Typeable                          (Typeable)
+import qualified Data.Typeable                          as Typeable
 
-import qualified Network.Tox.Encoding          as Encoding
-import qualified Network.Tox.NodeInfo.NodeInfo as T
-import qualified Network.Tox.RPC               as RPC
+import qualified Network.Tox.Encoding                   as Encoding
+import qualified Network.Tox.RPC                        as RPC
+
+import qualified Network.Tox.Crypto.Key                 as T
+import qualified Network.Tox.Crypto.KeyPair             as T
+import qualified Network.Tox.Crypto.Text                as T
+import qualified Network.Tox.DHT.DhtPacket              as T
+import qualified Network.Tox.DHT.NodesRequest           as T
+import qualified Network.Tox.DHT.NodesResponse          as T
+import qualified Network.Tox.DHT.PingPacket             as T
+import qualified Network.Tox.DHT.RpcPacket              as T
+import qualified Network.Tox.NodeInfo.HostAddress       as T
+import qualified Network.Tox.NodeInfo.NodeInfo          as T
+import qualified Network.Tox.NodeInfo.PortNumber        as T
+import qualified Network.Tox.NodeInfo.SocketAddress     as T
+import qualified Network.Tox.NodeInfo.TransportProtocol as T
+import qualified Network.Tox.Protocol.Packet            as T
+import qualified Network.Tox.Protocol.PacketKind        as T
 
 
 typeName :: Typeable a => Proxy a -> String
@@ -38,8 +53,23 @@ decodeM (Proxy :: Proxy a) bs =
   return $ RPC.toObject <$> (decode bs :: Maybe a)
 
 decodeF :: String -> ByteString -> RPC.Server (Maybe RPC.Object)
-decodeF "Int"      = decodeM (Proxy :: Proxy Int       )
-decodeF "NodeInfo" = decodeM (Proxy :: Proxy T.NodeInfo)
+decodeF "CipherText"        = decodeM (Proxy :: Proxy T.CipherText        )
+decodeF "DhtPacket"         = decodeM (Proxy :: Proxy T.DhtPacket         )
+decodeF "HostAddress"       = decodeM (Proxy :: Proxy T.HostAddress       )
+decodeF "Int"               = decodeM (Proxy :: Proxy Int                 )
+decodeF "Key"               = decodeM (Proxy :: Proxy T.PublicKey         )
+decodeF "KeyPair"           = decodeM (Proxy :: Proxy T.KeyPair           )
+decodeF "NodeInfo"          = decodeM (Proxy :: Proxy T.NodeInfo          )
+decodeF "NodesRequest"      = decodeM (Proxy :: Proxy T.NodesRequest      )
+decodeF "NodesResponse"     = decodeM (Proxy :: Proxy T.NodesResponse     )
+decodeF "Packet"            = decodeM (Proxy :: Proxy (T.Packet Int)      )
+decodeF "PacketKind"        = decodeM (Proxy :: Proxy T.PacketKind        )
+decodeF "PingPacket"        = decodeM (Proxy :: Proxy T.PingPacket        )
+decodeF "PlainText"         = decodeM (Proxy :: Proxy T.PlainText         )
+decodeF "PortNumber"        = decodeM (Proxy :: Proxy T.PortNumber        )
+decodeF "RpcPacket"         = decodeM (Proxy :: Proxy (T.RpcPacket Int)   )
+decodeF "SocketAddress"     = decodeM (Proxy :: Proxy T.SocketAddress     )
+decodeF "TransportProtocol" = decodeM (Proxy :: Proxy T.TransportProtocol )
 decodeF tycon = const $ fail $ "unsupported type in decode: " ++ tycon
 
 decodeS :: RPC.Method IO
@@ -68,8 +98,23 @@ encodeM (Proxy :: Proxy a) obj =
     Just a  -> return $ encode a
 
 encodeF :: String -> RPC.Object -> RPC.Server ByteString
-encodeF "Int"      = encodeM (Proxy :: Proxy Int)
-encodeF "NodeInfo" = encodeM (Proxy :: Proxy T.NodeInfo)
+encodeF "CipherText"        = encodeM (Proxy :: Proxy T.CipherText        )
+encodeF "DhtPacket"         = encodeM (Proxy :: Proxy T.DhtPacket         )
+encodeF "HostAddress"       = encodeM (Proxy :: Proxy T.HostAddress       )
+encodeF "Int"               = encodeM (Proxy :: Proxy Int                 )
+encodeF "Key"               = encodeM (Proxy :: Proxy T.PublicKey         )
+encodeF "KeyPair"           = encodeM (Proxy :: Proxy T.KeyPair           )
+encodeF "NodeInfo"          = encodeM (Proxy :: Proxy T.NodeInfo          )
+encodeF "NodesRequest"      = encodeM (Proxy :: Proxy T.NodesRequest      )
+encodeF "NodesResponse"     = encodeM (Proxy :: Proxy T.NodesResponse     )
+encodeF "Packet"            = encodeM (Proxy :: Proxy (T.Packet Int)      )
+encodeF "PacketKind"        = encodeM (Proxy :: Proxy T.PacketKind        )
+encodeF "PingPacket"        = encodeM (Proxy :: Proxy T.PingPacket        )
+encodeF "PlainText"         = encodeM (Proxy :: Proxy T.PlainText         )
+encodeF "PortNumber"        = encodeM (Proxy :: Proxy T.PortNumber        )
+encodeF "RpcPacket"         = encodeM (Proxy :: Proxy (T.RpcPacket Int)   )
+encodeF "SocketAddress"     = encodeM (Proxy :: Proxy T.SocketAddress     )
+encodeF "TransportProtocol" = encodeM (Proxy :: Proxy T.TransportProtocol )
 encodeF tycon = const $ fail $ "unsupported type in encode: " ++ tycon
 
 encodeS :: RPC.Method IO

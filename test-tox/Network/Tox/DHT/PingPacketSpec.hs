@@ -13,6 +13,6 @@ import           Network.Tox.EncodingSpec
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy PingPacket)
+  rpcSpec (Proxy :: Proxy PingPacket)
   binarySpec (Proxy :: Proxy PingPacket)
   readShowSpec (Proxy :: Proxy PingPacket)

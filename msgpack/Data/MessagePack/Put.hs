@@ -1,3 +1,4 @@
+{-# LANGUAGE Trustworthy #-}
 --------------------------------------------------------------------
 -- |
 -- Module    : Data.MessagePack.Put

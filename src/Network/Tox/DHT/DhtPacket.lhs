@@ -24,11 +24,10 @@ protocol never actually sends empty messages, so in reality the minimum size is
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveGeneric  #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Trustworthy    #-}
+{-# LANGUAGE Safe           #-}
 module Network.Tox.DHT.DhtPacket where
 
 import           Control.Applicative            ((<$>), (<*>))
-import           Data.Aeson                     (FromJSON, ToJSON)
 import           Data.Binary                    (Binary, get, put)
 import           Data.Binary.Get                (Decoder (..),
                                                  getRemainingLazyByteString,
@@ -36,6 +35,7 @@ import           Data.Binary.Get                (Decoder (..),
 import           Data.Binary.Put                (putByteString, putByteString,
                                                  runPut)
 import qualified Data.ByteString.Lazy           as LazyByteString
+import           Data.MessagePack.Class         (MessagePack)
 import           GHC.Generics                   (Generic)
 import qualified Network.Tox.Crypto.Box         as Box
 import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
@@ -61,8 +61,7 @@ data DhtPacket = DhtPacket
   }
   deriving (Eq, Read, Show, Generic)
 
-instance ToJSON DhtPacket
-instance FromJSON DhtPacket
+instance MessagePack DhtPacket
 
 
 instance Binary DhtPacket where

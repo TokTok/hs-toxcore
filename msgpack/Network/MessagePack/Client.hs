@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE Trustworthy                #-}
 
 -------------------------------------------------------------------
 -- |
@@ -29,15 +30,16 @@
 --
 --------------------------------------------------------------------
 
-module Network.MessagePack.Client (
+module Network.MessagePack.Client
   -- * MessagePack Client type
-  Client, execClient,
+  ( Client
+  , execClient
 
   -- * Call RPC method
-  call,
+  , call
 
   -- * RPC error
-  RpcError(..),
+  , RpcError (..)
   ) where
 
 import           Control.Applicative

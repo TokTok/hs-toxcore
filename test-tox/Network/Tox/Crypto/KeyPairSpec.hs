@@ -19,6 +19,7 @@ import           Network.Tox.EncodingSpec
 
 spec :: Spec
 spec = do
+  rpcSpec (Proxy :: Proxy KeyPair)
   readShowSpec (Proxy :: Proxy KeyPair)
 
   describe "newKeyPair" $ do

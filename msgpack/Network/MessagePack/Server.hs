@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE Trustworthy                #-}
 
 -------------------------------------------------------------------
 -- |
@@ -32,14 +33,18 @@
 --
 --------------------------------------------------------------------
 
-module Network.MessagePack.Server (
+module Network.MessagePack.Server
   -- * RPC method types
-  Method, MethodType(..),
-  ServerT(..), Server,
+  ( Method
+  , MethodType (..)
+  , ServerT (..)
+  , Server
+
   -- * Build a method
-  method,
+  , method
+
   -- * Start RPC server
-  serve,
+  , serve
   ) where
 
 import           Control.Applicative

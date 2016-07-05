@@ -6,6 +6,7 @@
 {-# LANGUAGE LambdaCase           #-}
 {-# LANGUAGE OverloadedLists      #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE Trustworthy          #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
@@ -119,7 +120,8 @@ instance MessagePack S.ByteString where
     ObjectBin r -> Just r
     _           -> Nothing
 
--- Because of overlapping instance, this must be above [a]
+-- Because of overlapping instance, this must be above [a].
+-- IncoherentInstances and TypeSynonymInstances are required for this to work.
 instance MessagePack String where
   toObject = toObject . T.pack
   fromObject obj = T.unpack <$> fromObject obj
@@ -251,38 +253,31 @@ instance GMessagePack U1 where
   gFromObject _ = Nothing
 
 instance (GMessagePack a, GMessagePack b) => GMessagePack (a :*: b) where
-  gToObject (a :*: b) = toObject (gToObject a, ":*:", gToObject b)
+  gToObject (a :*: b) = toObject (gToObject a, gToObject b)
   gFromObject o = do
-    (a, ":*:", b) <- fromObject o
+    (a, b) <- fromObject o
     (:*:) <$> gFromObject a <*> gFromObject b
 
 instance (GMessagePack a, GMessagePack b) => GMessagePack (a :+: b) where
-  gToObject (L1 x) = toObject ("L1", gToObject x)
-  gToObject (R1 x) = toObject ("R1", gToObject x)
+  gToObject (L1 x) = toObject (False, gToObject x)
+  gToObject (R1 x) = toObject (True , gToObject x)
   gFromObject o = do
     (choice, x) <- fromObject o
     case choice of
-      "L1" -> L1 <$> gFromObject x
-      "R1" -> R1 <$> gFromObject x
-      _    -> Nothing
+      False -> L1 <$> gFromObject x
+      True  -> R1 <$> gFromObject x
 
 instance (GMessagePack a, Constructor c) => GMessagePack (M1 C c a) where
-  gToObject c@(M1 x) = toObject (conName c, gToObject x)
-  gFromObject o = do
-    (_ :: String, x) <- fromObject o
-    M1 <$> gFromObject x
+  gToObject (M1 x) = gToObject x
+  gFromObject x = M1 <$> gFromObject x
 
 instance (GMessagePack a, Selector s) => GMessagePack (M1 S s a) where
-  gToObject s@(M1 x) = toObject (selName s, gToObject x)
-  gFromObject o = do
-    (_ :: String, x) <- fromObject o
-    M1 <$> gFromObject x
+  gToObject (M1 x) = gToObject x
+  gFromObject x = M1 <$> gFromObject x
 
 instance (GMessagePack a, Datatype d) => GMessagePack (M1 D d a) where
-  gToObject d@(M1 x) = toObject (datatypeName d, gToObject x)
-  gFromObject o = do
-    (_ :: String, x) <- fromObject o
-    M1 <$> gFromObject x
+  gToObject (M1 x) = gToObject x
+  gFromObject x = M1 <$> gFromObject x
 
 instance MessagePack a => GMessagePack (K1 i a) where
   gToObject (K1 x) = toObject x

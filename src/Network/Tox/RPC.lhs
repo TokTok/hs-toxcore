@@ -1,7 +1,7 @@
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Trustworthy       #-}
+{-# LANGUAGE Safe              #-}
 module Network.Tox.RPC
   ( MessagePack.MessagePack (..)
   , MessagePack.Object (..)

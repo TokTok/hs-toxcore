@@ -14,8 +14,6 @@ transmitted over untrusted data channels.
 module Network.Tox.Crypto.Text where
 
 import           Control.Applicative       ((<$>))
-import           Data.Aeson                (FromJSON, ToJSON)
-import qualified Data.Aeson                as Aeson (parseJSON, toJSON)
 import           Data.Binary               (Binary, get, put)
 import           Data.Binary.Get           (Decoder (..), pushChunk,
                                             runGetIncremental)
@@ -47,12 +45,6 @@ instance Show PlainText where
 instance Read PlainText where
   readPrec = PlainText . fst . Base16.decode <$> readPrec
 
-instance ToJSON PlainText where
-  toJSON (PlainText bytes) = Aeson.toJSON $ Char8.unpack $ Base16.encode bytes
-
-instance FromJSON PlainText where
-  parseJSON value = PlainText . fst . Base16.decode . Char8.pack <$> Aeson.parseJSON value
-
 instance MessagePack PlainText where
   toObject = toObject . unPlainText
   fromObject x = PlainText <$> fromObject x
@@ -69,12 +61,6 @@ instance Show CipherText where
 
 instance Read CipherText where
   readPrec = CipherText . fst . Base16.decode <$> readPrec
-
-instance ToJSON CipherText where
-  toJSON (CipherText bytes) = Aeson.toJSON $ Char8.unpack $ Base16.encode bytes
-
-instance FromJSON CipherText where
-  parseJSON value = CipherText . fst . Base16.decode . Char8.pack <$> Aeson.parseJSON value
 
 instance MessagePack CipherText where
   toObject = toObject . unCipherText

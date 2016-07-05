@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase  #-}
+{-# LANGUAGE Trustworthy #-}
 
 --------------------------------------------------------------------
 -- |

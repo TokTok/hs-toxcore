@@ -15,8 +15,8 @@ import           Network.Tox.EncodingSpec
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy CipherText)
-  jsonSpec (Proxy :: Proxy PlainText)
+  rpcSpec (Proxy :: Proxy CipherText)
+  rpcSpec (Proxy :: Proxy PlainText)
   binarySpec (Proxy :: Proxy CipherText)
   binarySpec (Proxy :: Proxy PlainText)
   readShowSpec (Proxy :: Proxy CipherText)

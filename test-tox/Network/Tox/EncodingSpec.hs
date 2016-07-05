@@ -9,7 +9,6 @@ import qualified Network.Tox.RPCTest    as RPC
 import           Test.Hspec
 import           Test.QuickCheck        (Arbitrary, property)
 
-import qualified Data.Aeson             as Aeson
 import           Data.Binary            (Binary)
 import qualified Data.Binary            as Binary (get, put)
 import qualified Data.Binary.Bits.Get   as Bits (BitGet, runBitGet)
@@ -18,7 +17,6 @@ import qualified Data.Binary.Get        as Binary (Decoder (..), Get, pushChunk,
                                                    runGet, runGetIncremental)
 import qualified Data.Binary.Put        as Binary (Put, runPut)
 import qualified Data.ByteString        as ByteString
-import           Data.ByteString.Lazy   (ByteString)
 import qualified Data.ByteString.Lazy   as LazyByteString
 import           Data.Proxy             (Proxy (..))
 import           Data.Typeable          (Typeable)
@@ -116,19 +114,6 @@ readShowSpec (Proxy :: Proxy a) =
       property $ \expected ->
         let output = readA $ showA expected in
         output `shouldBe` expected
-
-
-jsonSpec :: (Arbitrary a, Eq a, Show a, Aeson.FromJSON a, Aeson.ToJSON a) => Proxy a -> Spec
-jsonSpec (Proxy :: Proxy a) =
-  let
-    toJsonA = Aeson.encode :: a -> ByteString
-    fromJsonA = Aeson.decode :: ByteString -> Maybe a
-  in
-  describe "ToJSON/FromJSON" $ do
-    it "encodes and decodes correctly" $
-      property $ \expected ->
-        let output = fromJsonA $ toJsonA expected in
-        output `shouldBe` Just expected
 
 
 rpcSpec :: (Arbitrary a, Eq a, Show a, Typeable a, Binary a, RPC.MessagePack a) => Proxy a -> Spec

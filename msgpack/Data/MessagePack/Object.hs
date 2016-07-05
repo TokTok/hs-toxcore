@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE Trustworthy        #-}
 module Data.MessagePack.Object (Object (..)) where
 
 import           Control.Applicative       ((<$), (<$>), (<*>), (<|>))

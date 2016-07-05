@@ -33,12 +33,12 @@ parentheses, e.g. \href{#ping-request-0x00}{Ping Request (0x00)}.
 \begin{code}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase    #-}
-{-# LANGUAGE Trustworthy   #-}
+{-# LANGUAGE Safe          #-}
 module Network.Tox.Protocol.PacketKind where
 
 import           Control.Arrow             ((&&&))
-import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Binary               (Binary, get, put)
+import           Data.MessagePack.Class    (MessagePack)
 import           Data.Word                 (Word8)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary,
@@ -76,8 +76,7 @@ data PacketKind
   deriving (Eq, Read, Show, Bounded, Enum, Generic)
 
 
-instance FromJSON PacketKind
-instance ToJSON PacketKind
+instance MessagePack PacketKind
 
 
 kindToByte :: PacketKind -> Word8

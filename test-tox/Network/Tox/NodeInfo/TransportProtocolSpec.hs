@@ -13,7 +13,7 @@ import qualified Network.Tox.NodeInfo.TransportProtocol as TransportProtocol
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy TransportProtocol)
+  rpcSpec (Proxy :: Proxy TransportProtocol)
   binarySpec (Proxy :: Proxy TransportProtocol)
   readShowSpec (Proxy :: Proxy TransportProtocol)
   bitEncodingSpec (Proxy :: Proxy TransportProtocol)

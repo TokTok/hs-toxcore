@@ -13,6 +13,6 @@ import qualified Network.Tox.NodeInfo.PortNumber as PortNumber
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy PortNumber)
+  rpcSpec (Proxy :: Proxy PortNumber)
   binarySpec (Proxy :: Proxy PortNumber)
   readShowSpec (Proxy :: Proxy PortNumber)

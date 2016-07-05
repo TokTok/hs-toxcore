@@ -31,7 +31,7 @@ encodeDecodePublicKey key =
 spec :: Spec
 spec = do
   -- PublicKey for both binary and human-readable.
-  jsonSpec (Proxy :: Proxy Key.PublicKey)
+  rpcSpec (Proxy :: Proxy Key.PublicKey)
   binarySpec (Proxy :: Proxy Key.PublicKey)
   readShowSpec (Proxy :: Proxy Key.PublicKey)
 

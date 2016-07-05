@@ -13,6 +13,6 @@ import qualified Network.Tox.NodeInfo.HostAddress as HostAddress
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy HostAddress)
+  rpcSpec (Proxy :: Proxy HostAddress)
   binarySpec (Proxy :: Proxy HostAddress)
   readShowSpec (Proxy :: Proxy HostAddress)

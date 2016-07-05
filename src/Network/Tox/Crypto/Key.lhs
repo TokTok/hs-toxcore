@@ -16,8 +16,6 @@ import qualified Crypto.Saltine.Core.Box           as Sodium (CombinedKey,
 import qualified Crypto.Saltine.Internal.ByteSizes as Sodium (boxBeforeNM,
                                                               boxNonce, boxPK,
                                                               boxSK)
-import           Data.Aeson                        (FromJSON, ToJSON)
-import qualified Data.Aeson                        as Aeson (parseJSON, toJSON)
 import           Data.Binary                       (Binary)
 import qualified Data.Binary                       as Binary (get, put)
 import qualified Data.Binary.Get                   as Binary (getByteString,
@@ -132,13 +130,6 @@ instance CryptoNumber a => Show (Key a) where
 
 instance CryptoNumber a => Read (Key a) where
   readPrec = fst . Base16.decode <$> readPrec >>= decode
-
-
-instance CryptoNumber a => ToJSON (Key a) where
-  toJSON = Aeson.toJSON . Char8.unpack . Base16.encode . Sodium.encode
-
-instance CryptoNumber a => FromJSON (Key a) where
-  parseJSON value = fst . Base16.decode . Char8.pack <$> Aeson.parseJSON value >>= decode
 
 instance CryptoNumber a => MessagePack (Key a) where
   toObject = toObject . Sodium.encode

@@ -42,7 +42,7 @@ encodeIntAndDecodeNodeInfo = encodeAndDecode
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy DhtPacket)
+  rpcSpec (Proxy :: Proxy DhtPacket)
   binarySpec (Proxy :: Proxy DhtPacket)
   readShowSpec (Proxy :: Proxy DhtPacket)
 

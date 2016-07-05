@@ -11,11 +11,10 @@ bit unsigned integer (2 bytes).
 module Network.Tox.NodeInfo.PortNumber where
 
 import           Control.Applicative       ((<$>))
-import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
+import           Data.MessagePack.Class    (MessagePack)
 import           Data.Word                 (Word16)
 import           GHC.Generics              (Generic)
-import           Network.Tox.RPC           (MessagePack)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 
@@ -27,7 +26,7 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 
 newtype PortNumber = PortNumber Word16
-  deriving (Eq, Show, Read, Generic, Binary, Num, ToJSON, FromJSON, MessagePack)
+  deriving (Eq, Show, Read, Generic, Binary, Num, MessagePack)
 
 
 {-------------------------------------------------------------------------------

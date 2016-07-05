@@ -12,12 +12,12 @@ any internet host.
 module Network.Tox.NodeInfo.SocketAddress where
 
 import           Control.Applicative                    ((<$>), (<*>))
-import           Data.Aeson                             (FromJSON, ToJSON)
 import           Data.Binary                            (Binary, get, put)
 import qualified Data.Binary.Bits.Get                   as Bits (runBitGet)
 import qualified Data.Binary.Bits.Put                   as Bits (runBitPut)
 import qualified Data.Binary.Get                        as Binary (Get)
 import qualified Data.Binary.Put                        as Binary (Put)
+import           Data.MessagePack.Class                 (MessagePack)
 import           GHC.Generics                           (Generic)
 import qualified Network.Socket                         as Socket
 import           Network.Tox.Encoding                   (bitGet, bitPut)
@@ -25,7 +25,6 @@ import           Network.Tox.NodeInfo.HostAddress       (HostAddress (..))
 import qualified Network.Tox.NodeInfo.HostAddress       as HostAddress
 import           Network.Tox.NodeInfo.PortNumber        (PortNumber)
 import           Network.Tox.NodeInfo.TransportProtocol (TransportProtocol)
-import           Network.Tox.RPC                        (MessagePack)
 import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
 
 
@@ -40,8 +39,6 @@ data SocketAddress = SocketAddress HostAddress PortNumber
   deriving (Eq, Show, Read, Generic)
 
 instance Binary SocketAddress
-instance ToJSON SocketAddress
-instance FromJSON SocketAddress
 instance MessagePack SocketAddress
 
 

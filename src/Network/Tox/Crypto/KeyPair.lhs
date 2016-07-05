@@ -22,6 +22,7 @@ import           Control.Applicative            ((<$>))
 import qualified Crypto.Saltine.Class           as Sodium (decode, encode)
 import qualified Crypto.Saltine.Core.Box        as Sodium (newKeypair)
 import qualified Crypto.Saltine.Core.ScalarMult as Sodium (multBase)
+import           Data.Binary                    (Binary)
 import           GHC.Generics                   (Generic)
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
@@ -44,6 +45,7 @@ data KeyPair = KeyPair
   }
   deriving (Eq, Show, Read, Generic)
 
+instance Binary KeyPair
 instance MessagePack KeyPair where
   toObject (KeyPair sk pk) = toObject (sk, pk)
   fromObject obj = do

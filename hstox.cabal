@@ -31,7 +31,6 @@ library
   build-depends:
       base < 5
     , QuickCheck
-    , aeson >= 0.10 && <= 0.11.1.4
     , base16-bytestring
     , binary
     , binary-bits
@@ -169,7 +168,6 @@ executable test-tox
   build-depends:
       base < 5
     , QuickCheck
-    , aeson >= 0.10
     , async
     , base16-bytestring
     , binary

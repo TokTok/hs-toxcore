@@ -17,15 +17,15 @@ response has in their list of known nodes.
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveGeneric  #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Trustworthy    #-}
+{-# LANGUAGE Safe           #-}
 module Network.Tox.DHT.NodesResponse where
 
 import           Control.Applicative           ((<$>))
 import           Control.Monad                 (filterM, foldM)
-import           Data.Aeson                    (FromJSON, ToJSON)
 import           Data.Binary                   (Binary, get, put)
 import qualified Data.Binary.Get               as Binary (getWord8)
 import qualified Data.Binary.Put               as Binary (putWord8)
+import           Data.MessagePack.Class        (MessagePack)
 import           GHC.Generics                  (Generic)
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.Encoding          (getBool, putBool)
@@ -46,8 +46,7 @@ data NodesResponse = NodesResponse
   }
   deriving (Eq, Read, Show, Generic)
 
-instance ToJSON NodesResponse
-instance FromJSON NodesResponse
+instance MessagePack NodesResponse
 
 
 instance Binary NodesResponse where

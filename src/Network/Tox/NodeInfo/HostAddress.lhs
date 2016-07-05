@@ -18,7 +18,6 @@ module Network.Tox.NodeInfo.HostAddress where
 
 import           Control.Applicative       ((<$>))
 import           Control.Arrow             ((&&&))
-import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
 import qualified Data.Binary               as Binary (get, put)
 import qualified Data.Binary.Bits.Get      as Bits
@@ -30,10 +29,10 @@ import qualified Data.IP                   as IP
 import           Data.List                 as List
 import           Data.List.Split           as List
 import           Data.Maybe                (listToMaybe, mapMaybe)
+import           Data.MessagePack.Class    (MessagePack)
 import           Data.Word                 (Word16, Word8)
 import           GHC.Generics              (Generic)
 import qualified Network.Socket            as Socket (HostAddress, HostAddress6)
-import           Network.Tox.RPC           (MessagePack)
 import           Numeric                   (readHex, showHex)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
@@ -53,8 +52,6 @@ data HostAddress
   deriving (Eq, Generic)
 
 instance Binary HostAddress
-instance ToJSON HostAddress
-instance FromJSON HostAddress
 instance MessagePack HostAddress
 
 

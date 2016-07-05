@@ -13,7 +13,7 @@ import qualified Network.Tox.NodeInfo.SocketAddress as SocketAddress
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy SocketAddress)
+  rpcSpec (Proxy :: Proxy SocketAddress)
   binarySpec (Proxy :: Proxy SocketAddress)
   readShowSpec (Proxy :: Proxy SocketAddress)
 

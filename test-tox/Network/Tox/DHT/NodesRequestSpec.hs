@@ -13,6 +13,6 @@ import           Network.Tox.EncodingSpec
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy NodesRequest)
+  rpcSpec (Proxy :: Proxy NodesRequest)
   binarySpec (Proxy :: Proxy NodesRequest)
   readShowSpec (Proxy :: Proxy NodesRequest)

@@ -4,11 +4,11 @@ The Ping Service is used to periodically check if another node is still alive.
 
 \begin{code}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE Trustworthy   #-}
+{-# LANGUAGE Safe          #-}
 module Network.Tox.DHT.PingPacket where
 
-import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
+import           Data.MessagePack.Class    (MessagePack)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
@@ -57,8 +57,7 @@ data PingPacket
   deriving (Eq, Read, Show, Generic)
 
 instance Binary PingPacket
-instance ToJSON PingPacket
-instance FromJSON PingPacket
+instance MessagePack PingPacket
 
 
 {-------------------------------------------------------------------------------

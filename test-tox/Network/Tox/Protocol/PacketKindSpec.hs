@@ -15,7 +15,7 @@ import qualified Network.Tox.Protocol.PacketKind as PacketKind
 
 spec :: Spec
 spec = do
-  jsonSpec (Proxy :: Proxy PacketKind)
+  rpcSpec (Proxy :: Proxy PacketKind)
   binarySpec (Proxy :: Proxy PacketKind)
   readShowSpec (Proxy :: Proxy PacketKind)
 

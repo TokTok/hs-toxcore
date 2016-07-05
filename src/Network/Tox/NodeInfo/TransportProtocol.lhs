@@ -16,14 +16,14 @@ The human-readable representation for UDP is \texttt{UDP} and for TCP is
 {-# LANGUAGE Trustworthy   #-}
 module Network.Tox.NodeInfo.TransportProtocol where
 
-import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
 import qualified Data.Binary.Bits.Get      as Bits (getBool)
 import qualified Data.Binary.Bits.Put      as Bits (putBool)
+import           Data.MessagePack.Class    (MessagePack)
 import           GHC.Generics              (Generic)
 import           Network.Tox.Encoding      (BitEncoding, bitGet, bitPut)
-import           Network.Tox.RPC           (MessagePack)
-import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
+import           Test.QuickCheck.Arbitrary (Arbitrary (..))
+import qualified Test.QuickCheck.Gen       as Gen
 
 
 {-------------------------------------------------------------------------------
@@ -39,8 +39,6 @@ data TransportProtocol
   deriving (Eq, Show, Read, Generic)
 
 instance Binary TransportProtocol
-instance ToJSON TransportProtocol
-instance FromJSON TransportProtocol
 instance MessagePack TransportProtocol
 
 instance BitEncoding TransportProtocol where
@@ -61,9 +59,5 @@ instance BitEncoding TransportProtocol where
 
 
 instance Arbitrary TransportProtocol where
-  arbitrary =
-    fmap (\case
-        False -> UDP
-        True  -> TCP)
-      arbitrary
+  arbitrary = Gen.elements [UDP, TCP]
 \end{code}

@@ -44,13 +44,13 @@ The reason for these numbers is because the numbers on Linux for IPv4 and IPv6
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
-{-# LANGUAGE Trustworthy        #-}
+{-# LANGUAGE Safe               #-}
 module Network.Tox.NodeInfo.NodeInfo where
 
 import           Control.Applicative                    ((<$>), (<*>))
-import           Data.Aeson                             (FromJSON, ToJSON)
 import           Data.Binary                            (Binary)
 import qualified Data.Binary                            as Binary (get, put)
+import           Data.MessagePack.Class                 (MessagePack)
 import           Data.Typeable                          (Typeable)
 import           GHC.Generics                           (Generic)
 import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
@@ -59,7 +59,6 @@ import           Network.Tox.Crypto.Key                 (PublicKey)
 import           Network.Tox.NodeInfo.SocketAddress     (SocketAddress)
 import qualified Network.Tox.NodeInfo.SocketAddress     as SocketAddress
 import           Network.Tox.NodeInfo.TransportProtocol (TransportProtocol)
-import           Network.Tox.RPC                        (MessagePack)
 
 
 {-------------------------------------------------------------------------------
@@ -76,8 +75,6 @@ data NodeInfo = NodeInfo
   }
   deriving (Eq, Show, Read, Generic, Typeable)
 
-instance ToJSON NodeInfo
-instance FromJSON NodeInfo
 instance MessagePack NodeInfo
 
 

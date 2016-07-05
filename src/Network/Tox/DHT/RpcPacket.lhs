@@ -6,8 +6,8 @@
 module Network.Tox.DHT.RpcPacket where
 
 import           Control.Applicative       ((<$>), (<*>))
-import           Data.Aeson                (FromJSON, ToJSON)
 import           Data.Binary               (Binary)
+import           Data.MessagePack.Class    (MessagePack)
 import           Data.Word                 (Word64)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
@@ -30,7 +30,7 @@ responding to.
 \begin{code}
 
 newtype RequestId = RequestId Word64
-  deriving (Eq, Read, Show, Binary, Arbitrary, ToJSON, FromJSON)
+  deriving (Eq, Read, Show, Binary, Arbitrary, MessagePack)
 
 \end{code}
 
@@ -57,8 +57,7 @@ data RpcPacket payload = RpcPacket
   deriving (Eq, Read, Show, Generic)
 
 instance Binary payload => Binary (RpcPacket payload)
-instance ToJSON payload => ToJSON (RpcPacket payload)
-instance FromJSON payload => FromJSON (RpcPacket payload)
+instance MessagePack payload => MessagePack (RpcPacket payload)
 
 
 {-------------------------------------------------------------------------------

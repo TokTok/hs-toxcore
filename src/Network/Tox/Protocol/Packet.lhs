@@ -1,12 +1,12 @@
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE Trustworthy   #-}
+{-# LANGUAGE Safe          #-}
 module Network.Tox.Protocol.Packet where
 
 import           Control.Applicative             ((<$>), (<*>))
-import           Data.Aeson                      (FromJSON, ToJSON)
 import           Data.Binary                     (Binary)
+import           Data.MessagePack.Class          (MessagePack)
 import           Data.Proxy                      (Proxy)
 import           GHC.Generics                    (Generic)
 import           Network.Tox.Protocol.PacketKind (PacketKind)
@@ -42,8 +42,7 @@ data Packet payload = Packet
   deriving (Eq, Read, Show, Generic)
 
 instance Binary payload => Binary (Packet payload)
-instance FromJSON payload => FromJSON (Packet payload)
-instance ToJSON payload => ToJSON (Packet payload)
+instance MessagePack payload => MessagePack (Packet payload)
 
 
 {-------------------------------------------------------------------------------

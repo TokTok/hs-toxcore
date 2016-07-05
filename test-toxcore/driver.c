@@ -160,6 +160,13 @@ communicate (bool collect_samples, int read_fd, int write_fd)
 
 
 static int
+closep (int *fd)
+{
+  return close (*fd);
+}
+
+
+static int
 run_tests (bool collect_samples, int port)
 {
   int listen_fd = socket (AF_INET, SOCK_STREAM, 0);
@@ -174,7 +181,8 @@ run_tests (bool collect_samples, int port)
 
   while (1)
     {
-      int comm_fd = check_return (E_ACCEPT, accept (listen_fd, NULL, NULL));
+      int comm_fd __attribute__ ((__cleanup__ (closep)));
+      comm_fd = check_return (E_ACCEPT, accept (listen_fd, NULL, NULL));
       propagate (communicate (collect_samples, comm_fd, comm_fd));
     }
 
