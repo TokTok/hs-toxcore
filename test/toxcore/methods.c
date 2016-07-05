@@ -3,7 +3,7 @@
 #include "util.h"
 
 #include <crypto_core.h>
-
+#include <net_crypto.h>
 
 char const *const pending = "Pending";
 char const *const unimplemented = "Unimplemented";
@@ -48,19 +48,19 @@ METHOD (array, KeyPair, newKeyPair)
 
 METHOD (array, KeyPair, fromSecretKey)
 {
-  uint8_t secret_key[crypto_scalarmult_SCALARBYTES];
-  memcpy(secret_key, args.ptr[0].via.bin.ptr, crypto_scalarmult_SCALARBYTES);
-
-  uint8_t public_key[crypto_scalarmult_BYTES];
-  crypto_scalarmult_base(public_key, secret_key);
+  Net_Crypto c;
+  uint8_t secret_key[crypto_box_SECRETKEYBYTES];
+  memcpy(secret_key, args.ptr[0].via.bin.ptr, crypto_box_SECRETKEYBYTES);
+  load_secret_key(&c, secret_key);
 
   SUCCESS{
     msgpack_pack_array(res, 2);
 
-    msgpack_pack_bin(res, crypto_scalarmult_SCALARBYTES);
-    msgpack_pack_bin_body(res, secret_key, crypto_scalarmult_SCALARBYTES);
-    msgpack_pack_bin(res, crypto_scalarmult_SCALARBYTES);
-    msgpack_pack_bin_body(res, public_key, crypto_scalarmult_SCALARBYTES);
+    msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin_body(res, c.self_secret_key, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin(res, crypto_box_SECRETKEYBYTES);
+    msgpack_pack_bin_body(res, c.self_public_key, crypto_box_SECRETKEYBYTES);
+
   }
   return 0;
 }
