@@ -11,15 +11,17 @@ The human-readable representation for UDP is \texttt{UDP} and for TCP is
 \texttt{TCP}.
 
 \begin{code}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE LambdaCase    #-}
-{-# LANGUAGE Trustworthy   #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.TransportProtocol where
 
 import           Data.Binary               (Binary)
 import qualified Data.Binary.Bits.Get      as Bits (getBool)
 import qualified Data.Binary.Bits.Put      as Bits (putBool)
 import           Data.MessagePack.Class    (MessagePack)
+import           Data.Typeable             (Typeable)
 import           GHC.Generics              (Generic)
 import           Network.Tox.Encoding      (BitEncoding, bitGet, bitPut)
 import           Test.QuickCheck.Arbitrary (Arbitrary (..))
@@ -36,7 +38,7 @@ import qualified Test.QuickCheck.Gen       as Gen
 data TransportProtocol
   = UDP
   | TCP
-  deriving (Eq, Show, Read, Generic)
+  deriving (Eq, Show, Read, Generic, Typeable)
 
 instance Binary TransportProtocol
 instance MessagePack TransportProtocol

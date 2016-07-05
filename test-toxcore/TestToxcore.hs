@@ -9,7 +9,7 @@ import           Data.Word     (Word16, Word32)
 
 #include "errors.h"
 
-foreign import ccall "test_main" c_test_main :: Bool -> Word16 -> IO Word32
+foreign import ccall "test_main" c_test_main :: Bool -> Bool -> Word16 -> IO Word32
 
 
 data Result = Result
@@ -18,9 +18,9 @@ data Result = Result
   , errno :: Int
   }
 
-testMain :: Bool -> Int -> IO Result
-testMain collectSamples port = do
-  result <- c_test_main collectSamples (fromIntegral port)
+testMain :: Bool -> Bool -> Int -> IO Result
+testMain debug collectSamples port = do
+  result <- c_test_main debug collectSamples (fromIntegral port)
   let line  = fromIntegral $ shift result (-16)
   let errno = fromIntegral $ shift result (- 8) .&. 0xff
   let code  = fromIntegral $       result       .&. 0xff
@@ -44,6 +44,6 @@ errorDesc = \case
 
 main :: IO ()
 main = do
-  Result { line, code, errno } <- testMain True 1234
+  Result { line, code, errno } <- testMain True True 1234
   when (code /= E_OK) $
     putStrLn $ errorDesc code ++ ", errno=" ++ show errno ++ ", line=" ++ show line

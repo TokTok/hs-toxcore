@@ -10,13 +10,15 @@ The DHT Public Key sent in the request is the one the sender is searching for.
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE Safe          #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.NodesRequest where
 
 import           Control.Applicative             ((<$>))
 import           Data.Binary                     (Binary, get, put)
 import           Data.MessagePack.Class          (MessagePack)
+import           Data.Typeable                   (Typeable)
 import           GHC.Generics                    (Generic)
 import           Network.Tox.Crypto.Key          (PublicKey)
 import           Network.Tox.Encoding            (getBool, putBool)
@@ -35,7 +37,7 @@ import qualified Test.QuickCheck.Gen             as Gen
 data NodesRequest = NodesRequest
   { requestedKey :: PublicKey
   }
-  deriving (Eq, Read, Show, Generic)
+  deriving (Eq, Read, Show, Generic, Typeable)
 
 instance Binary NodesRequest
 instance MessagePack NodesRequest

@@ -1,13 +1,15 @@
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE Safe          #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE Safe               #-}
 module Network.Tox.Protocol.Packet where
 
 import           Control.Applicative             ((<$>), (<*>))
 import           Data.Binary                     (Binary)
 import           Data.MessagePack.Class          (MessagePack)
 import           Data.Proxy                      (Proxy)
+import           Data.Typeable                   (Typeable)
 import           GHC.Generics                    (Generic)
 import           Network.Tox.Protocol.PacketKind (PacketKind)
 import           Test.QuickCheck.Arbitrary       (Arbitrary, arbitrary)
@@ -39,7 +41,7 @@ data Packet payload = Packet
   { packetKind    :: PacketKind
   , packetPayload :: payload
   }
-  deriving (Eq, Read, Show, Generic)
+  deriving (Eq, Read, Show, Generic, Typeable)
 
 instance Binary payload => Binary (Packet payload)
 instance MessagePack payload => MessagePack (Packet payload)

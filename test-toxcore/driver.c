@@ -13,6 +13,13 @@
 #include "util.h"
 
 
+struct settings
+{
+  bool debug;
+  bool collect_samples;
+};
+
+
 static int
 protocol_error (msgpack_packer *pk, char const *fmt, ...)
 {
@@ -80,7 +87,7 @@ write_sample_input (msgpack_object req)
 
 
 static int
-handle_request (bool collect_samples, int write_fd, msgpack_object req)
+handle_request (struct settings cfg, int write_fd, msgpack_object req)
 {
   msgpack_sbuffer sbuf __attribute__ ((__cleanup__ (msgpack_sbuffer_destroy))); /* buffer */
   msgpack_sbuffer_init (&sbuf); /* initialize buffer */
@@ -98,11 +105,14 @@ handle_request (bool collect_samples, int write_fd, msgpack_object req)
       type_check (&pk, req, 2, MSGPACK_OBJECT_STR) &&
       type_check (&pk, req, 3, MSGPACK_OBJECT_ARRAY))
     {
-      printf ("Request: ");
-      msgpack_object_print (stdout, req);
-      printf ("\n");
+      if (cfg.debug)
+        {
+          printf ("Request: ");
+          msgpack_object_print (stdout, req);
+          printf ("\n");
+        }
 
-      if (collect_samples)
+      if (cfg.collect_samples)
         propagate (write_sample_input (req));
 
       msgpack_pack_array (&pk, 4); // 4 elements in the array
@@ -124,7 +134,7 @@ handle_request (bool collect_samples, int write_fd, msgpack_object req)
 
 
 static int
-communicate (bool collect_samples, int read_fd, int write_fd)
+communicate (struct settings cfg, int read_fd, int write_fd)
 {
   msgpack_unpacker unp __attribute__ ((__cleanup__ (msgpack_unpacker_destroy)));
   msgpack_unpacker_init (&unp, 128);
@@ -136,9 +146,9 @@ communicate (bool collect_samples, int read_fd, int write_fd)
       if (size == 0)
         break;
 
-      if (msgpack_unpacker_buffer_capacity (&unp) < size)
-        if (!msgpack_unpacker_reserve_buffer (&unp, size))
-          return E_NOMEM;
+      if (msgpack_unpacker_buffer_capacity (&unp) < size &&
+          !msgpack_unpacker_reserve_buffer (&unp, size))
+        return E_NOMEM;
 
       memcpy (msgpack_unpacker_buffer (&unp), buf, size);
       msgpack_unpacker_buffer_consumed (&unp, size);
@@ -148,7 +158,7 @@ communicate (bool collect_samples, int read_fd, int write_fd)
       switch (msgpack_unpacker_next (&unp, &req))
         {
           case MSGPACK_UNPACK_SUCCESS:
-            propagate (handle_request (collect_samples, write_fd, req.data));
+            propagate (handle_request (cfg, write_fd, req.data));
             break;
           case MSGPACK_UNPACK_EXTRA_BYTES:
             printf ("EXTRA_BYTES\n");
@@ -171,10 +181,12 @@ closep (int *fd)
 
 
 static int
-run_tests (bool collect_samples, int port)
+run_tests (struct settings cfg, int port)
 {
-  int listen_fd __attribute__ ((__cleanup__ (closep)));
+  int listen_fd __attribute__ ((__cleanup__ (closep))) = 0;
   listen_fd = check_return (E_SOCKET, socket (AF_INET, SOCK_STREAM, 0));
+  check_return (E_SOCKET,
+      setsockopt (listen_fd, SOL_SOCKET, SO_REUSEADDR, &(int) { 1 }, sizeof(int)));
 
   struct sockaddr_in servaddr;
   servaddr.sin_family = AF_INET;
@@ -186,9 +198,9 @@ run_tests (bool collect_samples, int port)
 
   while (1)
     {
-      int comm_fd __attribute__ ((__cleanup__ (closep)));
+      int comm_fd __attribute__ ((__cleanup__ (closep))) = 0;
       comm_fd = check_return (E_ACCEPT, accept (listen_fd, NULL, NULL));
-      propagate (communicate (collect_samples, comm_fd, comm_fd));
+      propagate (communicate (cfg, comm_fd, comm_fd));
     }
 
   return E_OK;
@@ -196,9 +208,11 @@ run_tests (bool collect_samples, int port)
 
 
 uint32_t
-test_main (bool collect_samples, uint16_t port)
+test_main (bool debug, bool collect_samples, uint16_t port)
 {
-  int result = run_tests (collect_samples, port);
+  struct settings cfg = { debug, collect_samples };
+
+  int result = run_tests (cfg, port);
   if (result == E_OK)
     return E_OK;
   return result | (errno << 8);
@@ -210,5 +224,6 @@ __attribute__ ((__weak__)) int main (int argc, char **argv);
 int
 main (int argc, char **argv)
 {
-  return communicate (false, STDIN_FILENO, STDOUT_FILENO);
+  struct settings cfg = { false, false };
+  return communicate (cfg, STDIN_FILENO, STDOUT_FILENO);
 }

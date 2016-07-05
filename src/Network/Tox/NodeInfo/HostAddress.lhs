@@ -11,9 +11,10 @@ packed byte is the protocol and the next 7 bits are the address family.
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE LambdaCase    #-}
-{-# LANGUAGE Trustworthy   #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.HostAddress where
 
 import           Control.Applicative       ((<$>))
@@ -30,6 +31,7 @@ import           Data.List                 as List
 import           Data.List.Split           as List
 import           Data.Maybe                (listToMaybe, mapMaybe)
 import           Data.MessagePack.Class    (MessagePack)
+import           Data.Typeable             (Typeable)
 import           Data.Word                 (Word16, Word8)
 import           GHC.Generics              (Generic)
 import qualified Network.Socket            as Socket (HostAddress, HostAddress6)
@@ -49,7 +51,7 @@ import           Text.Read                 (readPrec)
 data HostAddress
   = IPv4 Socket.HostAddress
   | IPv6 Socket.HostAddress6
-  deriving (Eq, Generic)
+  deriving (Eq, Generic, Typeable)
 
 instance Binary HostAddress
 instance MessagePack HostAddress

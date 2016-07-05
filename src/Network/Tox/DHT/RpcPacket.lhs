@@ -1,5 +1,6 @@
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Trustworthy                #-}
@@ -8,6 +9,7 @@ module Network.Tox.DHT.RpcPacket where
 import           Control.Applicative       ((<$>), (<*>))
 import           Data.Binary               (Binary)
 import           Data.MessagePack.Class    (MessagePack)
+import           Data.Typeable             (Typeable)
 import           Data.Word                 (Word64)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
@@ -54,7 +56,7 @@ data RpcPacket payload = RpcPacket
   { rpcPayload :: payload
   , requestId  :: RequestId
   }
-  deriving (Eq, Read, Show, Generic)
+  deriving (Eq, Read, Show, Generic, Typeable)
 
 instance Binary payload => Binary (RpcPacket payload)
 instance MessagePack payload => MessagePack (RpcPacket payload)

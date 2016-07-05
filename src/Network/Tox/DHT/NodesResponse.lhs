@@ -15,9 +15,10 @@ response has in their list of known nodes.
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric  #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Safe           #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE NamedFieldPuns     #-}
+{-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.NodesResponse where
 
 import           Control.Applicative           ((<$>))
@@ -26,6 +27,7 @@ import           Data.Binary                   (Binary, get, put)
 import qualified Data.Binary.Get               as Binary (getWord8)
 import qualified Data.Binary.Put               as Binary (putWord8)
 import           Data.MessagePack.Class        (MessagePack)
+import           Data.Typeable                 (Typeable)
 import           GHC.Generics                  (Generic)
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.Encoding          (getBool, putBool)
@@ -44,7 +46,7 @@ import qualified Test.QuickCheck.Gen           as Gen
 data NodesResponse = NodesResponse
   { foundNodes :: [NodeInfo]
   }
-  deriving (Eq, Read, Show, Generic)
+  deriving (Eq, Read, Show, Generic, Typeable)
 
 instance MessagePack NodesResponse
 

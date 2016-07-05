@@ -6,9 +6,10 @@ any internet host.
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE LambdaCase    #-}
-{-# LANGUAGE Trustworthy   #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.SocketAddress where
 
 import           Control.Applicative                    ((<$>), (<*>))
@@ -18,6 +19,7 @@ import qualified Data.Binary.Bits.Put                   as Bits (runBitPut)
 import qualified Data.Binary.Get                        as Binary (Get)
 import qualified Data.Binary.Put                        as Binary (Put)
 import           Data.MessagePack.Class                 (MessagePack)
+import           Data.Typeable                          (Typeable)
 import           GHC.Generics                           (Generic)
 import qualified Network.Socket                         as Socket
 import           Network.Tox.Encoding                   (bitGet, bitPut)
@@ -36,7 +38,7 @@ import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
 
 
 data SocketAddress = SocketAddress HostAddress PortNumber
-  deriving (Eq, Show, Read, Generic)
+  deriving (Eq, Show, Read, Generic, Typeable)
 
 instance Binary SocketAddress
 instance MessagePack SocketAddress

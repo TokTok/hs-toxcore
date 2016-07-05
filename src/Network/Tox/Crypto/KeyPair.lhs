@@ -13,9 +13,10 @@ standard group element and the Secret Key.  See the
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric  #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Trustworthy    #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE NamedFieldPuns     #-}
+{-# LANGUAGE Trustworthy        #-}
 module Network.Tox.Crypto.KeyPair where
 
 import           Control.Applicative            ((<$>))
@@ -23,12 +24,13 @@ import qualified Crypto.Saltine.Class           as Sodium (decode, encode)
 import qualified Crypto.Saltine.Core.Box        as Sodium (newKeypair)
 import qualified Crypto.Saltine.Core.ScalarMult as Sodium (multBase)
 import           Data.Binary                    (Binary)
+import           Data.MessagePack.Class         (MessagePack (..))
+import           Data.Typeable                  (Typeable)
 import           GHC.Generics                   (Generic)
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 import           Network.Tox.Crypto.Key         (Key (..))
 import qualified Network.Tox.Crypto.Key         as Key
-import           Network.Tox.RPC                (MessagePack (..))
 import qualified Network.Tox.RPC                as RPC
 
 
@@ -43,14 +45,10 @@ data KeyPair = KeyPair
   { secretKey :: Key.SecretKey
   , publicKey :: Key.PublicKey
   }
-  deriving (Eq, Show, Read, Generic)
+  deriving (Eq, Show, Read, Generic, Typeable)
 
 instance Binary KeyPair
-instance MessagePack KeyPair where
-  toObject (KeyPair sk pk) = toObject (sk, pk)
-  fromObject obj = do
-    (sk, pk) <- fromObject obj
-    return $ KeyPair sk pk
+instance MessagePack KeyPair
 
 
 newKeyPair :: IO KeyPair

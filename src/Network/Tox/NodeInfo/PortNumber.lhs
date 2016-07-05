@@ -5,6 +5,7 @@ bit unsigned integer (2 bytes).
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Trustworthy                #-}
@@ -13,6 +14,7 @@ module Network.Tox.NodeInfo.PortNumber where
 import           Control.Applicative       ((<$>))
 import           Data.Binary               (Binary)
 import           Data.MessagePack.Class    (MessagePack)
+import           Data.Typeable             (Typeable)
 import           Data.Word                 (Word16)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
@@ -26,7 +28,7 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 
 newtype PortNumber = PortNumber Word16
-  deriving (Eq, Show, Read, Generic, Binary, Num, MessagePack)
+  deriving (Eq, Show, Read, Generic, Typeable, Binary, Num, MessagePack)
 
 
 {-------------------------------------------------------------------------------

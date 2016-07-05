@@ -8,6 +8,8 @@ transmitted over untrusted data channels.
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE Trustworthy                #-}
@@ -24,7 +26,8 @@ import qualified Data.ByteString.Base16    as Base16
 import qualified Data.ByteString.Char8     as Char8
 import qualified Data.ByteString.Lazy      as LazyByteString
 import           Data.MessagePack.Class    (MessagePack (..))
-import           Data.String               (IsString (..))
+import           Data.Typeable             (Typeable)
+import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import           Text.Read                 (readPrec)
 
@@ -37,7 +40,9 @@ import           Text.Read                 (readPrec)
 
 
 newtype PlainText = PlainText { unPlainText :: ByteString }
-  deriving (Eq, Binary)
+  deriving (Eq, Binary, Generic, Typeable)
+
+instance MessagePack PlainText
 
 instance Show PlainText where
   show (PlainText bytes) = show $ Base16.encode bytes
@@ -45,26 +50,17 @@ instance Show PlainText where
 instance Read PlainText where
   readPrec = PlainText . fst . Base16.decode <$> readPrec
 
-instance MessagePack PlainText where
-  toObject = toObject . unPlainText
-  fromObject x = PlainText <$> fromObject x
-
-instance IsString PlainText where
-  fromString = PlainText . fromString
-
 
 newtype CipherText = CipherText { unCipherText :: ByteString }
-  deriving (Eq, Binary)
+  deriving (Eq, Binary, Generic, Typeable)
+
+instance MessagePack CipherText
 
 instance Show CipherText where
   show (CipherText bytes) = show $ Base16.encode bytes
 
 instance Read CipherText where
   readPrec = CipherText . fst . Base16.decode <$> readPrec
-
-instance MessagePack CipherText where
-  toObject = toObject . unCipherText
-  fromObject x = CipherText <$> fromObject x
 
 
 encode :: Binary a => a -> PlainText

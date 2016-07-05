@@ -3,12 +3,14 @@
 The Ping Service is used to periodically check if another node is still alive.
 
 \begin{code}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE Safe          #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.PingPacket where
 
 import           Data.Binary               (Binary)
 import           Data.MessagePack.Class    (MessagePack)
+import           Data.Typeable             (Typeable)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
@@ -54,7 +56,7 @@ A Ping Response is a Ping Packet with the response flag set to True.
 data PingPacket
   = PingRequest
   | PingResponse
-  deriving (Eq, Read, Show, Generic)
+  deriving (Eq, Read, Show, Generic, Typeable)
 
 instance Binary PingPacket
 instance MessagePack PingPacket

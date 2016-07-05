@@ -22,9 +22,10 @@ protocol never actually sends empty messages, so in reality the minimum size is
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE DeriveGeneric  #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Safe           #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE NamedFieldPuns     #-}
+{-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.DhtPacket where
 
 import           Control.Applicative            ((<$>), (<*>))
@@ -36,6 +37,7 @@ import           Data.Binary.Put                (putByteString, putByteString,
                                                  runPut)
 import qualified Data.ByteString.Lazy           as LazyByteString
 import           Data.MessagePack.Class         (MessagePack)
+import           Data.Typeable                  (Typeable)
 import           GHC.Generics                   (Generic)
 import qualified Network.Tox.Crypto.Box         as Box
 import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
@@ -59,7 +61,7 @@ data DhtPacket = DhtPacket
   , encryptionNonce  :: Nonce
   , encryptedPayload :: CipherText
   }
-  deriving (Eq, Read, Show, Generic)
+  deriving (Eq, Read, Show, Generic, Typeable)
 
 instance MessagePack DhtPacket
 

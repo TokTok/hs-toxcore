@@ -2,6 +2,7 @@
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.Key where
@@ -27,6 +28,7 @@ import qualified Data.ByteString.Char8             as Char8
 import qualified Data.ByteString.Lazy              as LazyByteString
 import           Data.MessagePack.Class            (MessagePack (..))
 import           Data.Proxy                        (Proxy (..))
+import           Data.Typeable                     (Typeable)
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Arbitrary         as Arbitrary
 import           Text.Read                         (readPrec)
@@ -77,7 +79,7 @@ instance CryptoNumber Sodium.Nonce       where { encodedByteSize Proxy = Sodium.
 
 
 newtype Key a = Key a
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Typeable)
 
 type PublicKey   = Key Sodium.PublicKey
 type SecretKey   = Key Sodium.SecretKey
