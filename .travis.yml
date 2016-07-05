@@ -7,15 +7,17 @@ cache:
     - $HOME/.ghc
 
 install:
-  - cabal install codecov-haskell
-  - cabal install hpc-coveralls
-  - cabal configure --enable-library-coverage --extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib
-  - cabal install --only-dependencies
+  - tools/install-libsodium
+  - EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
+  - cabal install --only-dependencies $EXTRA_DIRS
+  - cabal configure --enable-library-coverage $EXTRA_DIRS
+  - cabal install --avoid-reinstalls codecov-haskell hpc-coveralls pandoc stylish-haskell hlint
 
 script:
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
   - cabal build
-  - tools/run-tests
+  - tools/run-tests server
+  - tools/run-tests toxcore
   - tools/build-docs
   - git diff --exit-code
 

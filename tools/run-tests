@@ -2,9 +2,11 @@
 
 use strict;
 
+my $SUT = $ARGV[0] or die "Usage: run-tests <server|toxcore>";
+
 my $server_pid;
 unless ($server_pid = fork) {
-   exec "dist/build/test-server/test-server";
+   exec "dist/build/test-$SUT/test-$SUT";
 }
 
 my $client_pid;
