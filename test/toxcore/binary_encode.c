@@ -5,7 +5,33 @@ METHOD (Binary_encode, DhtPacket) { return pending; }
 METHOD (Binary_encode, HostAddress) { return pending; }
 METHOD (Binary_encode, Int) { return pending; }
 METHOD (Binary_encode, Key) { return pending; }
-METHOD (Binary_encode, KeyPair) { return pending; }
+
+METHOD (Binary_encode, KeyPair)
+{
+  CHECK (args.ptr[1].type == MSGPACK_OBJECT_ARRAY);
+
+  msgpack_object_array key_pair = args.ptr[1].via.array;
+
+  CHECK (key_pair.size == 2);
+  CHECK (key_pair.ptr[0].type == MSGPACK_OBJECT_BIN);
+  CHECK (key_pair.ptr[1].type == MSGPACK_OBJECT_BIN);
+
+  msgpack_object_bin secret_key = key_pair.ptr[0].via.bin;
+  msgpack_object_bin public_key = key_pair.ptr[1].via.bin;
+
+  CHECK (secret_key.size == 32);
+  CHECK (public_key.size == 32);
+
+  SUCCESS {
+    uint8_t data[64];
+    memcpy (data, secret_key.ptr, 32);
+    memcpy (data + 32, public_key.ptr, 32);
+    msgpack_pack_bin (res, 64);
+    msgpack_pack_bin_body (res, data, 64);
+  }
+  return 0;
+}
+
 METHOD (Binary_encode, NodeInfo) { return pending; }
 METHOD (Binary_encode, NodesRequest) { return pending; }
 METHOD (Binary_encode, NodesResponse) { return pending; }

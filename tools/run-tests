@@ -15,7 +15,8 @@ my $server_pid;
 $SIG{INT} = sub { kill 2, $server_pid };
 END { $server_pid and kill 15, $server_pid }
 unless ($server_pid = fork) {
-   exec "dist/build/test-$SUT/test-$SUT";
+   my $server = "dist/build/test-$SUT/test-$SUT";
+   exec $server or die "Unable to execute $server: $!";
 }
 
 system "dist/build/testsuite/testsuite", @ARGV;
