@@ -8,3 +8,4 @@
 #define E_OPEN    7
 #define E_READ    8
 #define E_WRITE   9
+#define E_SODIUM  10

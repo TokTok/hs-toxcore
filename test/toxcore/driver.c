@@ -12,6 +12,8 @@
 #include "methods.h"
 #include "util.h"
 
+#include <sodium.h>
+
 
 struct settings
 {
@@ -105,13 +107,6 @@ handle_request (struct settings cfg, int write_fd, msgpack_object req)
       type_check (&pk, req, 2, MSGPACK_OBJECT_STR) &&
       type_check (&pk, req, 3, MSGPACK_OBJECT_ARRAY))
     {
-      if (cfg.debug)
-        {
-          printf ("Request: ");
-          msgpack_object_print (stdout, req);
-          printf ("\n");
-        }
-
       if (cfg.collect_samples)
         propagate (write_sample_input (req));
 
@@ -123,6 +118,13 @@ handle_request (struct settings cfg, int write_fd, msgpack_object req)
       char const *error = call_method (req.via.array.ptr[2].via.str, req.via.array.ptr[3].via.array, &pk);
       if (error)
         {
+          if (cfg.debug)
+            {
+              printf ("Error '%s' in request: ", error);
+              msgpack_object_print (stdout, req);
+              printf ("\n");
+            }
+
           msgpack_pack_string (&pk, error);
           msgpack_pack_array (&pk, 0);
         }
@@ -211,6 +213,8 @@ uint32_t
 test_main (bool debug, bool collect_samples, uint16_t port)
 {
   struct settings cfg = { debug, collect_samples };
+
+  check_return (E_SODIUM, sodium_init ());
 
   int result = run_tests (cfg, port);
   if (result == E_OK)

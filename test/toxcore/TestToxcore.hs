@@ -39,6 +39,7 @@ errorDesc = \case
   E_OPEN    -> "Error: open failed"
   E_READ    -> "Error: read failed"
   E_WRITE   -> "Error: write failed"
+  E_SODIUM  -> "Error: libsodium initialisation failed"
   e         -> "Unknown error code: " ++ show e
 
 
