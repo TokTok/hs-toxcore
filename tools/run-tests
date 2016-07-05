@@ -13,7 +13,7 @@ die "$SUT is not a valid SUT. Choose one of [@valid_suts]\n" unless -f $server;
 
 my $server_pid;
 $SIG{INT} = sub { kill 2, $server_pid };
-END { $server_pid and kill 15, $server_pid }
+END { $server_pid and kill 2, $server_pid }
 unless ($server_pid = fork) {
    my $server = "dist/build/test-$SUT/test-$SUT";
    exec $server or die "Unable to execute $server: $!";

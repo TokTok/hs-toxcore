@@ -25,12 +25,18 @@ EXTRA_DIRS :=							\
 
 all: check $(DOCS)
 
-
 check:
-	$(MAKE) check-hstox
-	$(MAKE) check-toxcore
+	$(MAKE) test-hstox.tix
+	$(MAKE) test-toxcore.tix
+	hpc combine --exclude=Main --union testsuite.tix test-hstox.tix --output=hstox.tix
+	hpc markup --destdir=dist/hpc/html \
+		--hpcdir=dist/hpc/vanilla/mix/hstox-0.0.1 \
+		--hpcdir=dist/hpc/vanilla/mix/test-hstox \
+		--hpcdir=dist/hpc/vanilla/mix/testsuite \
+		hstox.tix \
+		> /dev/null
 
-check-%: .build.stamp
+test-%.tix: .build.stamp
 	tools/run-tests $*
 
 repl: .build.stamp
@@ -38,7 +44,7 @@ repl: .build.stamp
 
 clean:
 	cabal clean
-	rm -f $(wildcard .*.stamp)
+	rm -f $(wildcard .*.stamp *.tix)
 
 
 build: .build.stamp
@@ -51,7 +57,7 @@ configure: .configure.stamp
 .configure.stamp: .libsodium.stamp
 	cabal update
 	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
-	cabal configure --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE)
+	cabal configure --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE) --disable-profiling
 	@touch $@
 
 doc: $(DOCS)

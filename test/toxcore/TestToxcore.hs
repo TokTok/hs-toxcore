@@ -3,9 +3,11 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Main (main) where
 
-import           Control.Monad (when)
-import           Data.Bits     (shift, (.&.))
-import           Data.Word     (Word16, Word32)
+import           Control.Monad   (when)
+import           Data.Bits       (shift, (.&.))
+import           Data.Word       (Word16, Word32)
+import           Foreign.C.Error (Errno (..), eINTR)
+import           Foreign.C.Types (CInt)
 
 #include "errors.h"
 
@@ -15,7 +17,7 @@ foreign import ccall "test_main" c_test_main :: Bool -> Bool -> Word16 -> IO Wor
 data Result = Result
   { line  :: Int
   , code  :: Int
-  , errno :: Int
+  , errno :: CInt
   }
 
 testMain :: Bool -> Bool -> Int -> IO Result
@@ -46,5 +48,6 @@ errorDesc = \case
 main :: IO ()
 main = do
   Result { line, code, errno } <- testMain True True 1234
-  when (code /= E_OK) $
+  let Errno eintr = eINTR
+  when (code /= E_OK && errno /= eintr) $
     putStrLn $ errorDesc code ++ ", errno=" ++ show errno ++ ", line=" ++ show line
