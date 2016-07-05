@@ -2,17 +2,15 @@
 
 use strict;
 
-my $SUT = $ARGV[0] or die "Usage: run-tests <server|toxcore>";
+use IO::Socket::INET;
+
+my $SUT = shift @ARGV or die "Usage: run-tests <server|toxcore>";
 
 my $server_pid;
+$SIG{INT} = sub { kill 2, $server_pid };
+END { kill 15, $server_pid }
 unless ($server_pid = fork) {
    exec "dist/build/test-$SUT/test-$SUT";
 }
 
-my $client_pid;
-unless ($client_pid = fork) {
-   exec "dist/build/test-tox/test-tox";
-}
-
-waitpid $client_pid, 0;
-kill 2, $server_pid;
+system "dist/build/test-tox/test-tox", @ARGV;

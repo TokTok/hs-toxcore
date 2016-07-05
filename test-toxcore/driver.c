@@ -58,7 +58,11 @@ write_sample_input (msgpack_object req)
   memcpy (filename + strlen (filename), name.ptr, name.size);
   memcpy (filename + strlen (filename) + name.size, ".mp", 4);
 
-  int fd = check_return (E_OPEN, open (filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR));
+  int fd = open (filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+  if (fd < 0)
+    // If we can't open the sample file, we just don't write it.
+    return E_OK;
+
   check_return (E_WRITE, ftruncate (fd, 0));
 
   msgpack_sbuffer sbuf __attribute__ ((__cleanup__ (msgpack_sbuffer_destroy)));
@@ -169,7 +173,8 @@ closep (int *fd)
 static int
 run_tests (bool collect_samples, int port)
 {
-  int listen_fd = socket (AF_INET, SOCK_STREAM, 0);
+  int listen_fd __attribute__ ((__cleanup__ (closep)));
+  listen_fd = check_return (E_SOCKET, socket (AF_INET, SOCK_STREAM, 0));
 
   struct sockaddr_in servaddr;
   servaddr.sin_family = AF_INET;

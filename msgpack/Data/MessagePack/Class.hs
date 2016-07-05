@@ -267,15 +267,7 @@ instance (GMessagePack a, GMessagePack b) => GMessagePack (a :+: b) where
       False -> L1 <$> gFromObject x
       True  -> R1 <$> gFromObject x
 
-instance (GMessagePack a, Constructor c) => GMessagePack (M1 C c a) where
-  gToObject (M1 x) = gToObject x
-  gFromObject x = M1 <$> gFromObject x
-
-instance (GMessagePack a, Selector s) => GMessagePack (M1 S s a) where
-  gToObject (M1 x) = gToObject x
-  gFromObject x = M1 <$> gFromObject x
-
-instance (GMessagePack a, Datatype d) => GMessagePack (M1 D d a) where
+instance GMessagePack a => GMessagePack (M1 t c a) where
   gToObject (M1 x) = gToObject x
   gFromObject x = M1 <$> gFromObject x
 

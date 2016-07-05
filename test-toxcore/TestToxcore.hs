@@ -31,6 +31,7 @@ errorDesc :: Int -> String
 errorDesc = \case
   E_OK      -> "Success"
   E_NOMEM   -> "Error: Out of memory"
+  E_SOCKET  -> "Error: socket creation failed"
   E_BIND    -> "Error: bind failed"
   E_LISTEN  -> "Error: listen failed"
   E_ACCEPT  -> "Error: accept failed"

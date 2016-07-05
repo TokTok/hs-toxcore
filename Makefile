@@ -32,19 +32,14 @@ check:
 	$(MAKE) check-toxcore
 
 check-%: .build.stamp
-	-for pid in $(wildcard .*.pid); do kill `cat $$pid`; done
-	dist/build/test-$*/test-$* & echo $$! > .$*.pid
-	dist/build/test-tox/test-tox --seed=0
-	kill `cat .$*.pid`
-	rm .$*.pid
+	tools/run-tests $*
 
 repl: .build.stamp
 	cabal repl
 
 clean:
 	cabal clean
-	for pid in $(wildcard .*.pid); do kill `cat $$pid`; done
-	rm -f $(wildcard .*.stamp .*.pid)
+	rm -f $(wildcard .*.stamp)
 
 
 build: .build.stamp
