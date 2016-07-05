@@ -1,0 +1,25 @@
+version: 1.0.{build}
+clone_depth: 1
+deploy: off
+
+cache:
+  - C:\ProgramData\chocolatey\bin
+  - C:\ProgramData\chocolatey\lib
+  - C:\tools\ghc
+
+install:
+  - choco install ghc -version 7.10.3 > NUL
+  - SET PATH=%PATH%;C:\tools\ghc\ghc-7.10.3\bin
+  - cabal update
+  - echo cabal install --only-dependencies || echo "Setup failed"
+  - echo cabal configure --enable-library-coverage
+
+build_script:
+  - echo cabal build || echo "Build failed"
+  - echo tools/run-tests hstox
+  - echo tools/run-tests toxcore
+  - echo tools/build-docs
+  - git diff --exit-code
+
+test_script:
+  - echo "Run tests"
