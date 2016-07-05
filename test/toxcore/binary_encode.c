@@ -22,12 +22,13 @@ METHOD (array, Binary_encode, KeyPair)
   CHECK (secret_key.size == 32);
   CHECK (public_key.size == 32);
 
-  SUCCESS;
-  uint8_t data[64];
-  memcpy (data, secret_key.ptr, 32);
-  memcpy (data + 32, public_key.ptr, 32);
-  msgpack_pack_bin (res, 64);
-  msgpack_pack_bin_body (res, data, 64);
+  SUCCESS {
+    uint8_t data[64];
+    memcpy (data, secret_key.ptr, 32);
+    memcpy (data + 32, public_key.ptr, 32);
+    msgpack_pack_bin (res, 64);
+    msgpack_pack_bin_body (res, data, 64);
+  }
 
   return 0;
 }

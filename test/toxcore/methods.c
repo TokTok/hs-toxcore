@@ -44,9 +44,10 @@ METHOD (array, Nonce, newNonce)
   uint8_t nonce[24] = { 0 };
   new_nonce (nonce);
 
-  SUCCESS;
-  msgpack_pack_bin (res, sizeof nonce);
-  msgpack_pack_bin_body (res, nonce, sizeof nonce);
+  SUCCESS {
+    msgpack_pack_bin (res, sizeof nonce);
+    msgpack_pack_bin_body (res, nonce, sizeof nonce);
+  }
 
   return 0;
 }
@@ -62,9 +63,10 @@ METHOD (array, Nonce, increment)
   memcpy (nonce, args.ptr[0].via.bin.ptr, 24);
   increment_nonce (nonce);
 
-  SUCCESS;
-  msgpack_pack_bin (res, sizeof nonce);
-  msgpack_pack_bin_body (res, nonce, sizeof nonce);
+  SUCCESS {
+    msgpack_pack_bin (res, sizeof nonce);
+    msgpack_pack_bin_body (res, nonce, sizeof nonce);
+  }
 
   return 0;
 }

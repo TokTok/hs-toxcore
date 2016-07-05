@@ -2,7 +2,6 @@
 
 #include <msgpack.h>
 
-
 #define check_return(err, expr) __extension__ ({ \
     __typeof__ (expr) _r = (expr); \
     if (_r < 0) \

@@ -8,19 +8,19 @@ METHOD (bin, Binary_decode, Key) { return pending; }
 
 METHOD (bin, Binary_decode, KeyPair)
 {
-  SUCCESS;
-
-  // TODO(iphydf): Haskell implementation accepts >= 64, but shouldn't.
-  if (args.size < 64)
-    msgpack_pack_nil (res);
-  else
-    {
-      msgpack_pack_array (res, 2);
-      msgpack_pack_bin (res, 32);
-      msgpack_pack_bin_body (res, args.ptr, 32);
-      msgpack_pack_bin (res, 32);
-      msgpack_pack_bin_body (res, args.ptr + 32, 32);
-    }
+  SUCCESS {
+    // TODO(iphydf): Haskell implementation accepts >= 64, but shouldn't.
+    if (args.size < 64)
+      msgpack_pack_nil (res);
+    else
+      {
+        msgpack_pack_array (res, 2);
+        msgpack_pack_bin (res, 32);
+        msgpack_pack_bin_body (res, args.ptr, 32);
+        msgpack_pack_bin (res, 32);
+        msgpack_pack_bin_body (res, args.ptr + 32, 32);
+      }
+  }
 
   return 0;
 }

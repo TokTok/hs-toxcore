@@ -3,7 +3,7 @@
 #include <msgpack.h>
 
 #define CHECK(cond) if (!(cond)) return #cond
-#define SUCCESS msgpack_pack_array (res, 0)
+#define SUCCESS msgpack_pack_array (res, 0); if (true)
 
 #define METHOD(TYPE, SERVICE, NAME) \
 char const * \
