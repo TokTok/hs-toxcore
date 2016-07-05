@@ -1,9 +1,11 @@
 \section{Key}
 
 \begin{code}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving  #-}
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.Key where
 
@@ -77,8 +79,12 @@ instance CryptoNumber Sodium.SecretKey   where { encodedByteSize Proxy = Sodium.
 instance CryptoNumber Sodium.CombinedKey where { encodedByteSize Proxy = Sodium.boxBeforeNM }
 instance CryptoNumber Sodium.Nonce       where { encodedByteSize Proxy = Sodium.boxNonce    }
 
+deriving instance Typeable Sodium.PublicKey
+deriving instance Typeable Sodium.SecretKey
+deriving instance Typeable Sodium.CombinedKey
+deriving instance Typeable Sodium.Nonce
 
-newtype Key a = Key a
+newtype Key a = Key { unKey :: a }
   deriving (Eq, Ord, Typeable)
 
 type PublicKey   = Key Sodium.PublicKey
@@ -87,12 +93,8 @@ type CombinedKey = Key Sodium.CombinedKey
 type Nonce       = Key Sodium.Nonce
 
 instance Sodium.IsEncoding a => Sodium.IsEncoding (Key a) where
-  encode = Sodium.encode . unwrap
+  encode = Sodium.encode . unKey
   decode = fmap Key . Sodium.decode
-
-
-unwrap :: Key a -> a
-unwrap (Key key) = key
 
 
 keyToInteger :: Sodium.IsEncoding a => Key a -> Integer

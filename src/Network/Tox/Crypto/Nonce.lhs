@@ -42,7 +42,7 @@ reverseNonce (Key nonce) =
 
 nudge :: Nonce -> Nonce
 nudge =
-  Key . Sodium.nudge . unwrap
+  Key . Sodium.nudge . unKey
 
 
 increment :: Nonce -> Nonce

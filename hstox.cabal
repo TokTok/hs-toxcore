@@ -150,6 +150,8 @@ executable test-toxcore
       test-toxcore/toxcore/toxcore/ping_array.c
       test-toxcore/toxcore/toxcore/tox.c
       test-toxcore/toxcore/toxcore/util.c
+      test-toxcore/binary_decode.c
+      test-toxcore/binary_encode.c
       test-toxcore/driver.c
       test-toxcore/methods.c
       test-toxcore/util.c

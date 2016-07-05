@@ -5,26 +5,8 @@
 #include <crypto_core.h>
 
 
-#define CHECK(cond) if (!(cond)) return #cond
-#define SUCCESS msgpack_pack_array (res, 0); if (true)
-
-#define METHOD(SERVICE, NAME) \
-static char const * \
-SERVICE##_##NAME (msgpack_object_array args, msgpack_packer *res)
-
-static char const *const pending = "Pending";
-
-
-METHOD (Binary, decode)
-{
-  return pending;
-}
-
-
-METHOD (Binary, encode)
-{
-  return pending;
-}
+char const *const pending = "Pending";
+char const *const unimplemented = "Unimplemented";
 
 
 METHOD (Box, encrypt)
@@ -73,8 +55,9 @@ METHOD (Nonce, newNonce)
 
 METHOD (Nonce, increment)
 {
+  CHECK (args.size == 1);
   CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
-  CHECK (args.ptr[0].via.bin.size == 24        );
+  CHECK (args.ptr[0].via.bin.size == 24);
 
   uint8_t nonce[24];
   memcpy (nonce, args.ptr[0].via.bin.ptr, 24);
@@ -96,7 +79,6 @@ call_method (msgpack_object_str name, msgpack_object_array args, msgpack_packer 
   if (name.size == sizeof #SERVICE"."#NAME - 1 && \
       memcmp (name.ptr, #SERVICE"."#NAME, name.size) == 0) \
     return SERVICE##_##NAME (args, res)
-
   DISPATCH (Binary, decode);
   DISPATCH (Binary, encode);
   DISPATCH (Box, decrypt);
@@ -106,8 +88,9 @@ call_method (msgpack_object_str name, msgpack_object_array args, msgpack_packer 
   DISPATCH (KeyPair, newKeyPair);
   DISPATCH (Nonce, increment);
   DISPATCH (Nonce, newNonce);
+#undef DISPATCH
 
   // Default action: "Unimplemented" exception. New tests should be added here
   // returning "Pending" until they are properly implemented.
-  return "Unimplemented";
+  return unimplemented;
 }
