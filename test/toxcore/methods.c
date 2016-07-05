@@ -31,16 +31,16 @@ METHOD (array, KeyPair, newKeyPair)
 {
   uint8_t key1[crypto_box_PUBLICKEYBYTES];
   uint8_t key2[crypto_box_SECRETKEYBYTES];
-  crypto_box_keypair(key1, key2);
+  crypto_box_keypair (key1, key2);
 
   SUCCESS {
     //init array
-    msgpack_pack_array(res, 2);
-    msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
-    msgpack_pack_bin_body(res, key1, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_array (res, 2);
+    msgpack_pack_bin (res, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin_body (res, key1, crypto_box_PUBLICKEYBYTES);
 
-    msgpack_pack_bin(res, crypto_box_SECRETKEYBYTES);
-    msgpack_pack_bin_body(res, key2, crypto_box_SECRETKEYBYTES);
+    msgpack_pack_bin (res, crypto_box_SECRETKEYBYTES);
+    msgpack_pack_bin_body (res, key2, crypto_box_SECRETKEYBYTES);
   }
   return 0;
 }
@@ -54,16 +54,16 @@ METHOD (array, KeyPair, fromSecretKey)
 
   Net_Crypto c;
   uint8_t secret_key[crypto_box_SECRETKEYBYTES];
-  memcpy(secret_key, args.ptr[0].via.bin.ptr, crypto_box_SECRETKEYBYTES);
-  load_secret_key(&c, secret_key);
+  memcpy (secret_key, args.ptr[0].via.bin.ptr, crypto_box_SECRETKEYBYTES);
+  load_secret_key (&c, secret_key);
 
   SUCCESS {
-    msgpack_pack_array(res, 2);
+    msgpack_pack_array (res, 2);
 
-    msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
-    msgpack_pack_bin_body(res, c.self_secret_key, crypto_box_PUBLICKEYBYTES);
-    msgpack_pack_bin(res, crypto_box_SECRETKEYBYTES);
-    msgpack_pack_bin_body(res, c.self_public_key, crypto_box_SECRETKEYBYTES);
+    msgpack_pack_bin (res, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin_body (res, c.self_secret_key, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin (res, crypto_box_SECRETKEYBYTES);
+    msgpack_pack_bin_body (res, c.self_public_key, crypto_box_SECRETKEYBYTES);
   }
   return 0;
 }
