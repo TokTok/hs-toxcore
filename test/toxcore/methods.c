@@ -29,13 +29,40 @@ METHOD (array, CombinedKey, precompute)
 
 METHOD (array, KeyPair, newKeyPair)
 {
-  return pending;
+  uint8_t key1[crypto_box_PUBLICKEYBYTES];
+  uint8_t key2[crypto_box_SECRETKEYBYTES];
+  crypto_box_keypair(key1, key2);
+
+  SUCCESS{
+    //init array
+    msgpack_pack_array(res, 2);
+    msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin_body(res, key1, crypto_box_PUBLICKEYBYTES);
+
+    msgpack_pack_bin(res, crypto_box_SECRETKEYBYTES);
+    msgpack_pack_bin_body(res, key2, crypto_box_SECRETKEYBYTES);
+  }
+  return 0;
 }
 
 
 METHOD (array, KeyPair, fromSecretKey)
 {
-  return pending;
+  uint8_t secret_key[crypto_scalarmult_SCALARBYTES];
+  memcpy(secret_key, args.ptr[0].via.bin.ptr, crypto_scalarmult_SCALARBYTES);
+
+  uint8_t public_key[crypto_scalarmult_BYTES];
+  crypto_scalarmult_base(public_key, secret_key);
+
+  SUCCESS{
+    msgpack_pack_array(res, 2);
+
+    msgpack_pack_bin(res, crypto_scalarmult_SCALARBYTES);
+    msgpack_pack_bin_body(res, secret_key, crypto_scalarmult_SCALARBYTES);
+    msgpack_pack_bin(res, crypto_scalarmult_SCALARBYTES);
+    msgpack_pack_bin_body(res, public_key, crypto_scalarmult_SCALARBYTES);
+  }
+  return 0;
 }
 
 
