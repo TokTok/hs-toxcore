@@ -88,7 +88,7 @@ instance MessagePack o => RpcType (Client o) where
     res <- rpcCall m (reverse args)
     case fromObject res of
       Just r  -> return r
-      Nothing -> throwM $ ResultTypeError "type mismatch"
+      Nothing -> throwM $ ResultTypeError $ "type mismatch: " ++ show res
 
 instance (MessagePack o, RpcType r) => RpcType (o -> r) where
   rpcc m args arg = rpcc m (toObject arg:args)
@@ -111,9 +111,7 @@ rpcCall methodName args = ClientT $ do
 
       when (rmsgid /= msgid) $
         throwM $ ProtocolError $
-          "message id mismatch: expect "
-          ++ show msgid ++ ", but got "
-          ++ show rmsgid
+          "message id mismatch: expect " ++ show msgid ++ ", but got " ++ show rmsgid
 
       case fromObject rerror of
         Nothing -> throwM $ ServerError rerror

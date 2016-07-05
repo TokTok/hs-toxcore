@@ -104,8 +104,7 @@ handle_request (bool collect_samples, int write_fd, msgpack_object req)
       msgpack_pack_array (&pk, 4); // 4 elements in the array
       msgpack_pack_uint8 (&pk, 1); // 1. type = response
       msgpack_pack_uint64 (&pk, req.via.array.ptr[1].via.u64); // 2. msgid
-      msgpack_pack_array (&pk, 0); // 3. No error.
-      call_method (req.via.array.ptr[2].via.str, req.via.array.ptr[3].via.array, &pk); // 4. result
+      call_method (req.via.array.ptr[2].via.str, req.via.array.ptr[3].via.array, &pk); // 3. error, and 4. result
     }
   check_return (E_WRITE, write (write_fd, sbuf.data, sbuf.size));
 

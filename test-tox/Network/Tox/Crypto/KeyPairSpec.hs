@@ -3,7 +3,7 @@
 module Network.Tox.Crypto.KeyPairSpec where
 
 import           Control.Monad.IO.Class         (liftIO)
-import           Network.Tox.RPC                (runClient)
+import           Network.Tox.RPCTest            (runTest)
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -23,39 +23,39 @@ spec = do
 
   describe "newKeyPair" $ do
 
-    it "generates different key pairs on subsequent calls" $ runClient $ do
+    it "generates different key pairs on subsequent calls" $ runTest $ do
       kp1 <- KeyPair.newKeyPairC
       kp2 <- KeyPair.newKeyPairC
       liftIO $ kp1 `shouldNotBe` kp2
 
-    it "generates different secret keys on subsequent calls" $ runClient $ do
+    it "generates different secret keys on subsequent calls" $ runTest $ do
       KeyPair sk1 _ <- KeyPair.newKeyPairC
       KeyPair sk2 _ <- KeyPair.newKeyPairC
       liftIO $ sk1 `shouldNotBe` sk2
 
-    it "generates different public keys on subsequent calls" $ runClient $ do
+    it "generates different public keys on subsequent calls" $ runTest $ do
       KeyPair _ pk1 <- KeyPair.newKeyPairC
       KeyPair _ pk2 <- KeyPair.newKeyPairC
       liftIO $ pk1 `shouldNotBe` pk2
 
-    it "generates a public key that is different from the secret key" $ runClient $ do
+    it "generates a public key that is different from the secret key" $ runTest $ do
       KeyPair (Key.Key sk) (Key.Key pk) <- KeyPair.newKeyPairC
       liftIO $ Sodium.encode pk `shouldNotBe` Sodium.encode sk
 
   describe "fromSecretKey" $ do
 
     it "doesn't modify the secret key" $
-      property $ \sk -> runClient $ do
+      property $ \sk -> runTest $ do
         KeyPair sk' _ <- KeyPair.fromSecretKeyC sk
         liftIO $ sk' `shouldBe` sk
 
     it "never computes a public key that is equal to the secret key" $
-      property $ \sk -> runClient $ do
+      property $ \sk -> runTest $ do
         KeyPair _ (Key.Key pk) <- KeyPair.fromSecretKeyC sk
         liftIO $ Sodium.encode pk `shouldNotBe` Sodium.encode sk
 
     it "computes a usable public key from an invalid secret key" $
-      property $ \plainText nonce -> runClient $ do
+      property $ \plainText nonce -> runTest $ do
         KeyPair sk pk <- KeyPair.fromSecretKeyC $ read "\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\""
         ck <- CombinedKey.precomputeC sk pk
         encrypted <- Box.encryptC ck nonce plainText

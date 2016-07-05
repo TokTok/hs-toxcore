@@ -45,3 +45,6 @@ main = map readMaybe <$> getArgs >>= \case
     [Just port] -> RPC.runServer port            services
     _           -> RPC.runServer RPC.defaultPort services
 \end{code}
+
+See the \href{https://github.com/msgpack/msgpack/blob/master/spec.md}{spec} of
+msgpack for information on the binary representation.

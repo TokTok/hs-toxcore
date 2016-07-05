@@ -4,12 +4,13 @@ CABAL_VER_MINOR := $(shell echo $(CABAL_VER_NUM) | cut -f2 -d.)
 CABAL_GT_1_22 := $(shell [ $(CABAL_VER_MAJOR) -gt 1 -o \( $(CABAL_VER_MAJOR) -eq 1 -a $(CABAL_VER_MINOR) -ge 22 \) ] && echo true)
 
 ifeq ($(CABAL_GT_1_22),true)
-COVERAGE	= --enable-coverage
+ENABLE_COVERAGE	= --enable-coverage
 else
-COVERAGE	= --enable-library-coverage
+ENABLE_COVERAGE	= --enable-library-coverage
 endif
 
-SOURCES	:= $(shell find src test-server test-tox test-toxcore -name "*.*hs" -or -name "*.c" -or -name "*.h")
+DIRS	:= msgpack src test-server test-tox test-toxcore
+SOURCES	:= $(shell find $(DIRS) -name "*.*hs" -or -name "*.c" -or -name "*.h")
 
 ifneq ($(wildcard ../tox-spec/pandoc.mk),)
 ifneq ($(shell which pandoc),)
@@ -28,21 +29,22 @@ all: check $(DOCS)
 
 check:
 	$(MAKE) check-server
-#	$(MAKE) check-toxcore
+	$(MAKE) check-toxcore
 
 check-%: .build.stamp
-	dist/build/test-$*/test-$* & echo $$! > .server.pid
+	-for pid in $(wildcard .*.pid); do kill `cat $$pid`; done
+	dist/build/test-$*/test-$* & echo $$! > .$*.pid
 	dist/build/test-tox/test-tox --seed=0
-	kill `cat .server.pid`
-	rm .server.pid
+	kill `cat .$*.pid`
+	rm .$*.pid
 
 repl: .build.stamp
 	cabal repl
 
 clean:
 	cabal clean
-	-test -f .server.pid && kill `cat .server.pid`
-	rm -f $(wildcard .*.stamp) .server.pid
+	for pid in $(wildcard .*.pid); do kill `cat $$pid`; done
+	rm -f $(wildcard .*.stamp .*.pid)
 
 
 build: .build.stamp
@@ -55,7 +57,7 @@ configure: .configure.stamp
 .configure.stamp: .libsodium.stamp
 	cabal update
 	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
-	cabal configure --enable-tests $(EXTRA_DIRS) $(COVERAGE)
+	cabal configure --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE)
 	@touch $@
 
 doc: $(DOCS)

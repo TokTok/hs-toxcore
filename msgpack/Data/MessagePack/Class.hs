@@ -88,11 +88,8 @@ instance MessagePack Object where
 instance MessagePack () where
   toObject _ = ObjectArray V.empty
   fromObject = \case
-    ObjectArray v ->
-        if V.null v
-            then Just ()
-            else Nothing
-    _ -> Nothing
+    ObjectArray v | V.null v -> Just ()
+    _                        -> Nothing
 
 instance MessagePack Bool where
   toObject = ObjectBool
