@@ -33,7 +33,7 @@ METHOD (array, KeyPair, newKeyPair)
   uint8_t key2[crypto_box_SECRETKEYBYTES];
   crypto_box_keypair(key1, key2);
 
-  SUCCESS{
+  SUCCESS {
     //init array
     msgpack_pack_array(res, 2);
     msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
@@ -48,19 +48,22 @@ METHOD (array, KeyPair, newKeyPair)
 
 METHOD (array, KeyPair, fromSecretKey)
 {
+  CHECK (args.size == 1);
+  CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
+  CHECK (args.ptr[0].via.bin.size == crypto_box_SECRETKEYBYTES);
+
   Net_Crypto c;
   uint8_t secret_key[crypto_box_SECRETKEYBYTES];
   memcpy(secret_key, args.ptr[0].via.bin.ptr, crypto_box_SECRETKEYBYTES);
   load_secret_key(&c, secret_key);
 
-  SUCCESS{
+  SUCCESS {
     msgpack_pack_array(res, 2);
 
     msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
     msgpack_pack_bin_body(res, c.self_secret_key, crypto_box_PUBLICKEYBYTES);
     msgpack_pack_bin(res, crypto_box_SECRETKEYBYTES);
     msgpack_pack_bin_body(res, c.self_public_key, crypto_box_SECRETKEYBYTES);
-
   }
   return 0;
 }
