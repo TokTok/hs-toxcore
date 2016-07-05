@@ -30,13 +30,13 @@ services :: [RPC.Method IO]
 services =
   [ Binary.decodeS
   , Binary.encodeS
-  , Box.encryptS
   , Box.decryptS
+  , Box.encryptS
   , CombinedKey.precomputeS
-  , KeyPair.newKeyPairS
   , KeyPair.fromSecretKeyS
-  , Nonce.newNonceS
+  , KeyPair.newKeyPairS
   , Nonce.incrementS
+  , Nonce.newNonceS
   ]
 
 

@@ -5,48 +5,109 @@
 #include <crypto_core.h>
 
 
-#define success msgpack_pack_array (res, 0); if (true)
+#define CHECK(cond) if (!(cond)) return #cond
+#define SUCCESS msgpack_pack_array (res, 0); if (true)
+
+#define METHOD(SERVICE, NAME) \
+static char const * \
+SERVICE##_##NAME (msgpack_object_array args, msgpack_packer *res)
+
+static char const *const pending = "Pending";
 
 
-static void
-pending (msgpack_packer *res)
+METHOD (Binary, decode)
 {
-  msgpack_pack_string (res, "Pending");
-  msgpack_pack_array (res, 0);
+  return pending;
 }
 
 
-bool
+METHOD (Binary, encode)
+{
+  return pending;
+}
+
+
+METHOD (Box, encrypt)
+{
+  return pending;
+}
+
+
+METHOD (Box, decrypt)
+{
+  return pending;
+}
+
+
+METHOD (CombinedKey, precompute)
+{
+  return pending;
+}
+
+
+METHOD (KeyPair, newKeyPair)
+{
+  return pending;
+}
+
+
+METHOD (KeyPair, fromSecretKey)
+{
+  return pending;
+}
+
+
+METHOD (Nonce, newNonce)
+{
+  uint8_t nonce[24] = { 0 };
+  new_nonce (nonce);
+
+  SUCCESS {
+    msgpack_pack_bin (res, sizeof nonce);
+    msgpack_pack_bin_body (res, nonce, sizeof nonce);
+  }
+
+  return 0;
+}
+
+
+METHOD (Nonce, increment)
+{
+  CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
+  CHECK (args.ptr[0].via.bin.size == 24        );
+
+  uint8_t nonce[24];
+  memcpy (nonce, args.ptr[0].via.bin.ptr, 24);
+  increment_nonce (nonce);
+
+  SUCCESS {
+    msgpack_pack_bin (res, sizeof nonce);
+    msgpack_pack_bin_body (res, nonce, sizeof nonce);
+  }
+
+  return 0;
+}
+
+
+char const *
 call_method (msgpack_object_str name, msgpack_object_array args, msgpack_packer *res)
 {
-#define NAME_IS(NAME) name.size == sizeof NAME - 1 && memcmp (name.ptr, NAME, name.size) == 0
-  if (NAME_IS ("Nonce.newNonce"))
-    {
-      uint8_t nonce[24] = { 0 };
-      new_nonce (nonce);
+#define DISPATCH(SERVICE, NAME) \
+  if (name.size == sizeof #SERVICE"."#NAME - 1 && \
+      memcmp (name.ptr, #SERVICE"."#NAME, name.size) == 0) \
+    return SERVICE##_##NAME (args, res)
 
-      success {
-        msgpack_pack_bin (res, sizeof nonce);
-        msgpack_pack_bin_body (res, nonce, sizeof nonce);
-      }
-    }
-  else if (NAME_IS ("Nonce.increment"))
-    {
-      if (args.ptr[0].type != MSGPACK_OBJECT_BIN) return false;
-      if (args.ptr[0].via.bin.size != 24        ) return false;
+  DISPATCH (Binary, decode);
+  DISPATCH (Binary, encode);
+  DISPATCH (Box, decrypt);
+  DISPATCH (Box, encrypt);
+  DISPATCH (CombinedKey, precompute);
+  DISPATCH (KeyPair, fromSecretKey);
+  DISPATCH (KeyPair, newKeyPair);
+  DISPATCH (Nonce, increment);
+  DISPATCH (Nonce, newNonce);
 
-      uint8_t nonce[24];
-      memcpy (nonce, args.ptr[0].via.bin.ptr, 24);
-      increment_nonce (nonce);
-
-      success {
-        msgpack_pack_bin (res, sizeof nonce);
-        msgpack_pack_bin_body (res, nonce, sizeof nonce);
-      }
-    }
-  else
-    // Default action: "Pending" exception.
-    pending (res);
-
-  return true;
+  // Default action: "Unimplemented" exception. New tests should be added here
+  // returning "Pending" until they are properly implemented.
+  return "Unimplemented";
 }
