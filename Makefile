@@ -22,19 +22,15 @@ EXTRA_DIRS :=							\
 	--extra-include-dirs=$(HOME)/.cabal/extra-dist/include	\
 	--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 
+HPC_DIRS = `ls -d dist/hpc/vanilla/mix/* | sed -e 's/^/--hpcdir=/'`
+
 
 all: check $(DOCS)
 
-check:
-	$(MAKE) test-hstox.tix
-	$(MAKE) test-toxcore.tix
-	hpc combine --exclude=Main --union testsuite.tix test-hstox.tix --output=hstox.tix
-	hpc markup --destdir=dist/hpc/html \
-		--hpcdir=dist/hpc/vanilla/mix/hstox-0.0.1 \
-		--hpcdir=dist/hpc/vanilla/mix/test-hstox \
-		--hpcdir=dist/hpc/vanilla/mix/testsuite \
-		hstox.tix \
-		> /dev/null
+check: test-hstox.tix test-toxcore.tix
+	hpc sum --exclude=Main --union *.tix --output=dist/hpc/hstox.tix
+	hpc markup $(HPC_DIRS) --destdir=dist/hpc/html dist/hpc/hstox.tix > /dev/null
+	hpc report $(HPC_DIRS) dist/hpc/hstox.tix
 
 test-%.tix: .build.stamp
 	tools/run-tests $*

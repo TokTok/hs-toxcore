@@ -45,6 +45,7 @@ import           Network.Tox.Crypto.Key         (Nonce, PublicKey)
 import           Network.Tox.Crypto.KeyPair     (KeyPair (..))
 import           Network.Tox.Crypto.Text        (CipherText (..),
                                                  PlainText (..))
+import qualified Network.Tox.Crypto.Text        as Text
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 
@@ -67,10 +68,10 @@ instance MessagePack DhtPacket
 
 
 instance Binary DhtPacket where
-  put DhtPacket { senderPublicKey, encryptionNonce, encryptedPayload = CipherText bytes } = do
-    put senderPublicKey
-    put encryptionNonce
-    putByteString bytes
+  put packet = do
+    put $ senderPublicKey packet
+    put $ encryptionNonce packet
+    putByteString . unCipherText . encryptedPayload $ packet
 
   get =
     DhtPacket <$> get <*> get <*> (CipherText . LazyByteString.toStrict <$> getRemainingLazyByteString)
@@ -83,9 +84,12 @@ encrypt (KeyPair senderSecretKey senderPublicKey') receiverPublicKey nonce plain
 
 
 encode :: Binary payload => KeyPair -> PublicKey -> Nonce -> payload -> DhtPacket
-encode keyPair receiverPublicKey nonce payload =
+encode keyPair receiverPublicKey nonce =
   encrypt keyPair receiverPublicKey nonce
-    $ PlainText $ LazyByteString.toStrict $ runPut $ put payload
+  . PlainText
+  . LazyByteString.toStrict
+  . runPut
+  . put
 
 
 decrypt :: KeyPair -> DhtPacket -> Maybe PlainText
@@ -95,12 +99,7 @@ decrypt (KeyPair receiverSecretKey _) DhtPacket { senderPublicKey, encryptionNo
 
 
 decode :: Binary payload => KeyPair -> DhtPacket -> Maybe payload
-decode keyPair packet = do
-  PlainText bytes <- decrypt keyPair packet
-  case pushChunk (runGetIncremental get) bytes of
-    Fail {}         -> Nothing
-    Partial _       -> Nothing
-    Done _ _ output -> Just output
+decode keyPair packet = decrypt keyPair packet >>= Text.decode
 
 
 {-------------------------------------------------------------------------------

@@ -11,7 +11,8 @@ install:
   - EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
   - cabal install --only-dependencies $EXTRA_DIRS
   - cabal configure --enable-library-coverage $EXTRA_DIRS
-#  - cabal install --avoid-reinstalls codecov-haskell hpc-coveralls pandoc stylish-haskell hlint
+  - cabal install codecov-haskell hpc-coveralls aeson-0.9.0.1
+#  - cabal install pandoc stylish-haskell hlint
 
 script:
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
@@ -23,6 +24,8 @@ script:
 
 after_script:
   - mkdir -p dist/hpc/tix/hstox
-  - hpc combine --exclude=Main --union testsuite.tix test-hstox.tix --output=dist/hpc/tix/hstox/hstox.tix
-  - codecov-haskell --exclude-dir=test --exclude-dir=src/testsuite hstox
-  - hpc-coveralls   --exclude-dir=test --exclude-dir=src/testsuite hstox
+  - ls *.tix
+  - hpc sum --exclude=Main --union *.tix --output=dist/hpc/tix/hstox/hstox.tix
+  - hpc report `ls -d dist/hpc/vanilla/mix/* | sed -e 's/^/--hpcdir=/'` dist/hpc/tix/hstox/hstox.tix
+  - codecov-haskell hstox
+  - hpc-coveralls   hstox

@@ -17,23 +17,18 @@ response has in their list of known nodes.
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.NodesResponse where
 
 import           Control.Applicative           ((<$>))
-import           Control.Monad                 (filterM, foldM)
 import           Data.Binary                   (Binary, get, put)
 import qualified Data.Binary.Get               as Binary (getWord8)
 import qualified Data.Binary.Put               as Binary (putWord8)
 import           Data.MessagePack.Class        (MessagePack)
 import           Data.Typeable                 (Typeable)
 import           GHC.Generics                  (Generic)
-import           Network.Tox.Crypto.Key        (PublicKey)
-import           Network.Tox.Encoding          (getBool, putBool)
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
-import qualified Test.QuickCheck.Gen           as Gen
 
 
 {-------------------------------------------------------------------------------
@@ -52,9 +47,9 @@ instance MessagePack NodesResponse
 
 
 instance Binary NodesResponse where
-  put NodesResponse { foundNodes } = do
-    Binary.putWord8 $ fromInteger $ toInteger $ length foundNodes
-    mapM put foundNodes >>= foldM (\() -> return) ()
+  put res = do
+    Binary.putWord8 . fromInteger . toInteger . length . foundNodes $ res
+    mapM_ put (foundNodes res)
 
   get = do
     count <- Binary.getWord8

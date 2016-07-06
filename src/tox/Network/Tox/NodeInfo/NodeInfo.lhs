@@ -43,7 +43,6 @@ The reason for these numbers is because the numbers on Linux for IPv4 and IPv6
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE Safe               #-}
 module Network.Tox.NodeInfo.NodeInfo where
 
@@ -82,9 +81,9 @@ instance Binary NodeInfo where
   get =
     uncurry NodeInfo <$> SocketAddress.getSocketAddress <*> Binary.get
 
-  put NodeInfo { protocol, address, publicKey } = do
-    SocketAddress.putSocketAddress protocol address
-    Binary.put publicKey
+  put ni = do
+    SocketAddress.putSocketAddress (protocol ni) (address ni)
+    Binary.put $ publicKey ni
 
 
 {-------------------------------------------------------------------------------

@@ -45,7 +45,7 @@ newtype PlainText = PlainText { unPlainText :: ByteString }
 instance MessagePack PlainText
 
 instance Show PlainText where
-  show (PlainText bytes) = show $ Base16.encode bytes
+  show = show . Base16.encode . unPlainText
 
 instance Read PlainText where
   readPrec = PlainText . fst . Base16.decode <$> readPrec
@@ -57,7 +57,7 @@ newtype CipherText = CipherText { unCipherText :: ByteString }
 instance MessagePack CipherText
 
 instance Show CipherText where
-  show (CipherText bytes) = show $ Base16.encode bytes
+  show = show . Base16.encode . unCipherText
 
 instance Read CipherText where
   readPrec = CipherText . fst . Base16.decode <$> readPrec
