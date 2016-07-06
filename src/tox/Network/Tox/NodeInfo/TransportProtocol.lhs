@@ -20,7 +20,7 @@ module Network.Tox.NodeInfo.TransportProtocol where
 import           Data.Binary               (Binary)
 import qualified Data.Binary.Bits.Get      as Bits (getBool)
 import qualified Data.Binary.Bits.Put      as Bits (putBool)
-import           Data.MessagePack.Class    (MessagePack)
+import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
 import           GHC.Generics              (Generic)
 import           Network.Tox.Encoding      (BitEncoding, bitGet, bitPut)

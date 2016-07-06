@@ -18,7 +18,7 @@ import qualified Data.Binary.Bits.Get                   as Bits (runBitGet)
 import qualified Data.Binary.Bits.Put                   as Bits (runBitPut)
 import qualified Data.Binary.Get                        as Binary (Get)
 import qualified Data.Binary.Put                        as Binary (Put)
-import           Data.MessagePack.Class                 (MessagePack)
+import           Data.MessagePack                       (MessagePack)
 import           Data.Typeable                          (Typeable)
 import           GHC.Generics                           (Generic)
 import qualified Network.Socket                         as Socket

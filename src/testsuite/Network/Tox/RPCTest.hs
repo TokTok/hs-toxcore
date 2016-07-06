@@ -5,7 +5,7 @@ import           Control.Exception          (catch)
 import qualified Data.Text                  as Text
 import           Test.Hspec
 
-import           Data.MessagePack.Object    (Object (..))
+import           Data.MessagePack           (Object (..))
 import           Network.MessagePack.Client (Client, RpcError (..))
 import           Network.Tox.RPC            (runClient)
 

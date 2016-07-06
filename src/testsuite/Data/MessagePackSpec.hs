@@ -24,11 +24,23 @@ import           GHC.Generics               (Generic)
 import           Data.MessagePack
 
 
+data Record = Record Int Int Int
+  deriving (Eq, Show, Generic)
+
+instance MessagePack Record
+
+
 data Foo
   = Foo1
   | Foo2 Int
-  | Foo3 { unFoo3 :: Int }
-  | Foo4 (Maybe Foo)
+  | Foo3 Int
+  | Foo4 Int
+  | Foo5 Int
+  | Foo6 { unFoo3 :: Int }
+  | Foo7 (Maybe Foo)
+  | Foo8 Int
+  | Foo9 Int Int
+  | Foo10 Int Int Int
   deriving (Eq, Show, Generic)
 
 instance MessagePack Foo
@@ -39,6 +51,12 @@ instance Arbitrary Foo where
     , Foo2 <$> arbitrary
     , Foo3 <$> arbitrary
     , Foo4 <$> arbitrary
+    , Foo5 <$> arbitrary
+    , Foo6 <$> arbitrary
+    , Foo7 <$> arbitrary
+    , Foo8 <$> arbitrary
+    , Foo9 <$> arbitrary <*> arbitrary
+    , Foo10 <$> arbitrary <*> arbitrary <*> arbitrary
     ]
 
 
@@ -251,3 +269,13 @@ spec = do
       property $ \(a :: Foo) -> a `shouldBe` mid a
     it "arbitrary message" $
       property $ \(a :: Object) -> a `shouldBe` mid a
+
+  describe "show" $ do
+    it "Foo" $ do
+      show (toObject Foo1) `shouldBe` "ObjectInt 0"
+      show (toObject $ Foo3 3) `shouldBe` "ObjectArray [ObjectInt 2,ObjectInt 3]"
+      show (toObject $ Foo9 3 5) `shouldBe` "ObjectArray [ObjectInt 8,ObjectArray [ObjectInt 3,ObjectInt 5]]"
+      show (toObject $ Foo10 3 5 7) `shouldBe` "ObjectArray [ObjectInt 9,ObjectArray [ObjectInt 3,ObjectInt 5,ObjectInt 7]]"
+
+    it "Record" $
+      show (toObject $ Record 3 5 7) `shouldBe` "ObjectArray [ObjectInt 3,ObjectInt 5,ObjectInt 7]"

@@ -13,7 +13,7 @@ module Network.Tox.NodeInfo.PortNumber where
 
 import           Control.Applicative       ((<$>))
 import           Data.Binary               (Binary)
-import           Data.MessagePack.Class    (MessagePack)
+import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
 import           Data.Word                 (Word16)
 import           GHC.Generics              (Generic)

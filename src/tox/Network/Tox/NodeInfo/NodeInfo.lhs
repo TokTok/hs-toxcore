@@ -49,7 +49,7 @@ module Network.Tox.NodeInfo.NodeInfo where
 import           Control.Applicative                    ((<$>), (<*>))
 import           Data.Binary                            (Binary)
 import qualified Data.Binary                            as Binary (get, put)
-import           Data.MessagePack.Class                 (MessagePack)
+import           Data.MessagePack                       (MessagePack)
 import           Data.Typeable                          (Typeable)
 import           GHC.Generics                           (Generic)
 import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)

@@ -8,7 +8,7 @@ module Network.Tox.DHT.RpcPacket where
 
 import           Control.Applicative       ((<$>), (<*>))
 import           Data.Binary               (Binary)
-import           Data.MessagePack.Class    (MessagePack)
+import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
 import           Data.Word                 (Word64)
 import           GHC.Generics              (Generic)

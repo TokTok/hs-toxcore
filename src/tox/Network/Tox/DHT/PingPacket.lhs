@@ -9,7 +9,7 @@ The Ping Service is used to periodically check if another node is still alive.
 module Network.Tox.DHT.PingPacket where
 
 import           Data.Binary               (Binary)
-import           Data.MessagePack.Class    (MessagePack)
+import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)

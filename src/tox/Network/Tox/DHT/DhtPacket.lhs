@@ -36,7 +36,7 @@ import           Data.Binary.Get                (Decoder (..),
 import           Data.Binary.Put                (putByteString, putByteString,
                                                  runPut)
 import qualified Data.ByteString.Lazy           as LazyByteString
-import           Data.MessagePack.Class         (MessagePack)
+import           Data.MessagePack               (MessagePack)
 import           Data.Typeable                  (Typeable)
 import           GHC.Generics                   (Generic)
 import qualified Network.Tox.Crypto.Box         as Box

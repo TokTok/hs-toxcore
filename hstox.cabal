@@ -56,13 +56,15 @@ library
     , transformers
     , unordered-containers
     , vector
-  exposed-modules:
-      Data.MessagePack
+  other-modules:
       Data.MessagePack.Assoc
       Data.MessagePack.Class
+      Data.MessagePack.Generic
       Data.MessagePack.Get
       Data.MessagePack.Object
       Data.MessagePack.Put
+  exposed-modules:
+      Data.MessagePack
       Network.MessagePack.Client
       Network.MessagePack.Server
       Network.Tox

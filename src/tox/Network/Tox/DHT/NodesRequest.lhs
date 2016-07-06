@@ -17,7 +17,7 @@ module Network.Tox.DHT.NodesRequest where
 
 import           Control.Applicative             ((<$>))
 import           Data.Binary                     (Binary, get, put)
-import           Data.MessagePack.Class          (MessagePack)
+import           Data.MessagePack                (MessagePack)
 import           Data.Typeable                   (Typeable)
 import           GHC.Generics                    (Generic)
 import           Network.Tox.Crypto.Key          (PublicKey)

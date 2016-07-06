@@ -30,7 +30,7 @@ import qualified Data.IP                   as IP
 import           Data.List                 as List
 import           Data.List.Split           as List
 import           Data.Maybe                (listToMaybe, mapMaybe)
-import           Data.MessagePack.Class    (MessagePack)
+import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
 import           Data.Word                 (Word16, Word8)
 import           GHC.Generics              (Generic)

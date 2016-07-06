@@ -5,9 +5,7 @@
 {-# LANGUAGE IncoherentInstances  #-}
 {-# LANGUAGE LambdaCase           #-}
 {-# LANGUAGE OverloadedLists      #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE Trustworthy          #-}
-{-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 --------------------------------------------------------------------
@@ -24,10 +22,15 @@
 --
 --------------------------------------------------------------------
 
-module Data.MessagePack.Class (MessagePack (..)) where
+module Data.MessagePack.Class
+  ( MessagePack (..)
+  , GMessagePack (..)
+  ) where
 
-import           Control.Applicative     ((<$>), (<*>))
+import           Control.Applicative     ((<$>), (<*>), (<|>))
 import           Control.Arrow           ((***))
+import           Control.Monad           ((>=>))
+import           Data.Bits               (shiftR)
 import qualified Data.ByteString         as S
 import qualified Data.ByteString.Lazy    as L
 import           Data.Hashable           (Hashable)
@@ -39,6 +42,7 @@ import qualified Data.Text               as T
 import qualified Data.Text.Lazy          as LT
 import qualified Data.Vector             as V
 import           Data.Word               (Word16, Word32, Word64, Word8)
+import           Debug.Trace             (trace)
 import           GHC.Generics
 
 import           Data.MessagePack.Assoc
@@ -53,6 +57,13 @@ class MessagePack a where
   toObject = genericToObject
   default fromObject :: (Generic a, GMessagePack (Rep a)) => Object -> Maybe a
   fromObject = genericFromObject
+
+
+genericToObject :: (Generic a, GMessagePack (Rep a)) => a -> Object
+genericToObject = gToObject . from
+
+genericFromObject :: (Generic a, GMessagePack (Rep a)) => Object -> Maybe a
+genericFromObject x = to <$> gFromObject x
 
 
 -- integral instances
@@ -246,38 +257,3 @@ instance (MessagePack a1, MessagePack a2, MessagePack a3, MessagePack a4, Messag
 class GMessagePack f where
   gToObject   :: f a -> Object
   gFromObject :: Object -> Maybe (f a)
-
-instance GMessagePack U1 where
-  gToObject U1 = ObjectNil
-  gFromObject ObjectNil = Just U1
-  gFromObject _ = Nothing
-
-instance (GMessagePack a, GMessagePack b) => GMessagePack (a :*: b) where
-  gToObject (a :*: b) = toObject (gToObject a, gToObject b)
-  gFromObject o = do
-    (a, b) <- fromObject o
-    (:*:) <$> gFromObject a <*> gFromObject b
-
-instance (GMessagePack a, GMessagePack b) => GMessagePack (a :+: b) where
-  gToObject (L1 x) = toObject (True , gToObject x)
-  gToObject (R1 x) = toObject (False, gToObject x)
-  gFromObject o = do
-    (isLeft, x) <- fromObject o
-    if isLeft
-      then L1 <$> gFromObject x
-      else R1 <$> gFromObject x
-
-instance GMessagePack a => GMessagePack (M1 t c a) where
-  gToObject (M1 x) = gToObject x
-  gFromObject x = M1 <$> gFromObject x
-
-instance MessagePack a => GMessagePack (K1 i a) where
-  gToObject (K1 x) = toObject x
-  gFromObject o = K1 <$> fromObject o
-
-
-genericToObject :: (Generic a, GMessagePack (Rep a)) => a -> Object
-genericToObject = gToObject . from
-
-genericFromObject :: (Generic a, GMessagePack (Rep a)) => Object -> Maybe a
-genericFromObject x = to <$> gFromObject x

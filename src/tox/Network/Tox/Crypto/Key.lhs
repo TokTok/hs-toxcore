@@ -28,7 +28,7 @@ import qualified Data.ByteString                   as ByteString
 import qualified Data.ByteString.Base16            as Base16
 import qualified Data.ByteString.Char8             as Char8
 import qualified Data.ByteString.Lazy              as LazyByteString
-import           Data.MessagePack.Class            (MessagePack (..))
+import           Data.MessagePack                  (MessagePack (..))
 import           Data.Proxy                        (Proxy (..))
 import           Data.Typeable                     (Typeable)
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)

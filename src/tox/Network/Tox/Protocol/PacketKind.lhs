@@ -39,7 +39,7 @@ module Network.Tox.Protocol.PacketKind where
 
 import           Control.Arrow             ((&&&))
 import           Data.Binary               (Binary, get, put)
-import           Data.MessagePack.Class    (MessagePack)
+import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
 import           Data.Word                 (Word8)
 import           GHC.Generics              (Generic)

@@ -24,13 +24,15 @@ module Data.MessagePack
   ) where
 
 import           Data.Binary
-import qualified Data.ByteString.Lazy    as L
+import qualified Data.ByteString.Lazy     as L
 
-import           Data.MessagePack.Assoc  as X
-import           Data.MessagePack.Class  as X
-import           Data.MessagePack.Get    as X
-import           Data.MessagePack.Object as X
-import           Data.MessagePack.Put    as X
+import           Data.MessagePack.Assoc   as X
+import           Data.MessagePack.Class   as X
+import           Data.MessagePack.Generic ()
+import           Data.MessagePack.Get     as X
+import           Data.MessagePack.Object  as X
+import           Data.MessagePack.Put     as X
+
 
 -- | Pack a Haskell value to MessagePack binary.
 pack :: MessagePack a => a -> L.ByteString

@@ -7,7 +7,7 @@ module Network.Tox.Protocol.Packet where
 
 import           Control.Applicative             ((<$>), (<*>))
 import           Data.Binary                     (Binary)
-import           Data.MessagePack.Class          (MessagePack)
+import           Data.MessagePack                (MessagePack)
 import           Data.Proxy                      (Proxy)
 import           Data.Typeable                   (Typeable)
 import           GHC.Generics                    (Generic)
