@@ -3,7 +3,7 @@
 	url = https://github.com/jedisct1/libsodium
 [submodule "test/toxcore/toxcore"]
 	path = test/toxcore/toxcore
-	url = https://github.com/irungentoo/toxcore
+	url = https://github.com/TokTok/toxcore
 [submodule "test/toxcore/msgpack-c"]
 	path = test/toxcore/msgpack-c
 	url = https://github.com/msgpack/msgpack-c
