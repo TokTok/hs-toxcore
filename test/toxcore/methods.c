@@ -11,13 +11,57 @@ char const *const unimplemented = "Unimplemented";
 
 METHOD (array, Box, encrypt)
 {
-  return pending;
+  CHECK (args.size == 3);
+  CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
+  CHECK (args.ptr[0].via.bin.size == crypto_box_BEFORENMBYTES);
+
+  CHECK (args.ptr[1].type == MSGPACK_OBJECT_BIN);
+  CHECK (args.ptr[1].via.bin.size == crypto_box_NONCEBYTES);
+
+  uint8_t combined_key[crypto_box_BEFORENMBYTES];
+  uint8_t nonce[crypto_box_NONCEBYTES];
+  uint8_t plain_text[args.ptr[2].via.bin.size];
+  uint8_t cipher_text[sizeof (plain_text) + crypto_box_MACBYTES];
+
+  memcpy (combined_key, args.ptr[0].via.bin.ptr, crypto_box_BEFORENMBYTES);
+  memcpy (nonce, args.ptr[1].via.bin.ptr, crypto_box_NONCEBYTES);
+  memcpy (plain_text, args.ptr[2].via.bin.ptr, sizeof plain_text);
+
+  encrypt_data_symmetric (combined_key, nonce, plain_text, sizeof plain_text, cipher_text);
+
+  SUCCESS {
+    msgpack_pack_bin (res, sizeof cipher_text);
+    msgpack_pack_bin_body (res, cipher_text, sizeof cipher_text);
+  }
+  return 0;
 }
 
 
 METHOD (array, Box, decrypt)
 {
-  return pending;
+  CHECK (args.size == 3);
+  CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
+  CHECK (args.ptr[0].via.bin.size == crypto_box_BEFORENMBYTES);
+
+  CHECK (args.ptr[1].type == MSGPACK_OBJECT_BIN);
+  CHECK (args.ptr[1].via.bin.size == crypto_box_NONCEBYTES);
+
+  uint8_t combined_key[crypto_box_BEFORENMBYTES];
+  uint8_t nonce[crypto_box_NONCEBYTES];
+  uint8_t cipher_text[args.ptr[2].via.bin.size];
+  uint8_t plain_text[sizeof (cipher_text) - crypto_box_MACBYTES];
+
+  memcpy (combined_key, args.ptr[0].via.bin.ptr, crypto_box_BEFORENMBYTES);
+  memcpy (nonce, args.ptr[1].via.bin.ptr, crypto_box_NONCEBYTES);
+  memcpy (cipher_text, args.ptr[2].via.bin.ptr, sizeof cipher_text);
+
+  decrypt_data_symmetric (combined_key, nonce, cipher_text, sizeof cipher_text, plain_text);
+
+  SUCCESS {
+    msgpack_pack_bin(res, sizeof plain_text);
+    msgpack_pack_bin_body(res, plain_text, sizeof plain_text);
+  }
+  return 0;
 }
 
 
@@ -29,18 +73,17 @@ METHOD (array, CombinedKey, precompute)
 
 METHOD (array, KeyPair, newKeyPair)
 {
-  uint8_t key1[crypto_box_PUBLICKEYBYTES];
-  uint8_t key2[crypto_box_SECRETKEYBYTES];
-  crypto_box_keypair (key1, key2);
+  Net_Crypto c;
+  new_keys (&c);
 
   SUCCESS {
     //init array
     msgpack_pack_array (res, 2);
     msgpack_pack_bin (res, crypto_box_PUBLICKEYBYTES);
-    msgpack_pack_bin_body (res, key1, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin_body (res, c.self_public_key, crypto_box_PUBLICKEYBYTES);
 
     msgpack_pack_bin (res, crypto_box_SECRETKEYBYTES);
-    msgpack_pack_bin_body (res, key2, crypto_box_SECRETKEYBYTES);
+    msgpack_pack_bin_body (res, c.self_secret_key, crypto_box_SECRETKEYBYTES);
   }
   return 0;
 }
