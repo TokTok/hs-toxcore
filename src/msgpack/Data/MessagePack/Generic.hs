@@ -10,7 +10,7 @@
 {-# LANGUAGE TypeOperators       #-}
 module Data.MessagePack.Generic () where
 
-import           Control.Applicative     ((<$>), (<*>), (<|>))
+import           Control.Applicative     (Applicative, (<$>), (<*>), (<|>))
 import           Control.Monad           ((>=>))
 import           Data.Bits               (shiftR)
 import           Data.Word               (Word64)
@@ -22,8 +22,8 @@ import           Data.MessagePack.Object (Object (..))
 
 instance GMessagePack U1 where
   gToObject U1 = ObjectNil
-  gFromObject ObjectNil = Just U1
-  gFromObject _ = Nothing
+  gFromObject ObjectNil = return U1
+  gFromObject _ = fail "invalid encoding for custom unit type"
 
 instance (GMessagePack a, GProdPack b) => GMessagePack (a :*: b) where
   gToObject = toObject . prodToObject
@@ -53,7 +53,7 @@ instance MessagePack a => GMessagePack (K1 i a) where
 
 class GProdPack f where
   prodToObject :: f a -> [Object]
-  prodFromObject :: [Object] -> Maybe (f a)
+  prodFromObject :: (Functor m, Applicative m, Monad m) => [Object] -> m (f a)
 
 
 instance (GMessagePack a, GProdPack b) => GProdPack (a :*: b) where
@@ -69,13 +69,13 @@ instance GMessagePack a => GProdPack (M1 t c a) where
 
 -- Sum type packing.
 
-checkSumFromObject0 :: (GSumPack f) => Word64 -> Word64 -> Maybe (f a)
+checkSumFromObject0 :: (Functor m, Applicative m, Monad m) => (GSumPack f) => Word64 -> Word64 -> m (f a)
 checkSumFromObject0 size code
   | code < size = sumFromObject code size ObjectNil
   | otherwise   = fail "unknown encoding for constructor"
 
 
-checkSumFromObject :: (GSumPack f) => Word64 -> Word64 -> Object -> Maybe (f a)
+checkSumFromObject :: (Functor m, Applicative m, Monad m) => (GSumPack f) => Word64 -> Word64 -> Object -> m (f a)
 checkSumFromObject size code x
   | code < size = sumFromObject code size x
   | otherwise   = fail "unknown encoding for constructor"
@@ -83,7 +83,7 @@ checkSumFromObject size code x
 
 class GSumPack f where
   sumToObject :: Word64 -> Word64 -> f a -> Object
-  sumFromObject :: Word64 -> Word64 -> Object -> Maybe (f a)
+  sumFromObject :: (Functor m, Applicative m, Monad m) => Word64 -> Word64 -> Object -> m (f a)
 
 
 instance (GSumPack a, GSumPack b) => GSumPack (a :+: b) where

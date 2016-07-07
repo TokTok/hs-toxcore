@@ -116,8 +116,8 @@ keyToInteger =
 decode :: (CryptoNumber a, Monad m) => ByteString.ByteString -> m (Key a)
 decode bytes =
   case Sodium.decode bytes of
-    Nothing  -> fail $ "Unable to decode ByteString: " ++ show bytes
     Just key -> return $ Key key
+    Nothing  -> fail $ "unable to decode ByteString to Key: " ++ show bytes
 
 
 instance CryptoNumber a => Binary (Key a) where
@@ -137,7 +137,7 @@ instance CryptoNumber a => Read (Key a) where
 
 instance CryptoNumber a => MessagePack (Key a) where
   toObject = toObject . Sodium.encode
-  fromObject = fromObject >=> Sodium.decode
+  fromObject = fromObject >=> decode
 
 
 {-------------------------------------------------------------------------------

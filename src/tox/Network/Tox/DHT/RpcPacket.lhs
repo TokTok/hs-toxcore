@@ -32,7 +32,9 @@ responding to.
 \begin{code}
 
 newtype RequestId = RequestId Word64
-  deriving (Eq, Read, Show, Binary, Arbitrary, MessagePack)
+  deriving (Eq, Read, Show, Binary, Arbitrary, Generic)
+
+instance MessagePack RequestId
 
 \end{code}
 
