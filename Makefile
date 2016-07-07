@@ -53,7 +53,7 @@ configure: .configure.stamp
 .configure.stamp: .libsodium.stamp
 	cabal update
 	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
-	cabal configure --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE) --disable-profiling
+	cabal configure -f asan --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE) --disable-profiling
 	@touch $@
 
 doc: $(DOCS)
