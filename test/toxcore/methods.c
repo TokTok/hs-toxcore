@@ -67,7 +67,27 @@ METHOD (array, Box, decrypt)
 
 METHOD (array, CombinedKey, precompute)
 {
-  return pending;
+
+    CHECK (args.size == 2);
+    CHECK (args.ptr[1].type == MSGPACK_OBJECT_BIN);
+    CHECK (args.ptr[1].via.bin.size == crypto_box_SECRETKEYBYTES);
+    CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
+    CHECK (args.ptr[0].via.bin.size == crypto_box_PUBLICKEYBYTES);
+
+    uint8_t secret_key[crypto_box_SECRETKEYBYTES];
+    uint8_t public_key[crypto_box_PUBLICKEYBYTES];
+    uint8_t combined_key[crypto_box_BEFORENMBYTES];
+
+    memcpy (secret_key, args.ptr[0].via.bin.ptr, crypto_box_SECRETKEYBYTES);
+    memcpy (public_key, args.ptr[1].via.bin.ptr, crypto_box_PUBLICKEYBYTES);
+
+    encrypt_precompute (public_key, secret_key, combined_key);
+
+    SUCCESS {
+        msgpack_pack_bin (res, sizeof combined_key);
+        msgpack_pack_bin_body (res, combined_key, sizeof combined_key);
+    }
+    return 0;
 }
 
 
