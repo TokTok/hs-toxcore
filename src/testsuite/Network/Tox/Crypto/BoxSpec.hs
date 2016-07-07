@@ -21,20 +21,20 @@ spec = do
       decryptedText <- Box.decryptC combinedKey nonce cipherText
       liftIO $ decryptedText `shouldBe` Just plainText
 
-  it "should decrypt encrypted data with a generated keypair" $
+  it "should encrypt data with a generated keypair" $
     property $ \nonce plainText -> runTest $ do
       KeyPair sk pk <- KeyPair.newKeyPairC
       combinedKey <- CombinedKey.precomputeC sk pk
-      let cipherText = Box.encrypt combinedKey nonce plainText
-      decryptedText <- Box.decryptC combinedKey nonce cipherText
+      cipherText <- Box.encryptC combinedKey nonce plainText
+      let decryptedText = Box.decrypt combinedKey nonce cipherText
       liftIO $ decryptedText `shouldBe` Just plainText
 
   it "should decrypt encrypted data with a generated keypair" $
     property $ \nonce plainText -> runTest $ do
       KeyPair sk pk <- KeyPair.newKeyPairC
       combinedKey <- CombinedKey.precomputeC sk pk
-      cipherText <- Box.encryptC combinedKey nonce plainText
-      let decryptedText = Box.decrypt combinedKey nonce cipherText
+      let cipherText = Box.encrypt combinedKey nonce plainText
+      decryptedText <- Box.decryptC combinedKey nonce cipherText
       liftIO $ decryptedText `shouldBe` Just plainText
 
   it "supports communication with asymmetric keys" $
