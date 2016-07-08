@@ -3,7 +3,8 @@
 module Network.Tox.Crypto.BoxSpec where
 
 import           Control.Monad.IO.Class         (liftIO)
-import           Network.Tox.RPCTest            (runTest)
+import           Network.Tox.RPCTest            (equiv3, equivProp, equivProp3,
+                                                 runTest)
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -15,27 +16,35 @@ import qualified Network.Tox.Crypto.KeyPair     as KeyPair
 
 spec :: Spec
 spec = do
-  it "should decrypt its own encrypted data" $
-    property $ \combinedKey nonce plainText -> runTest $ do
-      cipherText <- Box.encryptC combinedKey nonce plainText
-      decryptedText <- Box.decryptC combinedKey nonce cipherText
-      liftIO $ decryptedText `shouldBe` Just plainText
+  describe "encrypt" $ do
+    equivProp3 Box.encrypt Box.encryptC
 
-  it "should encrypt data with a generated keypair" $
-    property $ \nonce plainText -> runTest $ do
-      KeyPair sk pk <- KeyPair.newKeyPairC
-      combinedKey <- CombinedKey.precomputeC sk pk
-      cipherText <- Box.encryptC combinedKey nonce plainText
-      let decryptedText = Box.decrypt combinedKey nonce cipherText
-      liftIO $ decryptedText `shouldBe` Just plainText
+    it "encrypts data with a random keypair" $
+      property $ \nonce plainText -> runTest $ do
+        KeyPair sk pk <- KeyPair.newKeyPairC
+        combinedKey <- CombinedKey.precomputeC sk pk
+        cipherText <- Box.encryptC combinedKey nonce plainText
+        let decryptedText = Box.decrypt combinedKey nonce cipherText
+        liftIO $ decryptedText `shouldBe` Just plainText
 
-  it "should decrypt encrypted data with a generated keypair" $
-    property $ \nonce plainText -> runTest $ do
-      KeyPair sk pk <- KeyPair.newKeyPairC
-      combinedKey <- CombinedKey.precomputeC sk pk
+  describe "decrypt" $ do
+    equivProp $ \combinedKey nonce plainText -> runTest $ do
       let cipherText = Box.encrypt combinedKey nonce plainText
-      decryptedText <- Box.decryptC combinedKey nonce cipherText
-      liftIO $ decryptedText `shouldBe` Just plainText
+      equiv3 Box.decrypt Box.decryptC combinedKey nonce cipherText
+
+    it "decrypts data encrypted with 'encrypt'" $
+      property $ \combinedKey nonce plainText -> runTest $ do
+        cipherText <- Box.encryptC combinedKey nonce plainText
+        decryptedText <- Box.decryptC combinedKey nonce cipherText
+        liftIO $ decryptedText `shouldBe` Just plainText
+
+    it "decrypts encrypted data with a random keypair" $
+      property $ \nonce plainText -> runTest $ do
+        KeyPair sk pk <- KeyPair.newKeyPairC
+        combinedKey <- CombinedKey.precomputeC sk pk
+        let cipherText = Box.encrypt combinedKey nonce plainText
+        decryptedText <- Box.decryptC combinedKey nonce cipherText
+        liftIO $ decryptedText `shouldBe` Just plainText
 
   it "supports communication with asymmetric keys" $
     property $ \nonce plainText -> runTest $ do
