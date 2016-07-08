@@ -29,6 +29,14 @@ EXTRA_DIRS :=							\
 	--extra-include-dirs=$(HOME)/.cabal/extra-dist/include	\
 	--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 
+CONFIGURE_FLAGS :=		\
+	-fasan			\
+	--enable-benchmarks	\
+	--enable-tests		\
+	$(DISABLE_PROFILING)	\
+	$(EXTRA_DIRS)
+
+
 all: check $(DOCS)
 
 check: dist/hpc/tix/hstox/hstox.tix
@@ -42,7 +50,9 @@ dist/hpc/tix/hstox/hstox.tix: check-hstox check-toxcore
 check-%: .build.stamp
 	tools/run-tests $*
 
-repl: .build.stamp
+repl:
+	rm -f .configure.stamp
+	cabal configure $(CONFIGURE_FLAGS)
 	cabal repl
 
 clean:
@@ -66,8 +76,8 @@ test/toxcore/test_main-$(TEST): $(shell find test/toxcore -name "*.[ch]") test/t
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp
 	cabal update
-	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
-	cabal configure --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE) $(DISABLE_PROFILING)
+	cabal install $(CONFIGURE_FLAGS) --only-dependencies hstox.cabal
+	cabal configure $(CONFIGURE_FLAGS) $(ENABLE_COVERAGE)
 	@touch $@
 
 doc: $(DOCS)
