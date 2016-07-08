@@ -1,0 +1,64 @@
+#!/usr/bin/env perl
+
+use strict;
+use File::Path 'make_path';
+
+my $PREFIX = "$ENV{HOME}/.cabal/extra-dist";
+make_path "$PREFIX/git";
+$ENV{PATH} = "$PREFIX/bin:$ENV{PATH}";
+$ENV{LD_LIBRARY_PATH} = "$PREFIX/lib";
+$ENV{PKG_CONFIG_PATH} = "$PREFIX/lib/pkgconfig";
+
+my @deps = (
+   [yasm    => '1.1.0' , 'https://github.com/yasm'       , 'yasm'     ],
+   [sodium  => 'stable', 'https://github.com/jedisct1'   , 'libsodium'],
+   [vpx     => 'v1.5.0', 'https://github.com/webmproject', 'libvpx'   ],
+   [opus    => '1.1.2' , 'https://github.com/xiph'       , 'opus'     ],
+   [check   => '0.10.0', 'https://github.com/libcheck'   , 'check'    ],
+   [toxcore => 'master', 'https://github.com/TokTok'     , 'toxcore'  ],
+   [msgpack => 'master', 'https://github.com/msgpack'    , 'msgpack-c'],
+);
+
+my %configure = (
+   toxcore => [
+      "--with-libsodium-headers=$PREFIX/include",
+      "--with-libsodium-libs=$PREFIX/lib",
+   ],
+);
+
+sub must_system {
+   (system @_) == 0 or die "error: @_";
+}
+
+for (@deps) {
+   my ($lib, $branch, $url, $repo) = @$_;
+
+   chdir "$PREFIX/git";
+
+   if (-d $repo) {
+      chdir $repo;
+      must_system "git", "fetch";
+      must_system "git", "clean", "-fdx";
+      must_system "git", "reset", "--hard";
+      must_system "git", "checkout", "$branch";
+   } else {
+      must_system "git", "clone", "--depth=1", "--branch=$branch", "$url/$repo";
+      chdir $repo;
+   }
+   my $new_hash = `git rev-parse HEAD`;
+   my $old_hash = do { local $/; open my $fh, '<', "$PREFIX/$lib.hash"; <$fh> };
+   next if $new_hash eq $old_hash;
+
+   print "Hashes differ => rebuilding\n";
+   must_system "autoreconf", "-fi"
+      if -f "configure.ac";
+   must_system "./configure", "--prefix=$PREFIX", @{$configure{$lib}}
+      if -f "configure";
+   must_system "cmake", ".", "-DCMAKE_INSTALL_PREFIX:PATH=$PREFIX", @{$configure{$lib}}
+      if -f "CMakeLists.txt";
+   must_system "make", "install";
+
+   open my $fh, '>', "$PREFIX/$lib.hash"
+      or die "$PREFIX/$lib.hash: $!";
+   print $fh $new_hash;
+}

@@ -7,7 +7,7 @@ cache:
     - $HOME/.ghc
 
 install:
-  - tools/install-libsodium
+  - tools/install-deplibs
   - EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
   - cabal install --only-dependencies $EXTRA_DIRS
   - cabal configure --enable-library-coverage $EXTRA_DIRS
