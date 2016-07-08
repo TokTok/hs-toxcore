@@ -49,7 +49,7 @@ data Object
   | ObjectExt    {-# UNPACK #-} !Word8 !S.ByteString
     -- ^ represents a tuple of an integer and a byte array where
     -- the integer represents type information and the byte array represents data.
-  deriving (Show, Eq, Ord, Typeable, Generic)
+  deriving (Read, Show, Eq, Ord, Typeable, Generic)
 
 instance NFData Object
 

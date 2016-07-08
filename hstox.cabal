@@ -141,3 +141,19 @@ executable test-hstox
       TestServer.lhs
   if flag(library-only)
     buildable: False
+
+executable msgpack-parser
+  default-language: Haskell2010
+  hs-source-dirs:
+      tools/MessagePackParser
+  ghc-options:
+      -Wall
+      -Werror
+  build-depends:
+      base < 5
+    , bytestring
+    , hstox
+  main-is:
+      MessagePackParser.hs
+  if flag(library-only)
+    buildable: False
