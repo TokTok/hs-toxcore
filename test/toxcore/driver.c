@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "errors.h"
@@ -73,7 +74,7 @@ write_sample_input (msgpack_object req)
     // If we can't open the sample file, we just don't write it.
     return E_OK;
 
-  check_return (E_WRITE, ftruncate (fd, 0));
+  // check_return (E_WRITE, ftruncate (fd, 0));
 
   msgpack_sbuffer sbuf __attribute__ ((__cleanup__ (msgpack_sbuffer_destroy)));
   msgpack_sbuffer_init (&sbuf);

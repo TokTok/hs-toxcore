@@ -10,11 +10,11 @@ $ENV{LD_LIBRARY_PATH} = "$PREFIX/lib";
 $ENV{PKG_CONFIG_PATH} = "$PREFIX/lib/pkgconfig";
 
 my @deps = (
-   [yasm    => '1.1.0' , 'https://github.com/yasm'       , 'yasm'     ],
+   # [yasm    => '1.1.0' , 'https://github.com/yasm'       , 'yasm'     ],
    [sodium  => 'stable', 'https://github.com/jedisct1'   , 'libsodium'],
-   [vpx     => 'v1.5.0', 'https://github.com/webmproject', 'libvpx'   ],
-   [opus    => '1.1.2' , 'https://github.com/xiph'       , 'opus'     ],
-   [check   => '0.10.0', 'https://github.com/libcheck'   , 'check'    ],
+   # [vpx     => 'v1.5.0', 'https://github.com/webmproject', 'libvpx'   ],
+   # [opus    => '1.1.2' , 'https://github.com/xiph'       , 'opus'     ],
+   # [check   => '0.10.0', 'https://github.com/libcheck'   , 'check'    ],
    [toxcore => 'master', 'https://github.com/TokTok'     , 'toxcore'  ],
    [msgpack => 'master', 'https://github.com/msgpack'    , 'msgpack-c'],
 );
