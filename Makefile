@@ -50,7 +50,7 @@ build: .build.stamp
 	@touch $@
 
 configure: .configure.stamp
-.configure.stamp: .libsodium.stamp
+.configure.stamp: .deplibs.stamp
 	cabal update
 	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
 	cabal configure -f asan --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE) --disable-profiling
@@ -69,8 +69,8 @@ doc: $(DOCS)
 	if which mdl; then $(MAKE) -C ../tox-spec check; fi
 	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io push; fi
 
-libsodium: .libsodium.stamp
-.libsodium.stamp: tools/install-libsodium
+deplibs: .deplibs.stamp
+.deplibs.stamp: tools/install-deplibs
 	$<
 	@touch $@
 
