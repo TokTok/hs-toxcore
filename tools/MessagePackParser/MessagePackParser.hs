@@ -36,15 +36,14 @@ module Main where
 import           Control.Applicative        ((<|>))
 import qualified Data.ByteString.Lazy       as L
 import qualified Data.ByteString.Lazy.Char8 as L8
-import           Data.Maybe                 (fromJust)
+import           Data.Maybe                 (fromMaybe)
 import           Data.MessagePack           (Object, pack, unpack)
 import           Text.Read                  (readMaybe)
 
 parse :: L.ByteString -> L.ByteString
-parse str = fromJust $
+parse str = fromMaybe L.empty $
   (pack <$> ((readMaybe . L8.unpack) str :: Maybe Object))
   <|> ((L8.pack . (flip (++) "\n") . show) <$> (unpack str :: Maybe Object))
-  <|> Just L.empty
 
 
 main :: IO ()
