@@ -42,7 +42,7 @@ main (void)
 
   if (code != E_OK)
     {
-      printf ("%s, errno=%d, line=%d\n", error_desc (code), error, code);
+      printf ("%s, errno=%d, line=%d\n", error_desc (code), error, line);
       return EXIT_FAILURE;
     }
 

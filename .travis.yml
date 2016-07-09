@@ -10,22 +10,14 @@ install:
   - tools/install-libsodium
   - EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
   - cabal install --only-dependencies $EXTRA_DIRS
-  - cabal configure --enable-library-coverage $EXTRA_DIRS
   - cabal install codecov-haskell hpc-coveralls aeson-0.9.0.1
 #  - cabal install pandoc stylish-haskell hlint
 
 script:
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
-  - cabal build
-  - tools/run-tests hstox
-  - tools/run-tests toxcore
-  - tools/build-docs
+  - make
   - git diff --exit-code
 
 after_script:
-  - mkdir -p dist/hpc/tix/hstox
-  - ls *.tix
-  - hpc sum --exclude=Main --union *.tix --output=dist/hpc/tix/hstox/hstox.tix
-  - hpc report `ls -d dist/hpc/mix/* | sed -e 's/^/--hpcdir=/'` dist/hpc/tix/hstox/hstox.tix
   - codecov-haskell hstox
   - hpc-coveralls   hstox
