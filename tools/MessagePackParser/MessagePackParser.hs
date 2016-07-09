@@ -17,13 +17,19 @@
 -- No flags are required as it automatically detects which of these
 -- two functions it should perform.  This is done by first assuming
 -- the input is human readable.  If it fails to parse it, it then
--- considers it binary data.
+-- considers it as binary data.
 --
 -- Therefore, given a valid input, the tool has the following property
 --   $ cat input.bin | ./msgpack-parser | ./msgpack-parser
 -- will output back the contents of input.bin.
 --
 -- In case the input is impossible to parse, nothing is output.
+--
+-- Known bugs:
+--   - If no input is given, the tool exits with
+--     "Data.Binary.Get.runGet at position 0: not enough bytes"
+--   - The tool does not check that all the input is parsed.
+--     Therefore, "abc" is interpreted as just "ObjectInt 97".
 --
 module Main where
 
