@@ -43,7 +43,7 @@ import           Text.Read                  (readMaybe)
 parse :: L.ByteString -> L.ByteString
 parse str = fromMaybe L.empty $
   (pack <$> ((readMaybe . L8.unpack) str :: Maybe Object))
-  <|> ((L8.pack . (flip (++) "\n") . show) <$> (unpack str :: Maybe Object))
+  <|> ((L8.pack . flip (++) "\n" . show) <$> (unpack str :: Maybe Object))
 
 
 main :: IO ()
