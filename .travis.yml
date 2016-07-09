@@ -11,7 +11,8 @@ install:
   - EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
   - cabal install --only-dependencies $EXTRA_DIRS
   - cabal install codecov-haskell hpc-coveralls aeson-0.9.0.1
-#  - cabal install pandoc stylish-haskell hlint
+  - cabal install stylish-haskell hlint happy
+#  - cabal install pandoc
 
 script:
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
