@@ -33,25 +33,19 @@
 --
 module Main where
 
-import           Data.MessagePack           (pack, unpack, Object)
+import           Control.Applicative        ((<|>))
 import qualified Data.ByteString.Lazy       as L
 import qualified Data.ByteString.Lazy.Char8 as L8
+import           Data.Maybe                 (fromJust)
+import           Data.MessagePack           (Object, pack, unpack)
 import           Text.Read                  (readMaybe)
 
-tryReadAsObject :: L.ByteString -> Maybe Object
-tryReadAsObject = readMaybe . L8.unpack
-
-tryUnpackAsObject :: L.ByteString -> Maybe Object
-tryUnpackAsObject = unpack
-
 parse :: L.ByteString -> L.ByteString
-parse bstr = case tryReadAsObject bstr of
-  Just o -> pack o
-  Nothing -> case tryUnpackAsObject bstr of
-    Just o -> L8.pack ((show o) ++ "\n")
-    Nothing -> L.empty
+parse str = fromJust $
+  (pack <$> ((readMaybe.L8.unpack) str :: Maybe Object))
+  <|> ((L8.pack.(flip (++) "\n").show) <$> (unpack str :: Maybe Object))
+  <|> Just L.empty
+
 
 main :: IO ()
-main = do
-  bytestring <- L8.getContents
-  L.putStr (parse bytestring)
+main = parse <$> L.getContents >>= L.putStr
