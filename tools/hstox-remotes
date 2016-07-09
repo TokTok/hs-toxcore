@@ -7,14 +7,18 @@ my %remotes = map { reverse ((split /\s+/)[0..1]) } `git remote -v`;
 
 sub add_remote {
    my ($name, $repo) = @_;
-   system "git", "remote", "add", $name, $repo
-      unless $remotes{$repo};
+   if (not $remotes{$repo}) {
+      print "Adding remote $name -> $repo\n";
+      system "git", "remote", "add", $name, $repo;
+   }
 }
 
-sub repo { [$_[0], "git\@github.com:$_[0]/hstox"] }
+sub repo($) { [$_[0], "git\@github.com:$_[0]/hstox"] }
 
 add_remote @$_ for (
    ['upstream', 'git@github.com:toktok/hstox'],
+   repo 'grayhatter',
    repo 'iphydf',
+   repo 'neduard',
    repo 'piling',
 )
