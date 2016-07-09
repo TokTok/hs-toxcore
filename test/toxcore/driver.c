@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <signal.h>
@@ -9,6 +10,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "driver.h"
 #include "errors.h"
 #include "methods.h"
 #include "util.h"
@@ -16,11 +18,12 @@
 #include <sodium.h>
 
 
-struct settings
+static void
+handle_interrupt (int signum)
 {
-  bool debug;
-  bool collect_samples;
-};
+  puts ("Caught interrupt; exiting cleanly.");
+  exit (0);
+}
 
 
 static int
@@ -136,13 +139,13 @@ handle_request (struct settings cfg, int write_fd, msgpack_object req)
 }
 
 
-static int
+int
 communicate (struct settings cfg, int read_fd, int write_fd)
 {
   msgpack_unpacker unp __attribute__ ((__cleanup__ (msgpack_unpacker_destroy)));
   msgpack_unpacker_init (&unp, 128);
 
-  while (1)
+  while (true)
     {
       char buf[64];
       int size = check_return (E_READ, read (read_fd, buf, sizeof buf));
@@ -199,7 +202,7 @@ run_tests (struct settings cfg, int port)
   check_return (E_BIND, bind (listen_fd, (struct sockaddr *) &servaddr, sizeof servaddr));
   check_return (E_LISTEN, listen (listen_fd, 10));
 
-  while (1)
+  while (true)
     {
       int comm_fd __attribute__ ((__cleanup__ (closep))) = 0;
       comm_fd = check_return (E_ACCEPT, accept (listen_fd, NULL, NULL));
@@ -211,24 +214,13 @@ run_tests (struct settings cfg, int port)
 
 
 uint32_t
-test_main (bool debug, bool collect_samples, uint16_t port)
+network_main (struct settings cfg, uint16_t port)
 {
-  struct settings cfg = { debug, collect_samples };
-
+  signal (SIGINT, handle_interrupt);
   check_return (E_SODIUM, sodium_init ());
 
   int result = run_tests (cfg, port);
   if (result == E_OK)
     return E_OK;
   return result | (errno << 8);
-}
-
-
-__attribute__ ((__weak__)) int main (int argc, char **argv);
-
-int
-main (int argc, char **argv)
-{
-  struct settings cfg = { false, false };
-  return communicate (cfg, STDIN_FILENO, STDOUT_FILENO);
 }

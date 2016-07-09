@@ -1,4 +1,7 @@
 /*.dSYM
+/*_main
+/*_main-*
 /test-findings
-/test-program
-/test-program-asan
+*.gcno
+*.gcda
+*.o

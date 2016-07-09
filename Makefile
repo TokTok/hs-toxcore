@@ -27,12 +27,12 @@ HPC_DIRS = `ls -d dist/hpc/vanilla/mix/* | sed -e 's/^/--hpcdir=/'`
 
 all: check $(DOCS)
 
-check: test-hstox.tix test-toxcore.tix
+check: check-hstox check-toxcore
 	hpc sum --exclude=Main --union *.tix --output=dist/hpc/hstox.tix
 	hpc markup $(HPC_DIRS) --destdir=dist/hpc/html dist/hpc/hstox.tix > /dev/null
 	hpc report $(HPC_DIRS) dist/hpc/hstox.tix
 
-test-%.tix: .build.stamp
+check-%: .build.stamp
 	tools/run-tests $*
 
 repl: .build.stamp
@@ -44,16 +44,23 @@ clean:
 
 
 build: .build.stamp
-.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp
+.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp dist/build/test-toxcore/test-toxcore
 	rm -f $(wildcard *.tix)
 	cabal build
 	@touch $@
+
+dist/build/test-toxcore/test-toxcore: test/toxcore/test_main
+	mkdir -p $(@D)
+	cp $< $@
+
+test/toxcore/test_main: $(shell find test/toxcore -name "*.[ch]") test/toxcore/Makefile
+	make -C $(@D) $(@F)
 
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp
 	cabal update
 	cabal install --enable-tests $(EXTRA_DIRS) --only-dependencies hstox.cabal
-	cabal configure -f asan --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE) --disable-profiling
+	cabal configure --enable-tests $(EXTRA_DIRS) $(ENABLE_COVERAGE) --disable-profiling
 	@touch $@
 
 doc: $(DOCS)
