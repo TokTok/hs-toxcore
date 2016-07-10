@@ -8,6 +8,11 @@
 // The msgpack-rpc test port expected by the test runner.
 #define PORT 1234
 
+// Timeout in seconds after which the driver shuts down. Currently, a complete
+// test run takes about 7 seconds. The timeout of 2 minutes is a guess so it
+// keeps working for a while, even on a very slow computer.
+#define TIMEOUT 120
+
 
 static char const *
 error_desc (int code)
@@ -35,7 +40,7 @@ int
 main (void)
 {
   struct settings cfg = { true, true };
-  uint32_t result = network_main (cfg, PORT);
+  uint32_t result = network_main (cfg, PORT, TIMEOUT);
   int line  =  result >> 16;
   int error = (result >>  8) & 0xff;
   int code  =  result        & 0xff;

@@ -18,4 +18,4 @@ struct settings
 int communicate (struct settings cfg, int read_fd, int write_fd);
 
 // Open a TCP socket on the given port and start communicate().
-uint32_t network_main (struct settings cfg, uint16_t port);
+uint32_t network_main (struct settings cfg, uint16_t port, unsigned int timeout);

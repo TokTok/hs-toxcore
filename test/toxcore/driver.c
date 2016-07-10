@@ -21,7 +21,7 @@
 static void
 handle_interrupt (int signum)
 {
-  puts ("Caught interrupt; exiting cleanly.");
+  printf ("Caught signal %d; exiting cleanly.", signum);
   exit (0);
 }
 
@@ -214,10 +214,15 @@ run_tests (struct settings cfg, int port)
 
 
 uint32_t
-network_main (struct settings cfg, uint16_t port)
+network_main (struct settings cfg, uint16_t port, unsigned int timeout)
 {
+  signal (SIGALRM, handle_interrupt);
   signal (SIGINT, handle_interrupt);
   check_return (E_SODIUM, sodium_init ());
+
+  // Kill the process after `timeout` seconds so we don't get lingering
+  // processes bound to the test port when something goes wrong with a test run.
+  alarm (timeout);
 
   int result = run_tests (cfg, port);
   if (result == E_OK)
