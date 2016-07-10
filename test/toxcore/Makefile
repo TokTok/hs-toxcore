@@ -33,6 +33,14 @@ PROGRAMS :=			\
 	test_main-vanilla-asan
 
 ifneq ($(shell which afl-clang),)
+AFL_CLANG := afl-clang
+endif
+
+ifneq ($(shell which afl-clang-fast),)
+AFL_CLANG := afl-clang-fast
+endif
+
+ifneq ($(AFL_CLANG),)
 PROGRAMS +=			\
 	fuzz_main-afl		\
 	fuzz_main-afl-asan
@@ -47,10 +55,10 @@ slave%: fuzz_main-afl test-findings
 	afl-fuzz -i test-inputs -o test-findings -S slave$* ./$<
 
 %-afl: %.c $(SOURCES) $(HEADERS)
-	afl-clang $(CFLAGS) -O3 $(filter %.c,$^) $(LDFLAGS) -o $@
+	$(AFL_CLANG) $(CFLAGS) -O3 $(filter %.c,$^) $(LDFLAGS) -o $@
 
 %-afl-asan: %.c $(SOURCES) $(HEADERS)
-	afl-clang $(CFLAGS) -O3 -fsanitize=address $(filter %.c,$^) $(LDFLAGS) -o $@
+	$(AFL_CLANG) $(CFLAGS) -O3 -fsanitize=address $(filter %.c,$^) $(LDFLAGS) -o $@
 
 %-cov: %.c $(SOURCES) $(HEADERS)
 	$(CC) $(CFLAGS) -fprofile-arcs -ftest-coverage $(filter %.c,$^) $(LDFLAGS) -o $@
@@ -69,12 +77,18 @@ $(VERSION_H): Makefile
 	echo '#define SODIUM_LIBRARY_VERSION_MAJOR 0' >> $@
 	echo '#define SODIUM_LIBRARY_VERSION_MINOR 0' >> $@
 
+ifneq ($(wildcard /Volumes),)
 test-findings: /Volumes/RAM\ Disk
 	mkdir -p "$</$@"
 	ln -sf "$</$@" $@
 
 /Volumes/RAM\ Disk:
 	diskutil erasevolume HFS+ 'RAM Disk' `hdiutil attach -nomount ram://204800`
+else
+test-findings: /dev/shm
+	mkdir -p "$</$@"
+	ln -sf "$</$@" $@
+endif
 
 clean:
 	rm -rf $(wildcard *_main-* *.dSYM *.gcno *.gcda $(VERSION_H) test-findings/*)
