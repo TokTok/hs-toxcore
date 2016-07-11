@@ -21,7 +21,7 @@
 static void
 handle_interrupt (int signum)
 {
-  printf ("Caught signal %d; exiting cleanly.", signum);
+  printf ("Caught signal %d; exiting cleanly.\n", signum);
   exit (0);
 }
 
