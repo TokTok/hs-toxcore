@@ -27,7 +27,6 @@ library
     , src/tox
   ghc-options:
       -Wall
-      -Werror
   build-depends:
       base < 5
     , QuickCheck
@@ -103,7 +102,6 @@ executable testsuite
       src/testsuite
   ghc-options:
       -Wall
-      -Werror
   build-depends:
       base < 5
     , QuickCheck
@@ -133,7 +131,6 @@ executable test-hstox
       test/hstox
   ghc-options:
       -Wall
-      -Werror
   build-depends:
       base < 5
     , hstox
@@ -148,7 +145,6 @@ executable msgpack-parser
       tools/MessagePackParser
   ghc-options:
       -Wall
-      -Werror
   build-depends:
       base < 5
     , bytestring
