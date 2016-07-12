@@ -40,9 +40,9 @@ METHOD (bin, Binary_decode, TransportProtocol) { return pending; }
 
 METHOD (array, Binary, decode)
 {
-  CHECK (args.size == 2);
-  CHECK (args.ptr[0].type == MSGPACK_OBJECT_STR);
-  CHECK (args.ptr[1].type == MSGPACK_OBJECT_BIN);
+  CHECK_SIZE (args, 2);
+  CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_STR);
+  CHECK_TYPE (args.ptr[1], MSGPACK_OBJECT_BIN);
 
   msgpack_object_str type = args.ptr[0].via.str;
 #define DISPATCH(TYPE) \

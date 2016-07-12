@@ -48,9 +48,9 @@ METHOD (array, KeyPair, newKeyPair)
 
 METHOD (array, KeyPair, fromSecretKey)
 {
-  CHECK (args.size == 1);
-  CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
-  CHECK (args.ptr[0].via.bin.size == crypto_box_SECRETKEYBYTES);
+  CHECK_SIZE (args, 1);
+  CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_BIN);
+  CHECK_SIZE (args.ptr[0].via.bin, crypto_box_SECRETKEYBYTES);
 
   Net_Crypto c;
   uint8_t secret_key[crypto_box_SECRETKEYBYTES];
@@ -85,9 +85,9 @@ METHOD (array, Nonce, newNonce)
 
 METHOD (array, Nonce, increment)
 {
-  CHECK (args.size == 1);
-  CHECK (args.ptr[0].type == MSGPACK_OBJECT_BIN);
-  CHECK (args.ptr[0].via.bin.size == 24);
+  CHECK_SIZE (args, 1);
+  CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_BIN);
+  CHECK_SIZE (args.ptr[0].via.bin, 24);
 
   uint8_t nonce[24];
   memcpy (nonce, args.ptr[0].via.bin.ptr, 24);

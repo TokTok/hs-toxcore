@@ -50,3 +50,16 @@ msgpack_pack_stringf (msgpack_packer *pk, char const *fmt, ...)
   va_end (ap);
   return res;
 }
+
+
+char const *
+ssprintf (char const *fmt, ...)
+{
+  static char buf[1024];
+
+  va_list ap;
+  va_start (ap, fmt);
+  vsnprintf (buf, sizeof buf, fmt, ap);
+  va_end (ap);
+  return buf;
+}
