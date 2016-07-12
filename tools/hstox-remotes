@@ -1,24 +1,112 @@
 #!/usr/bin/env perl
 
+# Usage: hstox-remotes [--reset]
+#
+# The --reset flag deletes all remotes and adds back the ones listed in the
+# code. Without --reset, it only adds remotes that did not exist yet.
+#
+# This tool is intended to be run once after cloning the repository and its
+# submodules. It will delete all remotes and set them up in a standard way that
+# is hopefully shared between all contributors:
+#
+# - upstream => The main repository into which all changes are eventually merged.
+# - origin   => The current contributor's repository (i.e. *your* repo).
+# - $name    => For each collaborator, another remote is added, so people can
+#               work together on a problem.
+#
+# Note that when passing --reset, this tool will remove all remotes and
+# therefore all remote tracking statuses of branches. It will add back the
+# master -> origin/master tracking, but all other branch tracking is deleted.
+
 use strict;
+use Cwd;
 use Data::Dumper;
 
-my %remotes = map { reverse ((split /\s+/)[0..1]) } `git remote -v`;
+my %flags = (
+   reset => grep { $_ eq "--reset" } @ARGV,
+);
+
+local $Data::Dumper::Indent   = 1;
+local $Data::Dumper::Sortkeys = 1;
+local $Data::Dumper::Terse    = 1;
+
+sub repo($) { $_[0] => $_[0] }
+
+my %repos = (
+   hstox => ['.', {
+      upstream => 'toktok',
+      repo 'endoffile78',
+      repo 'grayhatter',
+      repo 'iphydf',
+      repo 'neduard',
+      repo 'piling',
+   }],
+   toxcore => ['test/toxcore/toxcore', {
+      upstream => 'toktok',
+      repo 'endoffile78',
+      repo 'grayhatter',
+      repo 'iphydf',
+      repo 'irungentoo',
+      repo 'piling',
+   }],
+   'msgpack-c' => ['test/toxcore/msgpack-c', {
+      upstream => 'msgpack',
+      repo 'iphydf',
+   }],
+);
+
+# Get map of remote -> url in current directory.
+sub remotes { return { map { (split /\s+/)[0..1] } `git remote -v` } }
+
+# Keey 'origin' as it is.
+my ($me) = remotes->{origin} =~ m|([^:/]+)/hstox|;
+print "Contributor name: $me\n";
+for (values %repos) {
+   delete $_->[1]{$me};
+   $_->[1]{origin} = $me;
+}
+
 
 sub add_remote {
-   my ($name, $repo) = @_;
-   if (not $remotes{$repo}) {
-      print "Adding remote $name -> $repo\n";
-      system "git", "remote", "add", $name, $repo;
+   my ($remotes, $repo, $remote, $user) = @_;
+   my $url = "git\@github.com:$user/$repo";
+   if (not $remotes->{$url}) {
+      print "Adding $repo remote $remote -> $user\n";
+      system 'git', 'remote', 'add', $remote, $url;
    }
 }
 
-sub repo($) { [$_[0], "git\@github.com:$_[0]/hstox"] }
 
-add_remote @$_ for (
-   ['upstream', 'git@github.com:toktok/hstox'],
-   repo 'grayhatter',
-   repo 'iphydf',
-   repo 'neduard',
-   repo 'piling',
-)
+for my $name (sort keys %repos) {
+   my $repo = $repos{$name};
+
+   # Change to repo clone directory.
+   my $dir = getcwd;
+   chdir $repo->[0] or die "could not chdir to '$repo->[0]'";
+
+   # Delete all current remotes.
+   if ($flags{reset}) {
+      for my $remote (sort keys remotes) {
+         print "Removing $name remote $remote\n";
+         system 'git', 'remote', 'remove', $remote;
+      }
+   }
+
+   my %remotes = reverse %{remotes()};
+
+   # Add the ones we want back.
+   for my $remote (sort keys $repo->[1]) {
+      add_remote \%remotes, $name, $remote, $repo->[1]{$remote};
+   }
+
+   chdir $dir;
+}
+
+sub git_foreach {
+   system 'git', 'submodule', 'foreach', "@_ &";
+   system @_;
+}
+
+# Fetch all remotes in the background.
+git_foreach 'git', 'fetch', '--all';
+git_foreach 'git', 'branch', '--set-upstream-to=origin/master', 'master';
