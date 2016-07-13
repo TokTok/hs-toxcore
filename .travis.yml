@@ -7,6 +7,11 @@ cache:
     - $HOME/.ghc
 
 install:
+  # Make sure the submodules are up-to-date.
+  - (cd test/toxcore/libsodium && git checkout stable && git pull)
+  - (cd test/toxcore/msgpack-c && git checkout master && git pull)
+  - (cd test/toxcore/toxcore   && git checkout master && git pull)
+  # Install libsodium into $HOME/.cabal/extra-dist.
   - tools/install-libsodium
   - EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
   - cabal install --only-dependencies $EXTRA_DIRS
@@ -17,6 +22,15 @@ install:
 script:
   - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
   - make
+  # Make a temporary commit with just the submodules to avoid errors on diff
+  # checking due to ref changes in submodules.
+  - git config --global user.email "travis@travis-ci.org"
+  - git config --global user.name "Travis Builder"
+  - >
+      git commit --allow-empty -m'Submodule updates.' \
+        test/toxcore/libsodium \
+        test/toxcore/msgpack-c \
+        test/toxcore/toxcore
   - git diff --exit-code
 
 after_script:
