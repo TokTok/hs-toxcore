@@ -8,7 +8,6 @@ module Data.MessagePackSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Gen        as Gen
-import           Test.Result
 
 import           Control.Applicative        ((<$>), (<*>))
 import qualified Data.ByteString.Char8      as S
