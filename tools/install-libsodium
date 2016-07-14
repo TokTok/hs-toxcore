@@ -16,7 +16,8 @@ if diff new-hash $HOME/.cabal/extra-dist/libsodium.hash; then
 fi
 
 echo "Hashes differ => rebuilding"
-mv new-hash $HOME/.cabal/extra-dist/libsodium.hash
 sh autogen.sh
 ./configure --prefix=$HOME/.cabal/extra-dist
 make install
+
+mv new-hash $HOME/.cabal/extra-dist/libsodium.hash
