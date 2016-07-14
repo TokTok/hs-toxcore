@@ -1,8 +1,5 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE Safe #-}
----------------------------
---
--- A MessagePack parser.
+{-# LANGUAGE Trustworthy #-}
+-- | A MessagePack parser.
 --
 -- Example usage:
 --   $ echo -ne "\x94\x01\xa1\x32\xa1\x33\xa4\x50\x6f\x6f\x66" | ./msgpack-parser
@@ -21,7 +18,7 @@
 -- considers it as binary data.
 --
 -- Therefore, given a valid input, the tool has the following property
---   $ cat input.bin | ./msgpack-parser | ./msgpack-parser
+--   $ ./msgpack-parser < input.bin | ./msgpack-parser
 -- will output back the contents of input.bin.
 --
 -- In case the input is impossible to parse, nothing is output.
@@ -39,12 +36,16 @@ import qualified Data.ByteString.Lazy       as L
 import qualified Data.ByteString.Lazy.Char8 as L8
 import           Data.Maybe                 (fromMaybe)
 import           Data.MessagePack           (Object, pack, unpack)
+import           Text.Groom                 (groom)
 import           Text.Read                  (readMaybe)
+
 
 parse :: L.ByteString -> L.ByteString
 parse str = fromMaybe L.empty $
-  (pack <$> ((readMaybe . L8.unpack) str :: Maybe Object))
-  <|> ((L8.pack . flip (++) "\n" . show) <$> (unpack str :: Maybe Object))
+  pack <$> (readMaybe $ L8.unpack str :: Maybe Object)
+  <|>
+  L8.pack . flip (++) "\n" . groom <$> (unpack str :: Maybe Object)
+
 
 main :: IO ()
 main = parse <$> L.getContents >>= L.putStr

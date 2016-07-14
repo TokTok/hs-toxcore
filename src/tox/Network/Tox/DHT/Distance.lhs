@@ -1,13 +1,12 @@
 \section{Distance}
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MagicHash                  #-}
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.Distance where
 
-import           Control.Applicative       ((<$>), (<*>))
+import           Control.Applicative       ((<$>))
 import           Control.Arrow             (first)
 import           Data.Bits                 (xor)
 import           Data.Monoid               (Monoid, mappend, mempty)

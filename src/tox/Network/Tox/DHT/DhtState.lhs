@@ -1,7 +1,6 @@
 \section{DHT node state}
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE NamedFieldPuns #-}
 module Network.Tox.DHT.DhtState where
 
@@ -10,7 +9,6 @@ import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import qualified Data.Maybe                    as Maybe
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
-import qualified Test.QuickCheck.Gen           as Gen
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.Crypto.KeyPair    (KeyPair)

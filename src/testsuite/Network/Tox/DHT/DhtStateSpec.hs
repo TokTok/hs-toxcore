@@ -1,8 +1,6 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.DhtStateSpec where
 
-import           Debug.Trace
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -12,7 +10,6 @@ import           Data.Proxy                    (Proxy (..))
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
 import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
-import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.EncodingSpec
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 

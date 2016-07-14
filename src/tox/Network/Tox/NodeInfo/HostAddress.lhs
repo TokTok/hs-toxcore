@@ -10,7 +10,6 @@ Thus, when packed together with the Transport Protocol, the first bit of the
 packed byte is the protocol and the next 7 bits are the address family.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
@@ -25,17 +24,11 @@ import qualified Data.Binary.Bits.Get      as Bits
 import qualified Data.Binary.Bits.Put      as Bits
 import qualified Data.Binary.Get           as Bytes
 import qualified Data.Binary.Put           as Bytes
-import           Data.Bits                 (shiftL, shiftR, (.&.), (.|.))
 import qualified Data.IP                   as IP
-import           Data.List                 as List
-import           Data.List.Split           as List
-import           Data.Maybe                (listToMaybe, mapMaybe)
 import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
-import           Data.Word                 (Word16, Word8)
 import           GHC.Generics              (Generic)
 import qualified Network.Socket            as Socket (HostAddress, HostAddress6)
-import           Numeric                   (readHex, showHex)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
 import           Text.Read                 (readPrec)

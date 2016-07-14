@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.KBucketsSpec where
@@ -9,7 +8,6 @@ import           Test.QuickCheck
 import           Control.Monad                 (when)
 import qualified Data.Map                      as Map
 import           Data.Proxy                    (Proxy (..))
-import qualified Data.Set                      as Set
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.DHT.KBuckets      (KBuckets)

@@ -1,9 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
-{-# LANGUAGE Trustworthy        #-}
+{-# LANGUAGE Safe               #-}
 module Data.MessagePack.Object (Object (..)) where
 
 import           Control.Applicative       ((<$), (<$>), (<*>), (<|>))
@@ -15,7 +14,6 @@ import           Data.Int                  (Int64)
 import qualified Data.Text                 as T
 import qualified Data.Text.Lazy            as LT
 import           Data.Typeable             (Typeable)
-import qualified Data.Vector               as V
 import           Data.Word                 (Word8)
 import           GHC.Generics              (Generic)
 import           Prelude                   hiding (putStr)
@@ -42,9 +40,9 @@ data Object
     -- ^ extending Raw type represents a UTF-8 string
   | ObjectBin                   !S.ByteString
     -- ^ extending Raw type represents a byte array
-  | ObjectArray                 !(V.Vector Object)
+  | ObjectArray                 ![Object]
     -- ^ represents a sequence of objects
-  | ObjectMap                   !(V.Vector (Object, Object))
+  | ObjectMap                   ![(Object, Object)]
     -- ^ represents key-value pairs of objects
   | ObjectExt    {-# UNPACK #-} !Word8 !S.ByteString
     -- ^ represents a tuple of an integer and a byte array where
@@ -110,6 +108,3 @@ instance Arbitrary T.Text where
 
 instance Arbitrary LT.Text where
   arbitrary = LT.pack <$> arbitrary
-
-instance Arbitrary v => Arbitrary (V.Vector v) where
-  arbitrary = V.fromList <$> arbitrary

@@ -1,13 +1,12 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.DhtPacketSpec where
 
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Data.Binary                   (Binary, get, put)
+import           Data.Binary                   (Binary)
 import qualified Data.Binary                   as Binary (get, put)
-import qualified Data.Binary.Get               as Binary (Get, runGet)
+import qualified Data.Binary.Get               as Binary (runGet)
 import qualified Data.Binary.Put               as Binary (runPut)
 import           Data.Proxy                    (Proxy (..))
 import           Network.Tox.Crypto.Key        (Nonce)

@@ -1,5 +1,4 @@
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}

@@ -14,7 +14,6 @@ Nodes responses should contain the 4 closest nodes that the sender of the
 response has in their list of known nodes.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE Safe               #-}

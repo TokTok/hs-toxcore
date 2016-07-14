@@ -4,7 +4,6 @@ A Port Number is a 16 bit number.  Its binary representation is a Big Endian 16
 bit unsigned integer (2 bytes).
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}

@@ -40,7 +40,6 @@ The reason for these numbers is because the numbers on Linux for IPv4 and IPv6
 \texttt{10}.  The TCP numbers are just the UDP numbers \texttt{+ 128}.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE Safe               #-}

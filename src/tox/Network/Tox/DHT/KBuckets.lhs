@@ -5,13 +5,12 @@ certain key called the base key.  The base key is constant throughout the
 lifetime of a k-buckets instance.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.KBuckets where
 
-import           Control.Applicative           ((<$>), (<*>))
+import           Control.Applicative           ((<$>))
 import           Data.Binary                   (Binary)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map

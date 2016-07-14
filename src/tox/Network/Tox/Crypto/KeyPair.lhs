@@ -12,7 +12,6 @@ standard group element and the Secret Key.  See the
 \href{https://nacl.cr.yp.to/scalarmult.html}{NaCl documentation} for details.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.NonceSpec where
 
@@ -7,11 +6,7 @@ import           Network.Tox.RPCTest      (equivProp1, runTest)
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Control.Applicative      ((<$>))
-import           Control.Monad            (unless)
-import           Network.Tox.Crypto.Key   (Nonce)
 import qualified Network.Tox.Crypto.Nonce as Nonce
-import           System.Environment       (lookupEnv)
 
 
 spec :: Spec

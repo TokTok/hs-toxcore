@@ -16,7 +16,7 @@ endif
 # Test flavour. See test/toxcore/Makefile for choices.
 TEST	:= vanilla
 
-SOURCES	:= $(shell find src test -name "*.*hs" -or -name "*.c" -or -name "*.h")
+SOURCES	:= $(shell find src test tools -name "*.*hs" -or -name "*.c" -or -name "*.h")
 
 ifneq ($(wildcard ../tox-spec/pandoc.mk),)
 ifneq ($(shell which pandoc),)
@@ -24,6 +24,8 @@ DOCS	:= ../tox-spec/spec.md
 include ../tox-spec/pandoc.mk
 endif
 endif
+
+export LD_LIBRARY_PATH := $(HOME)/.cabal/extra-dist/lib
 
 EXTRA_DIRS :=							\
 	--extra-include-dirs=$(HOME)/.cabal/extra-dist/include	\

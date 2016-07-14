@@ -8,7 +8,6 @@ the Tox protocol following the architecture specified in this document is
 correct.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Safe       #-}
 module Main (main) where

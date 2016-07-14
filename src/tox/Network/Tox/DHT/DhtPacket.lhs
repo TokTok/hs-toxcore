@@ -21,7 +21,6 @@ protocol never actually sends empty messages, so in reality the minimum size is
 27 bytes for the \href{#ping-service}{Ping Packet}.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
@@ -30,9 +29,7 @@ module Network.Tox.DHT.DhtPacket where
 
 import           Control.Applicative            ((<$>), (<*>))
 import           Data.Binary                    (Binary, get, put)
-import           Data.Binary.Get                (Decoder (..),
-                                                 getRemainingLazyByteString,
-                                                 pushChunk, runGetIncremental)
+import           Data.Binary.Get                (getRemainingLazyByteString)
 import           Data.Binary.Put                (putByteString, putByteString,
                                                  runPut)
 import qualified Data.ByteString.Lazy           as LazyByteString

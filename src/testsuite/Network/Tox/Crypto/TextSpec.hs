@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.TextSpec where
@@ -11,6 +10,7 @@ import           Data.Proxy               (Proxy (..))
 import           Network.Tox.Crypto.Text  (CipherText, PlainText (..))
 import qualified Network.Tox.Crypto.Text  as Text
 import           Network.Tox.EncodingSpec
+import           Test.Result
 
 
 spec :: Spec
@@ -26,10 +26,7 @@ spec = do
     property $ \(bytes :: String) ->
       Text.decode (Text.encode bytes) `shouldBe` Just bytes
 
-  {-
   it "should return an error message in a monad that supports fail" $
     case Text.decode (PlainText (ByteString.pack [0x00])) of
-      Test.Skipped         -> expectationFailure   "Expected failure, but got Skipped"
-      Test.Success success -> expectationFailure $ "Expected failure, but got Success: " ++ success
-      Test.Failure failure -> failure `shouldContain` "not enough bytes"
-  -}
+      TestSuccess success -> expectationFailure $ "Expected failure, but got success: " ++ success
+      TestFailure failure -> failure `shouldContain` "not enough bytes"

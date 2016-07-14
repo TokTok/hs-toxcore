@@ -23,7 +23,9 @@ module Data.MessagePack
   , module X
   ) where
 
-import           Data.Binary
+import           Control.Applicative      (Applicative)
+import           Control.Monad            ((>=>))
+import           Data.Binary              (decodeOrFail, encode)
 import qualified Data.ByteString.Lazy     as L
 
 import           Data.MessagePack.Assoc   as X
@@ -38,6 +40,11 @@ import           Data.MessagePack.Put     as X
 pack :: MessagePack a => a -> L.ByteString
 pack = encode . toObject
 
--- | Unpack MessagePack binary to a Haskell value. If it fails, it returns Nothing.
-unpack :: MessagePack a => L.ByteString -> Maybe a
-unpack = fromObject . decode
+-- | Unpack MessagePack binary to a Haskell value. If it fails, it fails in the
+-- Monad. In the Maybe monad, failure returns Nothing.
+unpack :: (Applicative m, Monad m, MessagePack a)
+       => L.ByteString -> m a
+unpack = eitherToM . decodeOrFail >=> fromObject
+  where
+    eitherToM (Left  (_, _, msg)) = fail msg
+    eitherToM (Right (_, _, res)) = return res

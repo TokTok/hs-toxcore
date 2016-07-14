@@ -1,10 +1,8 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE IncoherentInstances  #-}
 {-# LANGUAGE LambdaCase           #-}
-{-# LANGUAGE OverloadedLists      #-}
 {-# LANGUAGE Trustworthy          #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
@@ -27,10 +25,8 @@ module Data.MessagePack.Class
   , GMessagePack (..)
   ) where
 
-import           Control.Applicative     (Applicative, (<$>), (<*>), (<|>))
+import           Control.Applicative     (Applicative, (<$>), (<*>))
 import           Control.Arrow           ((***))
-import           Control.Monad           ((>=>))
-import           Data.Bits               (shiftR)
 import qualified Data.ByteString         as S
 import qualified Data.ByteString.Lazy    as L
 import           Data.Hashable           (Hashable)
@@ -40,9 +36,7 @@ import qualified Data.IntMap.Strict      as IntMap
 import qualified Data.Map                as Map
 import qualified Data.Text               as T
 import qualified Data.Text.Lazy          as LT
-import qualified Data.Vector             as V
-import           Data.Word               (Word16, Word32, Word64, Word8)
-import           Debug.Trace             (trace)
+import           Data.Word               (Word, Word16, Word32, Word64, Word8)
 import           GHC.Generics
 
 import           Data.MessagePack.Assoc
@@ -53,17 +47,17 @@ import           Data.MessagePack.Object
 
 class GMessagePack f where
   gToObject   :: f a -> Object
-  gFromObject :: (Functor m, Applicative m, Monad m) => Object -> m (f a)
+  gFromObject :: (Applicative m, Monad m) => Object -> m (f a)
 
 
 class MessagePack a where
   toObject   :: a -> Object
-  fromObject :: (Functor m, Applicative m, Monad m) => Object -> m a
+  fromObject :: (Applicative m, Monad m) => Object -> m a
 
   default toObject :: (Generic a, GMessagePack (Rep a))
                    => a -> Object
   toObject = genericToObject
-  default fromObject :: ( Functor m, Applicative m, Monad m
+  default fromObject :: ( Applicative m, Monad m
                         , Generic a, GMessagePack (Rep a))
                      => Object -> m a
   fromObject = genericFromObject
@@ -73,7 +67,7 @@ genericToObject :: (Generic a, GMessagePack (Rep a))
                 => a -> Object
 genericToObject = gToObject . from
 
-genericFromObject :: ( Functor m, Applicative m, Monad m
+genericFromObject :: ( Applicative m, Monad m
                      , Generic a, GMessagePack (Rep a))
                   => Object -> m a
 genericFromObject x = to <$> gFromObject x
@@ -93,11 +87,12 @@ instance MessagePack Int64 where
     ObjectInt n -> return n
     _           -> fail "invalid encoding for integer type"
 
+instance MessagePack Int    where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Int8   where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Int16  where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Int32  where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
-instance MessagePack Int    where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 
+instance MessagePack Word   where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Word8  where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Word16 where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
 instance MessagePack Word32 where { toObject = toObject . toInt; fromObject o = fromInt <$> fromObject o }
@@ -111,10 +106,10 @@ instance MessagePack Object where
   fromObject = return
 
 instance MessagePack () where
-  toObject _ = ObjectArray V.empty
+  toObject _ = ObjectArray []
   fromObject = \case
-    ObjectArray v | V.null v -> return ()
-    _                        -> fail "invalid encoding for ()"
+    ObjectArray [] -> return ()
+    _              -> fail "invalid encoding for ()"
 
 instance MessagePack Bool where
   toObject = ObjectBool
@@ -183,29 +178,21 @@ instance MessagePack LT.Text where
 -- Instances for array-like data structures.
 
 instance MessagePack a => MessagePack [a] where
-  toObject = toObject . V.fromList
-  fromObject obj = V.toList <$> fromObject obj
-
-instance MessagePack a => MessagePack (V.Vector a) where
-  toObject = ObjectArray . V.map toObject
+  toObject = ObjectArray . map toObject
   fromObject = \case
-    ObjectArray xs -> V.mapM fromObject xs
-    _              -> fail "invalid encoding for Vector"
+    ObjectArray xs -> mapM fromObject xs
+    _              -> fail "invalid encoding for list"
 
 
 -- Instances for map-like data structures.
 
-instance (MessagePack a, MessagePack b) => MessagePack (Assoc (V.Vector (a, b))) where
-  toObject (Assoc xs) = ObjectMap $ V.map (toObject *** toObject) xs
+instance (MessagePack a, MessagePack b) => MessagePack (Assoc [(a, b)]) where
+  toObject (Assoc xs) = ObjectMap $ map (toObject *** toObject) xs
   fromObject = \case
     ObjectMap xs ->
-      Assoc <$> V.mapM (\(k, v) -> (,) <$> fromObject k <*> fromObject v) xs
+      Assoc <$> mapM (\(k, v) -> (,) <$> fromObject k <*> fromObject v) xs
     _ ->
       fail "invalid encoding for Assoc"
-
-instance (MessagePack k, MessagePack v) => MessagePack (Assoc [(k, v)]) where
-  toObject = toObject . Assoc . V.fromList . unAssoc
-  fromObject obj = Assoc . V.toList . unAssoc <$> fromObject obj
 
 instance (MessagePack k, MessagePack v, Ord k) => MessagePack (Map.Map k v) where
   toObject = toObject . Assoc . Map.toList

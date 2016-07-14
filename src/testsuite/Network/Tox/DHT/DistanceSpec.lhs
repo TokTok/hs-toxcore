@@ -1,5 +1,4 @@
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.DistanceSpec where

@@ -1,16 +1,13 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.NodeInfo.NodeInfoSpec where
 
 import           Test.Hspec
-import           Test.QuickCheck
 
 import qualified Data.Binary                   as Binary (get)
 import qualified Data.Binary.Get               as Binary (Get)
 import           Data.Proxy                    (Proxy (..))
 import           Network.Tox.EncodingSpec
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
-import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
 
 spec :: Spec

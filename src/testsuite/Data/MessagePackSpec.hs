@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Trustworthy         #-}
 module Data.MessagePackSpec where
@@ -8,17 +8,20 @@ module Data.MessagePackSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Gen        as Gen
+import           Test.Result
 
 import           Control.Applicative        ((<$>), (<*>))
 import qualified Data.ByteString.Char8      as S
 import qualified Data.ByteString.Lazy.Char8 as L
 import           Data.Hashable              (Hashable)
 import qualified Data.HashMap.Strict        as HashMap
-import           Data.Int                   (Int64)
+import           Data.Int                   (Int16, Int32, Int64, Int8)
 import qualified Data.IntMap                as IntMap
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 import qualified Data.Text.Lazy             as LT
+import           Data.Word                  (Word, Word16, Word32, Word64,
+                                             Word8)
 import           GHC.Generics               (Generic)
 
 import           Data.MessagePack
@@ -59,33 +62,10 @@ instance Arbitrary Foo where
     , Foo10 <$> arbitrary <*> arbitrary <*> arbitrary
     ]
 
+instance (Hashable k, Ord k, Eq k, Arbitrary k, Arbitrary v)
+    => Arbitrary (HashMap.HashMap k v) where
+  arbitrary = HashMap.fromList . Map.assocs <$> arbitrary
 
-newtype Map k v = Map (Map.Map k v) deriving (Eq, Show, Generic)
-newtype IntMap v = IntMap (IntMap.IntMap v) deriving (Eq, Show, Generic)
-
-instance (Ord k, MessagePack k, MessagePack v) => MessagePack (Map k v)
-instance MessagePack v => MessagePack (IntMap v)
-
-instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (Map k v) where
-  arbitrary = Map . Map.fromList <$> arbitrary
-
-instance Arbitrary v => Arbitrary (IntMap v) where
-  arbitrary = IntMap . IntMap.fromList <$> arbitrary
-
-instance (Hashable k, Eq k, Arbitrary k, Arbitrary v) => Arbitrary (HashMap.HashMap k v) where
-  arbitrary = HashMap.fromList <$> arbitrary
-
-instance (Arbitrary a1, Arbitrary a2, Arbitrary a3, Arbitrary a4, Arbitrary a5, Arbitrary a6) => Arbitrary (a1, a2, a3, a4, a5, a6) where
-  arbitrary = (,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
-
-instance (Arbitrary a1, Arbitrary a2, Arbitrary a3, Arbitrary a4, Arbitrary a5, Arbitrary a6, Arbitrary a7) => Arbitrary (a1, a2, a3, a4, a5, a6, a7) where
-  arbitrary = (,,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
-
-instance (Arbitrary a1, Arbitrary a2, Arbitrary a3, Arbitrary a4, Arbitrary a5, Arbitrary a6, Arbitrary a7, Arbitrary a8) => Arbitrary (a1, a2, a3, a4, a5, a6, a7, a8) where
-  arbitrary = (,,,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
-
-instance (Arbitrary a1, Arbitrary a2, Arbitrary a3, Arbitrary a4, Arbitrary a5, Arbitrary a6, Arbitrary a7, Arbitrary a8, Arbitrary a9) => Arbitrary (a1, a2, a3, a4, a5, a6, a7, a8, a9) where
-  arbitrary = (,,,,,,,,) <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
 mid :: MessagePack a => a -> a
 mid = Maybe.fromJust . unpack . pack
@@ -99,8 +79,35 @@ coerce :: (MessagePack a, MessagePack b) => a -> Maybe b
 coerce = unpack . pack
 
 
+checkMessage :: Show a => TestResult a -> Expectation
+checkMessage (TestSuccess res) =
+  expectationFailure $ "unexpected success: " ++ show res
+checkMessage (TestFailure msg) =
+  msg `shouldContain` "invalid encoding for "
+
+
 spec :: Spec
 spec = do
+  describe "failures" $
+    it "should contain the same start of the failure message for all types" $ do
+      checkMessage (unpack (pack "") :: TestResult ())
+      checkMessage (unpack (pack ()) :: TestResult Int)
+      checkMessage (unpack (pack ()) :: TestResult Bool)
+      checkMessage (unpack (pack ()) :: TestResult Float)
+      checkMessage (unpack (pack ()) :: TestResult Double)
+      checkMessage (unpack (pack ()) :: TestResult S.ByteString)
+      checkMessage (unpack (pack ()) :: TestResult LT.Text)
+      checkMessage (unpack (pack "") :: TestResult [String])
+      checkMessage (unpack (pack "") :: TestResult (Assoc [(Int, Int)]))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int, Int, Int, Int))
+
   describe "type coercion" $ do
     it "bool<-int" $
       property $ \(a :: Int) -> coerce a `shouldBe` (Nothing :: Maybe Bool)
@@ -132,7 +139,7 @@ spec = do
     let sizes = [0xf, 0x10, 0x1f, 0x20, 0xff, 0x100, 0xffff, 0x10000]
 
     it "map encodings" $ do
-      let rt n = let a = IntMap $ IntMap.fromList [(x, -x) | x <- [0..n]] in a `shouldBe` mid a
+      let rt n = let a = IntMap.fromList [(x, -x) | x <- [0..n]] in a `shouldBe` mid a
       mapM_ rt sizes
 
     it "list encodings" $ do
@@ -167,10 +174,19 @@ spec = do
       0x80000000 `shouldBe` intMid 0x80000000
       0x7fffffffffffffff `shouldBe` intMid 0x7fffffffffffffff
 
-    it "int" $
+    it "int"    $ property $ \(a :: Int   ) -> a `shouldBe` mid a
+    it "int8"   $ property $ \(a :: Int8  ) -> a `shouldBe` mid a
+    it "int16"  $ property $ \(a :: Int16 ) -> a `shouldBe` mid a
+    it "int32"  $ property $ \(a :: Int32 ) -> a `shouldBe` mid a
+    it "int64"  $ property $ \(a :: Int64 ) -> a `shouldBe` mid a
+    it "word"   $ property $ \(a :: Word  ) -> a `shouldBe` mid a
+    it "word8"  $ property $ \(a :: Word8 ) -> a `shouldBe` mid a
+    it "word16" $ property $ \(a :: Word16) -> a `shouldBe` mid a
+    it "word32" $ property $ \(a :: Word32) -> a `shouldBe` mid a
+    it "word64" $ property $ \(a :: Word64) -> a `shouldBe` mid a
+
+    it "ext" $
       property $ \(n, a) -> ObjectExt n a `shouldBe` mid (ObjectExt n a)
-    it "int" $
-      property $ \(a :: Int) -> a `shouldBe` mid a
     it "nil" $
       property $ \(a :: ()) -> a `shouldBe` mid a
     it "bool" $
@@ -216,9 +232,9 @@ spec = do
     it "Assoc [(string, int)]" $
       property $ \(a :: Assoc [(String, Int)]) -> a `shouldBe` mid a
     it "Map String Int" $
-      property $ \(a :: Map String Int) -> a `shouldBe` mid a
+      property $ \(a :: Map.Map String Int) -> a `shouldBe` mid a
     it "IntMap Int" $
-      property $ \(a :: IntMap Int) -> a `shouldBe` mid a
+      property $ \(a :: IntMap.IntMap Int) -> a `shouldBe` mid a
     it "HashMap String Int" $
       property $ \(a :: HashMap.HashMap String Int) -> a `shouldBe` mid a
     it "maybe int" $

@@ -2,7 +2,6 @@
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving  #-}
@@ -26,7 +25,6 @@ import qualified Data.Binary.Get                   as Binary (getByteString,
 import qualified Data.Binary.Put                   as Binary (putByteString)
 import qualified Data.ByteString                   as ByteString
 import qualified Data.ByteString.Base16            as Base16
-import qualified Data.ByteString.Char8             as Char8
 import qualified Data.ByteString.Lazy              as LazyByteString
 import           Data.MessagePack                  (MessagePack (..))
 import           Data.Proxy                        (Proxy (..))

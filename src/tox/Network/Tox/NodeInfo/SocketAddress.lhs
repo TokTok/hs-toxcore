@@ -5,7 +5,6 @@ Transport Protocol, it is sufficient information to address a network port on
 any internet host.
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
@@ -21,7 +20,6 @@ import qualified Data.Binary.Put                        as Binary (Put)
 import           Data.MessagePack                       (MessagePack)
 import           Data.Typeable                          (Typeable)
 import           GHC.Generics                           (Generic)
-import qualified Network.Socket                         as Socket
 import           Network.Tox.Encoding                   (bitGet, bitPut)
 import           Network.Tox.NodeInfo.HostAddress       (HostAddress (..))
 import qualified Network.Tox.NodeInfo.HostAddress       as HostAddress

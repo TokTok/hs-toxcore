@@ -1,7 +1,6 @@
 \section{Box}
 
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.Box where
 

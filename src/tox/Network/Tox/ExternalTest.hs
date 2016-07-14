@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.ExternalTest where

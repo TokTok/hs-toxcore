@@ -1,16 +1,13 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Protocol.PacketKindSpec where
 
 import           Test.Hspec
-import           Test.QuickCheck
 
 import qualified Data.Binary                     as Binary (get)
 import qualified Data.Binary.Get                 as Binary (Get)
 import           Data.Proxy                      (Proxy (..))
 import           Network.Tox.EncodingSpec
 import           Network.Tox.Protocol.PacketKind (PacketKind)
-import qualified Network.Tox.Protocol.PacketKind as PacketKind
 
 
 spec :: Spec
