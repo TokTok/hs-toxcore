@@ -1,5 +1,6 @@
 #include "methods.h"
 
+#include <DHT.h>
 
 METHOD (bin, Binary_encode, CipherText) { return pending; }
 METHOD (array, Binary_encode, DhtPacket) { return pending; }
@@ -30,7 +31,47 @@ METHOD (array, Binary_encode, KeyPair)
   return 0;
 }
 
-METHOD (array, Binary_encode, NodeInfo) { return pending; }
+METHOD (array, Binary_encode, NodeInfo)
+{
+  CHECK_SIZE (args, 3);
+
+  /* UDP = 0, TCP = 1 */
+  CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);
+  // CHECK_SIZE (args.ptr[0].via.bin, 2);
+
+  /* Addr and Port */
+  CHECK_TYPE (args.ptr[1], MSGPACK_OBJECT_ARRAY);
+  // CHECK_SIZE (args.ptr[1].via.array, 2);
+  //   CHECK_TYPE (args.ptr[1].via.array.ptr[0], MSGPACK_OBJECT_ARRAY);
+  //   CHECK_SIZE (args.ptr[1].via.array.ptr[0].via.array, 2);
+  //   CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);
+  //   CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);
+  // CHECK_TYPE (args.ptr[1].via.array.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);
+  // CHECK_SIZE (args.ptr[1].via.array.ptr[1].via.bin, 2);
+
+  /* Pubkey */
+  CHECK_TYPE (args.ptr[2], MSGPACK_OBJECT_BIN);
+  CHECK_SIZE (args.ptr[2].via.bin, crypto_box_PUBLICKEYBYTES);
+
+
+  Node_format node;
+  memcpy(&node.public_key, &args.ptr[2].via.bin, crypto_box_PUBLICKEYBYTES);
+  memcpy(&node.ip_port,    &args.ptr[1].via.bin, sizeof(IP_Port));
+
+  uint8_t packed_node[sizeof(Node_format) * 2] = {0};
+  int len = pack_nodes(packed_node, sizeof(Node_format), &node, 1);
+
+  CHECK (len > 0);
+
+  SUCCESS {
+    msgpack_pack_array(res, 1);
+    msgpack_pack_bin (res, len);
+    msgpack_pack_bin_body (res, packed_node, len);
+  }
+  return 0;
+}
+
+
 METHOD (bin, Binary_encode, NodesRequest) { return pending; }
 METHOD (array, Binary_encode, NodesResponse) { return pending; }
 METHOD (array, Binary_encode, Packet) { return pending; }
