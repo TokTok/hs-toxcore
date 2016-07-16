@@ -9,14 +9,16 @@
 
 #define CHECK_SIZE(ARG, SIZE) do { \
   if ((ARG).size != (SIZE)) \
-    return ssprintf ("Size of `" #ARG "' expected to be %zu, but was %zu", \
-                     SIZE, (ARG).size); \
+    return ssprintf ( \
+        "%s:%d: Size of `" #ARG "' expected to be %zu, but was %zu", \
+        __FILE__, __LINE__, SIZE, (ARG).size); \
 } while (0)
 
 #define CHECK_TYPE(ARG, TYPE) do { \
   if ((ARG).type != (TYPE)) \
-    return ssprintf ("Type of `" #ARG "' expected to be %s, but was %s", \
-                     type_name (TYPE), type_name ((ARG).type)); \
+    return ssprintf ( \
+        "%s:%d: Type of `" #ARG "' expected to be %s, but was %s", \
+        __FILE__, __LINE__, type_name (TYPE), type_name ((ARG).type)); \
 } while (0)
 
 
