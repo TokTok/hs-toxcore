@@ -1,0 +1,43 @@
+# Test suite IDL.
+
+# builtin types: object, bin, str, uint (positive int), sint (negative int)
+
+type SecretKey = bin
+type PublicKey = bin
+type PortNumber = uint
+
+enum TransportProtocol {
+  UDP
+  TCP
+}
+
+message KeyPair {
+  secret_key : SecretKey
+  public_key : PublicKey
+}
+
+enum HostAddress {
+  IPv4 : uint
+  IPv6 : uint[4]
+}
+
+message SocketAddress {
+  host_address : HostAddress
+  port : PortNumber
+}
+
+message NodeInfo {
+  protocol : TransportProtocol
+  address : SocketAddress
+  public_key : PublicKey
+}
+
+service Binary {
+  encode (type : str, value : object) : bin
+  encode ("KeyPair", value : KeyPair) : bin
+  encode ("NodeInfo", value : NodeInfo) : bin
+
+  decode (type : str, value : bin) : object
+  decode ("KeyPair", value : bin) : KeyPair
+  decode ("NodeInfo", value : bin) : NodeInfo
+}
