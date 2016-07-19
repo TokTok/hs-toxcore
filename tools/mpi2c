@@ -1,0 +1,134 @@
+#!/usr/bin/env perl
+
+use v5.10.1;
+use strict;
+no warnings;
+use utf8;
+
+use Data::Dumper;
+local $Data::Dumper::Indent   = 1;
+local $Data::Dumper::Sortkeys = 1;
+local $Data::Dumper::Terse    = 1;
+
+my $FILE = $ARGV[0] or die "Usage: mpic <input.mpi>";
+
+my $text = join "", grep { !/^\s*#/ } do { open my $fh, '<', $FILE or die "$FILE: $!"; <$fh> };
+my @tokens = $text =~ /(\w+|[\[\]{}=:()]|\"[^"]*\")/g;
+
+sub next_token {
+   #print "next token: $tokens[0]\n";
+   if (@_) {
+      die "expected $_[0], not $tokens[0]"
+         unless $tokens[0] eq $_[0];
+   }
+   shift @tokens;
+}
+
+sub parse_dim {
+   next_token "[";
+   my $dim = next_token;
+   next_token "]";
+   $dim
+}
+
+sub parse_type {
+   my $name = next_token;
+   my @dims;
+   push @dims, parse_dim while $tokens[0] eq "[";
+   { name => $name, dims => \@dims }
+}
+
+sub parse_typedef {
+   my $name = next_token;
+   next_token "=";
+   my $type = parse_type;
+   { t => 'type', name => $name, type => $type }
+}
+
+sub parse_enumerator {
+   my $name = next_token;
+   my $type = undef;
+   if ($tokens[0] eq ":") {
+      next_token ":";
+      $type = parse_type;
+   }
+   { name => $name, type => $type }
+}
+
+sub parse_enum {
+   my $name = next_token;
+   next_token "{";
+   my @members;
+   push @members, parse_enumerator while $tokens[0] ne "}";
+   next_token "}";
+   { t => 'enum', name => $name, members => \@members }
+}
+
+sub parse_field {
+   my $name = next_token;
+   next_token ":";
+   my $type = parse_type;
+   { name => $name, type => $type }
+}
+
+sub parse_message {
+   my $name = next_token;
+   next_token "{";
+   my @fields;
+   push @fields, parse_field while $tokens[0] ne "}";
+   next_token "}";
+   { t => 'message', name => $name, fields => \@fields }
+}
+
+sub parse_arg {
+   my $name = next_token;
+   if ($tokens[0] eq ":") {
+      next_token ":";
+      my $type = next_token;
+      { name => $name, type => $type }
+   } else {
+      { value => $name }
+   }
+}
+
+sub parse_method {
+   my $name = next_token;
+   next_token "(";
+   my @args;
+   push @args, parse_arg while $tokens[0] ne ")";
+   next_token ")";
+   next_token ":";
+   my $type = parse_type;
+   { name => $name, args => \@args, type => $type }
+}
+
+sub parse_service {
+   my $name = next_token;
+   next_token "{";
+   my @methods;
+   push @methods, parse_method while $tokens[0] ne "}";
+   next_token "}";
+   { t => 'service', name => $name, methods => \@methods }
+}
+
+my %decls = (
+   type    => \&parse_typedef,
+   enum    => \&parse_enum,
+   message => \&parse_message,
+   service => \&parse_service,
+);
+
+sub parse_decl {
+   my $kind = next_token;
+   die "unrecognised token: $kind" unless $decls{$kind};
+   $decls{$kind}->()
+}
+
+sub parse {
+   my @decls;
+   push @decls, parse_decl while @tokens;
+   \@decls
+}
+
+my $decls = parse;
+print Dumper $decls;
