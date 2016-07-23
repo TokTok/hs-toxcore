@@ -79,7 +79,7 @@ METHOD (array, Binary_encode, NodeInfo)
 
       int i;
       for (i = 0; i < 4; ++i) {
-          memcpy(&ipp.ip.ip4.uint8[3 - i], &args.ptr[1].via.array.ptr[0].via[i], 1);
+          ipp.ip.ip4.uint32 = args.ptr[1].via.array.ptr[0].via.u64;
       }
   }
 
