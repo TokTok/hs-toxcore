@@ -37,32 +37,29 @@ METHOD (array, Binary_encode, NodeInfo)
 {
   CHECK_SIZE (args, 3);
 
-  CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);                                    /* UDP = 0, TCP = 1 */
+  CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);
   uint64_t protocol = args.ptr[0].via.u64;
 
-  CHECK_TYPE (args.ptr[1], MSGPACK_OBJECT_ARRAY);                                               /* Socket           */
+  CHECK_TYPE (args.ptr[1], MSGPACK_OBJECT_ARRAY);
   msgpack_object_array address = args.ptr[1].via.array;
 
-  CHECK_SIZE (address, 2);                                                        /* IP and Port      */
-  CHECK_TYPE (address.ptr[0], MSGPACK_OBJECT_ARRAY);                              /* IP 4 & 6         */
+  CHECK_SIZE (address, 2);
+  CHECK_TYPE (address.ptr[0], MSGPACK_OBJECT_ARRAY);
   msgpack_object_array host_address = address.ptr[0].via.array;
 
-  CHECK_TYPE (address.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);                   /* Port             */
+  CHECK_TYPE (address.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);
   uint64_t port_number = address.ptr[1].via.u64;
 
   CHECK_SIZE (host_address, 2);
-  CHECK_TYPE (host_address.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);  /* IP 4             */
+  CHECK_TYPE (host_address.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);
   uint64_t address_family = host_address.ptr[0].via.u64;
 
-  // CHECK_TYPE (host_address.ptr[1], MSGPACK_OBJECT_ARRAY);             /* IP 6 */
-  // CHECK_SIZE (host_address.ptr[1].via.array, 4);
-  CHECK_TYPE (args.ptr[2], MSGPACK_OBJECT_BIN);                                                 /* Pubkey           */
+  CHECK_TYPE (args.ptr[2], MSGPACK_OBJECT_BIN);
   msgpack_object_bin public_key = args.ptr[2].via.bin;
 
   CHECK_SIZE (public_key, crypto_box_PUBLICKEYBYTES);
 
   IP_Port ipp;
-  // memcpy(&ipp.port, args.ptr[1].via.array.ptr[1].via.bin.ptr, sizeof(uint16_t));
   ipp.port = htons (port_number);
 
   switch (address_family) {
