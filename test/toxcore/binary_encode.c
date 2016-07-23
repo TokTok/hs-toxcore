@@ -38,54 +38,74 @@ METHOD (array, Binary_encode, NodeInfo)
   CHECK_SIZE (args, 3);
 
   CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);                                    /* UDP = 0, TCP = 1 */
+  uint64_t protocol = args.ptr[0].via.u64;
+
   CHECK_TYPE (args.ptr[1], MSGPACK_OBJECT_ARRAY);                                               /* Socket           */
-  CHECK_SIZE (args.ptr[1].via.array, 2);                                                        /* IP and Port      */
-  CHECK_TYPE (args.ptr[1].via.array.ptr[0], MSGPACK_OBJECT_ARRAY);                              /* IP 4 & 6         */
-  CHECK_SIZE (args.ptr[1].via.array.ptr[0].via.array, 2);
-  CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);  /* IP 4             */
-  // CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[1], MSGPACK_OBJECT_ARRAY);             /* IP 6 */
-  // CHECK_SIZE (args.ptr[1].via.array.ptr[0].via.array.ptr[1].via.array, 4);
-  // CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[1].via.array.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);
-  // CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[1].via.array.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);
-  // CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[1].via.array.ptr[2], MSGPACK_OBJECT_POSITIVE_INTEGER);
-  // CHECK_TYPE (args.ptr[1].via.array.ptr[0].via.array.ptr[1].via.array.ptr[3], MSGPACK_OBJECT_POSITIVE_INTEGER);
-  CHECK_TYPE (args.ptr[1].via.array.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);                   /* Port             */
+  msgpack_object_array address = args.ptr[1].via.array;
+
+  CHECK_SIZE (address, 2);                                                        /* IP and Port      */
+  CHECK_TYPE (address.ptr[0], MSGPACK_OBJECT_ARRAY);                              /* IP 4 & 6         */
+  msgpack_object_array host_address = address.ptr[0].via.array;
+
+  CHECK_TYPE (address.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);                   /* Port             */
+  uint64_t port_number = address.ptr[1].via.u64;
+
+  CHECK_SIZE (host_address, 2);
+  CHECK_TYPE (host_address.ptr[0], MSGPACK_OBJECT_POSITIVE_INTEGER);  /* IP 4             */
+  uint64_t address_family = host_address.ptr[0].via.u64;
+
+  // CHECK_TYPE (host_address.ptr[1], MSGPACK_OBJECT_ARRAY);             /* IP 6 */
+  // CHECK_SIZE (host_address.ptr[1].via.array, 4);
   CHECK_TYPE (args.ptr[2], MSGPACK_OBJECT_BIN);                                                 /* Pubkey           */
-  CHECK_SIZE (args.ptr[2].via.bin, crypto_box_PUBLICKEYBYTES);
+  msgpack_object_bin public_key = args.ptr[2].via.bin;
+
+  CHECK_SIZE (public_key, crypto_box_PUBLICKEYBYTES);
 
   IP_Port ipp;
   // memcpy(&ipp.port, args.ptr[1].via.array.ptr[1].via.bin.ptr, sizeof(uint16_t));
-  ipp.port = args.ptr[1].via.array.ptr[1].via.u64;
+  ipp.port = htons (port_number);
 
-  if (args.ptr[1].via.array.ptr[0].via.array.ptr[1].type == MSGPACK_OBJECT_ARRAY) {
-      /* IPv6 */
-      int i;
-      for (i = 0; i < 4; ++i) {
-        ipp.ip.ip6.uint32[i] = args.ptr[1].via.array.ptr[0].via.array.ptr[1].via.array.ptr[3 - i].via.u64;
-      }
+  switch (address_family) {
+    case 0:
+      {
+        /* IPv4*/
+        if (protocol == 1) {
+          ipp.ip.family = TCP_INET;
+        } else {
+          ipp.ip.family = AF_INET;
+        }
 
-      if (args.ptr[0].via.u64) {
-        ipp.ip.family = TCP_INET6;
-      } else {
-        ipp.ip.family = AF_INET6;
-      }
-  } else {
-      /* IPv4*/
-      if (args.ptr[0].via.u64) {
-        ipp.ip.family = TCP_INET;
-      } else {
-        ipp.ip.family = AF_INET;
-      }
+        CHECK_TYPE (host_address.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);
+        uint64_t addr = host_address.ptr[1].via.u64;
 
-      int i;
-      for (i = 0; i < 4; ++i) {
-          ipp.ip.ip4.uint32 = args.ptr[1].via.array.ptr[0].via.u64;
+        ipp.ip.ip4.uint32 = htonl (addr);
+        break;
+      }
+    case 1:
+      {
+        /* IPv6 */
+        if (protocol == 1) {
+          ipp.ip.family = TCP_INET6;
+        } else {
+          ipp.ip.family = AF_INET6;
+        }
+
+        CHECK_TYPE (host_address.ptr[1], MSGPACK_OBJECT_ARRAY);
+        msgpack_object_array addr = host_address.ptr[1].via.array;
+
+        int i;
+        for (i = 0; i < 4; ++i) {
+          CHECK_TYPE (addr.ptr[i], MSGPACK_OBJECT_POSITIVE_INTEGER);
+          uint64_t component = addr.ptr[i].via.u64;
+          ipp.ip.ip6.uint32[i] = htonl (component);
+        }
+        break;
       }
   }
 
   Node_format node;
   node.ip_port = ipp;
-  memcpy(&node.public_key, args.ptr[2].via.bin.ptr, crypto_box_PUBLICKEYBYTES);
+  memcpy(&node.public_key, public_key.ptr, crypto_box_PUBLICKEYBYTES);
 
   uint8_t packed_node[PACKED_NODE_SIZE_IP6] = {0}; /* We assume IP6 because it's bigger */
 
