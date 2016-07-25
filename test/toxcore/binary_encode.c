@@ -17,7 +17,19 @@ METHOD (bin, Binary_encode, CipherText)
 
 METHOD (array, Binary_encode, DhtPacket) { return pending; }
 METHOD (array, Binary_encode, HostAddress) { return pending; }
-METHOD (u64, Binary_encode, Word64) { return pending; }
+
+METHOD (u64, Binary_encode, Word64)
+{
+  SUCCESS {
+    uint64_t u64;
+    u64 = be64toh(args);
+    msgpack_pack_bin(res, sizeof(u64));
+    msgpack_pack_bin_body(res, &u64, sizeof(u64));
+  }
+  return 0;
+}
+
+
 METHOD (bin, Binary_encode, Key) { return pending; }
 
 METHOD (array, Binary_encode, KeyPair)
