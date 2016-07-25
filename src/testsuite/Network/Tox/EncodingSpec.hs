@@ -20,7 +20,7 @@ import qualified Data.ByteString        as ByteString
 import qualified Data.ByteString.Lazy   as LazyByteString
 import           Data.Proxy             (Proxy (..))
 import           Data.Typeable          (Typeable)
-import           Data.Word              (Word8)
+import           Data.Word              (Word64, Word8)
 
 import qualified Network.Tox.Binary     as Binary
 import           Network.Tox.Encoding   (BitEncoding, bitGet, bitPut, getBool,
@@ -29,7 +29,7 @@ import           Network.Tox.Encoding   (BitEncoding, bitGet, bitPut, getBool,
 
 spec :: Spec
 spec = do
-  rpcSpec (Proxy :: Proxy Int)
+  rpcSpec (Proxy :: Proxy Word64)
   --binarySpec (Proxy :: Proxy Bool)
   binaryGetPutSpec "{get,put}Bool" getBool putBool
 
