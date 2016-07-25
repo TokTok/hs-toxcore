@@ -2,7 +2,19 @@
 
 #include <DHT.h>
 
-METHOD (bin, Binary_encode, CipherText) { return pending; }
+METHOD (bin, Binary_encode, CipherText)
+{
+  uint64_t length = be64toh (args.size);
+
+  SUCCESS {
+    msgpack_pack_bin(res, sizeof(length) + args.size);
+    msgpack_pack_bin_body(res, &length,  sizeof(length));
+    msgpack_pack_bin_body(res,  args.ptr,   args.size);
+  }
+  return 0;
+}
+
+
 METHOD (array, Binary_encode, DhtPacket) { return pending; }
 METHOD (array, Binary_encode, HostAddress) { return pending; }
 METHOD (u64, Binary_encode, Word64) { return pending; }

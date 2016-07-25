@@ -2,7 +2,20 @@
 
 #include <DHT.h>
 
-METHOD (bin, Binary_decode, CipherText) { return pending; }
+METHOD (bin, Binary_decode, CipherText)
+{
+  SUCCESS {
+    if (args.size >= sizeof(uint64_t)) {
+      msgpack_pack_bin(res, args.size - sizeof(uint64_t));
+      msgpack_pack_bin_body(res, (args.ptr + sizeof(uint64_t)), args.size - sizeof(uint64_t));
+    } else {
+      msgpack_pack_nil(res);
+    }
+  }
+  return 0;
+}
+
+
 METHOD (bin, Binary_decode, DhtPacket) { return pending; }
 METHOD (bin, Binary_decode, HostAddress) { return pending; }
 METHOD (bin, Binary_decode, Word64) { return pending; }
