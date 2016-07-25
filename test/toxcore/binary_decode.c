@@ -21,7 +21,7 @@ METHOD (bin, Binary_decode, HostAddress) { return pending; }
 METHOD (bin, Binary_decode, Word64)
 {
   SUCCESS {
-    if (args.size < sizeof(uint64_t)) {
+    if (args.size != sizeof(uint64_t)) {
       msgpack_pack_nil(res);
     } else {
       uint64_t net_u64, host_u64;

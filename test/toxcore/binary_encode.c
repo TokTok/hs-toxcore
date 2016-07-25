@@ -29,7 +29,6 @@ METHOD (u64, Binary_encode, Word64)
   return 0;
 }
 
-
 METHOD (bin, Binary_encode, Key) { return pending; }
 
 METHOD (array, Binary_encode, KeyPair)
