@@ -14,12 +14,40 @@
         __FILE__, __LINE__, SIZE, (ARG).size); \
 } while (0)
 
-#define CHECK_TYPE(ARG, TYPE) do { \
-  if ((ARG).type != (TYPE)) \
-    return ssprintf ( \
-        "%s:%d: Type of `" #ARG "' expected to be %s, but was %s", \
-        __FILE__, __LINE__, type_name (TYPE), type_name ((ARG).type)); \
+#define CHECK_TYPE(ARG, ...) do { \
+  msgpack_object_type valid[] = { __VA_ARGS__ }; \
+  char const *type_check_result = check_type ( \
+      __FILE__, __LINE__, \
+      #ARG, (ARG).type, sizeof valid / sizeof *valid, valid); \
+  if (type_check_result) \
+    return type_check_result; \
 } while (0)
+
+
+static inline char const *
+check_type (
+    char const *file, int line,
+    char const *arg, msgpack_object_type type,
+    size_t count, msgpack_object_type *valid)
+{
+  for (size_t i = 0; i < count; i++)
+    if (type == valid[i])
+      return NULL;
+  if (count == 1)
+    return ssprintf (
+        "%s:%d: Type of `%s' expected to be %s, but was %s",
+        file, line, arg,
+        type_name (valid[0]),
+        type_name (type));
+  else if (count == 2)
+    return ssprintf (
+        "%s:%d: Type of `%s' expected to be %s or %s, but was %s",
+        file, line, arg,
+        type_name (valid[0]),
+        type_name (valid[1]),
+        type_name (type));
+  return "noooo!";
+}
 
 
 #define SUCCESS msgpack_pack_array (res, 0); if (true)

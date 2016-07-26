@@ -159,31 +159,32 @@ METHOD (array, Binary, encode)
   CHECK_TYPE (args.ptr[0], MSGPACK_OBJECT_STR);
 
   msgpack_object_str type = args.ptr[0].via.str;
-#define DISPATCH(TYPE, UTYPE, LTYPE) do { \
+#define DISPATCH(TYPE, LTYPE, ...) do { \
   if (type.size == sizeof #TYPE - 1 && \
       memcmp (type.ptr, #TYPE, type.size) == 0) \
     { \
-      CHECK_TYPE (args.ptr[1], MSGPACK_OBJECT_##UTYPE); \
+      CHECK_TYPE (args.ptr[1], __VA_ARGS__); \
       return Binary_encode_##TYPE (args.ptr[1].via.LTYPE, res); \
     } \
 } while (0)
-  DISPATCH (CipherText       , BIN             , bin);
-  DISPATCH (DhtPacket        , ARRAY           , array);
-  DISPATCH (HostAddress      , ARRAY           , array);
-  DISPATCH (Word64           , POSITIVE_INTEGER, u64);
-  DISPATCH (Key              , BIN             , bin);
-  DISPATCH (KeyPair          , ARRAY           , array);
-  DISPATCH (NodeInfo         , ARRAY           , array);
-  DISPATCH (NodesRequest     , BIN             , bin);
-  DISPATCH (NodesResponse    , ARRAY           , array);
-  DISPATCH (Packet           , ARRAY           , array);
-  DISPATCH (PacketKind       , POSITIVE_INTEGER, u64);
-  DISPATCH (PingPacket       , POSITIVE_INTEGER, u64);
-  DISPATCH (PlainText        , BIN             , bin);
-  DISPATCH (PortNumber       , POSITIVE_INTEGER, u64);
-  DISPATCH (RpcPacket        , ARRAY           , array);
-  DISPATCH (SocketAddress    , ARRAY           , array);
-  DISPATCH (TransportProtocol, POSITIVE_INTEGER, u64);
+  DISPATCH (CipherText       , bin  , MSGPACK_OBJECT_BIN             );
+  DISPATCH (DhtPacket        , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (HostAddress      , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (Word64           , u64  , MSGPACK_OBJECT_POSITIVE_INTEGER
+                                    , MSGPACK_OBJECT_NEGATIVE_INTEGER);
+  DISPATCH (Key              , bin  , MSGPACK_OBJECT_BIN             );
+  DISPATCH (KeyPair          , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (NodeInfo         , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (NodesRequest     , bin  , MSGPACK_OBJECT_BIN             );
+  DISPATCH (NodesResponse    , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (Packet           , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (PacketKind       , u64  , MSGPACK_OBJECT_POSITIVE_INTEGER);
+  DISPATCH (PingPacket       , u64  , MSGPACK_OBJECT_POSITIVE_INTEGER);
+  DISPATCH (PlainText        , bin  , MSGPACK_OBJECT_BIN             );
+  DISPATCH (PortNumber       , u64  , MSGPACK_OBJECT_POSITIVE_INTEGER);
+  DISPATCH (RpcPacket        , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (SocketAddress    , array, MSGPACK_OBJECT_ARRAY           );
+  DISPATCH (TransportProtocol, u64  , MSGPACK_OBJECT_POSITIVE_INTEGER);
 #undef DISPATCH
 
   return unimplemented;
