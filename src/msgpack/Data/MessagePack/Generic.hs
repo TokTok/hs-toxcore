@@ -58,12 +58,12 @@ class GProdPack f where
 instance (GMessagePack a, GProdPack b) => GProdPack (a :*: b) where
   prodToObject (a :*: b) = gToObject a : prodToObject b
   prodFromObject (a:b) = (:*:) <$> gFromObject a <*> prodFromObject b
-  prodFromObject l     = fail $ "invalid product encoding: " ++ show l
+  prodFromObject l     = fail "invalid encoding for product type"
 
 instance GMessagePack a => GProdPack (M1 t c a) where
   prodToObject (M1 x) = [gToObject x]
   prodFromObject [x] = M1 <$> gFromObject x
-  prodFromObject l   = fail $ "invalid product encoding: " ++ show l
+  prodFromObject l   = fail "invalid encoding for product type"
 
 
 -- Sum type packing.
@@ -71,13 +71,13 @@ instance GMessagePack a => GProdPack (M1 t c a) where
 checkSumFromObject0 :: (Applicative m, Monad m) => (GSumPack f) => Word64 -> Word64 -> m (f a)
 checkSumFromObject0 size code
   | code < size = sumFromObject code size ObjectNil
-  | otherwise   = fail "unknown encoding for constructor"
+  | otherwise   = fail "invalid encoding for sum type"
 
 
 checkSumFromObject :: (Applicative m, Monad m) => (GSumPack f) => Word64 -> Word64 -> Object -> m (f a)
 checkSumFromObject size code x
   | code < size = sumFromObject code size x
-  | otherwise   = fail "unknown encoding for constructor"
+  | otherwise   = fail "invalid encoding for sum type"
 
 
 class GSumPack f where

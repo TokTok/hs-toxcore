@@ -27,6 +27,12 @@ import           GHC.Generics               (Generic)
 import           Data.MessagePack
 
 
+data Unit = Unit
+  deriving (Eq, Show, Generic)
+
+instance MessagePack Unit
+
+
 data Record = Record Int Int Int
   deriving (Eq, Show, Generic)
 
@@ -62,6 +68,7 @@ instance Arbitrary Foo where
     , Foo10 <$> arbitrary <*> arbitrary <*> arbitrary
     ]
 
+
 instance (Hashable k, Ord k, Eq k, Arbitrary k, Arbitrary v)
     => Arbitrary (HashMap.HashMap k v) where
   arbitrary = HashMap.fromList . Map.assocs <$> arbitrary
@@ -88,8 +95,21 @@ checkMessage (TestFailure msg) =
 
 spec :: Spec
 spec = do
+  describe "unpack" $
+    it "does not throw exceptions on arbitrary data" $
+      property $ \bs ->
+        case unpack bs of
+          Just "" -> return () :: IO ()
+          _       -> return () :: IO ()
+
   describe "failures" $
     it "should contain the same start of the failure message for all types" $ do
+      checkMessage (unpack (pack $ ObjectInt (-1)) :: TestResult Foo)
+      checkMessage (unpack (pack [ObjectInt (-1), ObjectInt 0]) :: TestResult Foo)
+      checkMessage (unpack (pack $ ObjectArray []) :: TestResult Record)
+      checkMessage (unpack (pack [0 :: Int, 1, 2, 3]) :: TestResult Record)
+      checkMessage (unpack (pack "") :: TestResult Unit)
+      checkMessage (unpack (pack "") :: TestResult Record)
       checkMessage (unpack (pack "") :: TestResult ())
       checkMessage (unpack (pack ()) :: TestResult Int)
       checkMessage (unpack (pack ()) :: TestResult Bool)
@@ -137,6 +157,9 @@ spec = do
 
   describe "Identity Properties" $ do
     let sizes = [0xf, 0x10, 0x1f, 0x20, 0xff, 0x100, 0xffff, 0x10000]
+
+    it "unit encoding" $
+      Unit `shouldBe` mid Unit
 
     it "map encodings" $ do
       let rt n = let a = IntMap.fromList [(x, -x) | x <- [0..n]] in a `shouldBe` mid a

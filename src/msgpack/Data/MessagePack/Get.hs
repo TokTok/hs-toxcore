@@ -83,7 +83,7 @@ getStr = do
     _    -> empty
   bs <- getByteString len
   case T.decodeUtf8' bs of
-    Left _ -> empty
+    Left  _ -> empty
     Right v -> return v
 
 getBin :: Get S.ByteString
@@ -126,7 +126,7 @@ getExt = do
     0xC7 -> fromIntegral <$> getWord8
     0xC8 -> fromIntegral <$> getWord16be
     0xC9 -> fromIntegral <$> getWord32be
-    _ -> empty
+    _    -> empty
   (,) <$> getWord8 <*> getByteString len
 
 getInt8 :: Get Int8

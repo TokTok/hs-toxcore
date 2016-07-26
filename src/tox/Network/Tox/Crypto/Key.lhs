@@ -115,7 +115,7 @@ decode :: (CryptoNumber a, Monad m) => ByteString.ByteString -> m (Key a)
 decode bytes =
   case Sodium.decode bytes of
     Just key -> return $ Key key
-    Nothing  -> fail $ "unable to decode ByteString to Key: " ++ show bytes
+    Nothing  -> fail "unable to decode ByteString to Key"
 
 
 instance CryptoNumber a => Binary (Key a) where

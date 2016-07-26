@@ -38,8 +38,11 @@ spec = do
       liftIO $ pk1 `shouldNotBe` pk2
 
     it "generates a public key that is different from the secret key" $ runTest $ do
-      KeyPair (Key.Key sk) (Key.Key pk) <- KeyPair.newKeyPairC
-      liftIO $ Sodium.encode pk `shouldNotBe` Sodium.encode sk
+      kp <- KeyPair.newKeyPairC
+      liftIO $
+        Sodium.encode (KeyPair.secretKey kp)
+        `shouldNotBe`
+        Sodium.encode (KeyPair.publicKey kp)
 
   describe "fromSecretKey" $ do
     equivProp1 KeyPair.fromSecretKey KeyPair.fromSecretKeyC

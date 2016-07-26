@@ -4,17 +4,23 @@ module Network.Tox.Crypto.KeySpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import qualified Crypto.Saltine.Class     as Sodium (decode, encode)
-import qualified Data.ByteString          as ByteString (pack)
+import qualified Crypto.Saltine.Class     as Sodium
+import           Data.ByteString          (ByteString)
+import qualified Data.ByteString          as ByteString
 import           Data.Proxy               (Proxy (..))
 import           Network.Tox.Crypto.Key   (Key (..))
 import qualified Network.Tox.Crypto.Key   as Key
 import           Network.Tox.EncodingSpec
-import qualified Text.Read                as Read (readMaybe)
+import           Test.Result
+import qualified Text.Read                as Read
 
 
 readMaybe :: String -> Maybe Key.PublicKey
 readMaybe = Read.readMaybe
+
+
+decodeM :: Monad m => ByteString -> m Key.PublicKey
+decodeM = Key.decode
 
 
 keyToInteger :: String -> Integer
@@ -51,9 +57,12 @@ spec = do
       in
       actual `shouldBe` (Just $ Key expected)
 
-    it "decodes empty string to Nothing" $
-      let actual = readMaybe "" in
+    it "decodes empty string to Nothing" $ do
+      let actual = readMaybe ""
       actual `shouldBe` Nothing
+      case decodeM ByteString.empty of
+        TestFailure msg -> msg `shouldStartWith` "unable to decode"
+        TestSuccess val -> expectationFailure $ "unexpected success: " ++ show val
 
     it "decodes valid hex string of wrong length to Nothing" $
       let actual = readMaybe "\"0110\"" in

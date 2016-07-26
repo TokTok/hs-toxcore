@@ -118,7 +118,7 @@ instance Binary PacketKind where
   get = do
     byte <- get
     case byteToKind byte of
-      Nothing   -> fail $ "No binary mapping for packet kind " ++ show byte
+      Nothing   -> fail $ "no binary mapping for packet kind " ++ show byte
       Just kind -> return kind
 
 

@@ -23,15 +23,12 @@ import           Data.Typeable          (Typeable)
 import           Data.Word              (Word64, Word8)
 
 import qualified Network.Tox.Binary     as Binary
-import           Network.Tox.Encoding   (BitEncoding, bitGet, bitPut, getBool,
-                                         putBool)
+import           Network.Tox.Encoding   (BitEncoding, bitGet, bitPut)
 
 
 spec :: Spec
-spec = do
+spec =
   rpcSpec (Proxy :: Proxy Word64)
-  --binarySpec (Proxy :: Proxy Bool)
-  binaryGetPutSpec "{get,put}Bool" getBool putBool
 
 
 expectDecoded :: (Binary a, Eq a, Show a) => [Word8] -> a -> Expectation
