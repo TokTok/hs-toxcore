@@ -24,7 +24,30 @@ METHOD (bin, Binary_decode, CipherText)
   return 0;
 }
 
-METHOD (bin, Binary_decode, DhtPacket) { return pending; }
+METHOD (bin, Binary_decode, DhtPacket)
+{
+  CHECK(args.size >= crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES);
+
+  uint8_t pbkey[crypto_box_PUBLICKEYBYTES];
+  uint8_t nonce[crypto_box_NONCEBYTES];
+  uint8_t payld[args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES)];
+
+  memcpy(pbkey, args.ptr, crypto_box_PUBLICKEYBYTES);
+  memcpy(nonce, args.ptr + crypto_box_PUBLICKEYBYTES, crypto_box_NONCEBYTES);
+  memcpy(payld, args.ptr + crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+
+  SUCCESS {
+    msgpack_pack_array(res, 3);
+    msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin_body(res, pbkey, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin(res, crypto_box_NONCEBYTES);
+    msgpack_pack_bin_body(res, nonce, crypto_box_NONCEBYTES);
+    msgpack_pack_bin(res, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+    msgpack_pack_bin_body(res, payld, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+  }
+  return 0;
+}
+
 METHOD (bin, Binary_decode, HostAddress) { return pending; }
 
 METHOD (bin, Binary_decode, Word64)
