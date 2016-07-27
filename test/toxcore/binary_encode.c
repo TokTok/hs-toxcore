@@ -14,8 +14,32 @@ METHOD (bin, Binary_encode, CipherText)
   return 0;
 }
 
+METHOD (array, Binary_encode, DhtPacket)
+{
+  CHECK_SIZE(args, 3);
+  CHECK_TYPE(args.ptr[0], MSGPACK_OBJECT_BIN);
+  CHECK_SIZE(args.ptr[0].via.bin, crypto_box_PUBLICKEYBYTES);
+  CHECK_TYPE(args.ptr[1], MSGPACK_OBJECT_BIN);
+  CHECK_SIZE(args.ptr[1].via.bin, crypto_box_NONCEBYTES);
+  CHECK_TYPE(args.ptr[2], MSGPACK_OBJECT_BIN);
 
-METHOD (array, Binary_encode, DhtPacket) { return pending; }
+  uint8_t pbkey[crypto_box_PUBLICKEYBYTES]  = {0};
+  uint8_t nonce[crypto_box_NONCEBYTES]      = {0};
+  uint8_t payld[args.ptr[2].via.bin.size];
+
+  memcpy(pbkey, args.ptr[0].via.bin.ptr, args.ptr[0].via.bin.size);
+  memcpy(nonce, args.ptr[1].via.bin.ptr, args.ptr[1].via.bin.size);
+  memcpy(payld, args.ptr[2].via.bin.ptr, args.ptr[2].via.bin.size);
+
+  SUCCESS {
+    msgpack_pack_bin(res, args.ptr[2].via.bin.size + crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES);
+    msgpack_pack_bin_body(res, pbkey, crypto_box_PUBLICKEYBYTES);
+    msgpack_pack_bin_body(res, nonce, crypto_box_NONCEBYTES);
+    msgpack_pack_bin_body(res, payld, args.ptr[2].via.bin.size);
+  }
+  return 0;
+}
+
 METHOD (array, Binary_encode, HostAddress) { return pending; }
 
 METHOD (u64, Binary_encode, Word64)
