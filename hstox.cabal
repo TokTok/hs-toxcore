@@ -64,6 +64,7 @@ library
       Data.MessagePack.Put
   exposed-modules:
       Data.MessagePack
+      Data.Result
       Network.MessagePack.Client
       Network.MessagePack.Server
       Network.Tox
@@ -74,7 +75,6 @@ library
       Network.Tox.Crypto.Key
       Network.Tox.Crypto.KeyPair
       Network.Tox.Crypto.Nonce
-      Network.Tox.Crypto.Text
       Network.Tox.DHT
       Network.Tox.DHT.DhtPacket
       Network.Tox.DHT.DhtState

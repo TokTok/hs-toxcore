@@ -8,7 +8,6 @@ module Data.MessagePackSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Gen        as Gen
-import           Test.Result
 
 import           Control.Applicative        ((<$>), (<*>))
 import qualified Data.ByteString.Char8      as S
@@ -19,6 +18,7 @@ import           Data.Int                   (Int16, Int32, Int64, Int8)
 import qualified Data.IntMap                as IntMap
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
+import qualified Data.Result                as R
 import qualified Data.Text.Lazy             as LT
 import           Data.Word                  (Word, Word16, Word32, Word64,
                                              Word8)
@@ -86,10 +86,10 @@ coerce :: (MessagePack a, MessagePack b) => a -> Maybe b
 coerce = unpack . pack
 
 
-checkMessage :: Show a => TestResult a -> Expectation
-checkMessage (TestSuccess res) =
+checkMessage :: Show a => R.Result a -> Expectation
+checkMessage (R.Success res) =
   expectationFailure $ "unexpected success: " ++ show res
-checkMessage (TestFailure msg) =
+checkMessage (R.Failure msg) =
   msg `shouldContain` "invalid encoding for "
 
 
@@ -104,29 +104,29 @@ spec = do
 
   describe "failures" $
     it "should contain the same start of the failure message for all types" $ do
-      checkMessage (unpack (pack $ ObjectInt (-1)) :: TestResult Foo)
-      checkMessage (unpack (pack [ObjectInt (-1), ObjectInt 0]) :: TestResult Foo)
-      checkMessage (unpack (pack $ ObjectArray []) :: TestResult Record)
-      checkMessage (unpack (pack [0 :: Int, 1, 2, 3]) :: TestResult Record)
-      checkMessage (unpack (pack "") :: TestResult Unit)
-      checkMessage (unpack (pack "") :: TestResult Record)
-      checkMessage (unpack (pack "") :: TestResult ())
-      checkMessage (unpack (pack ()) :: TestResult Int)
-      checkMessage (unpack (pack ()) :: TestResult Bool)
-      checkMessage (unpack (pack ()) :: TestResult Float)
-      checkMessage (unpack (pack ()) :: TestResult Double)
-      checkMessage (unpack (pack ()) :: TestResult S.ByteString)
-      checkMessage (unpack (pack ()) :: TestResult LT.Text)
-      checkMessage (unpack (pack "") :: TestResult [String])
-      checkMessage (unpack (pack "") :: TestResult (Assoc [(Int, Int)]))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int, Int))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int, Int, Int))
-      checkMessage (unpack (pack ()) :: TestResult (Int, Int, Int, Int, Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack $ ObjectInt (-1)) :: R.Result Foo)
+      checkMessage (unpack (pack [ObjectInt (-1), ObjectInt 0]) :: R.Result Foo)
+      checkMessage (unpack (pack $ ObjectArray []) :: R.Result Record)
+      checkMessage (unpack (pack [0 :: Int, 1, 2, 3]) :: R.Result Record)
+      checkMessage (unpack (pack "") :: R.Result Unit)
+      checkMessage (unpack (pack "") :: R.Result Record)
+      checkMessage (unpack (pack "") :: R.Result ())
+      checkMessage (unpack (pack ()) :: R.Result Int)
+      checkMessage (unpack (pack ()) :: R.Result Bool)
+      checkMessage (unpack (pack ()) :: R.Result Float)
+      checkMessage (unpack (pack ()) :: R.Result Double)
+      checkMessage (unpack (pack ()) :: R.Result S.ByteString)
+      checkMessage (unpack (pack ()) :: R.Result LT.Text)
+      checkMessage (unpack (pack "") :: R.Result [String])
+      checkMessage (unpack (pack "") :: R.Result (Assoc [(Int, Int)]))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int, Int))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int, Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int, Int, Int, Int, Int, Int, Int))
+      checkMessage (unpack (pack ()) :: R.Result (Int, Int, Int, Int, Int, Int, Int, Int, Int))
 
   describe "type coercion" $ do
     it "bool<-int" $

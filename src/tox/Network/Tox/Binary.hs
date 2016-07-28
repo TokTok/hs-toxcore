@@ -13,9 +13,9 @@ import           Data.Word                              (Word64)
 import qualified Network.Tox.Encoding                   as Encoding
 import qualified Network.Tox.RPC                        as RPC
 
+import qualified Network.Tox.Crypto.Box                 as T
 import qualified Network.Tox.Crypto.Key                 as T
 import qualified Network.Tox.Crypto.KeyPair             as T
-import qualified Network.Tox.Crypto.Text                as T
 import qualified Network.Tox.DHT.DhtPacket              as T
 import qualified Network.Tox.DHT.NodesRequest           as T
 import qualified Network.Tox.DHT.NodesResponse          as T

@@ -41,19 +41,22 @@ module Network.MessagePack.Client
   , RpcError (..)
   ) where
 
-import           Control.Applicative
-import           Control.Exception
-import           Control.Monad
-import           Control.Monad.Catch
+import           Control.Applicative               (Applicative)
+import           Control.Exception                 (Exception)
+import           Control.Monad                     ()
+import           Control.Monad.Catch               (MonadThrow, throwM)
 import           Control.Monad.State.Strict        as CMS
 import           Data.Binary                       as Binary
 import qualified Data.ByteString                   as S
 import           Data.Conduit
 import qualified Data.Conduit.Binary               as CB
-import           Data.Conduit.Network
+import           Data.Conduit.Network              (appSink, appSource,
+                                                    clientSettings,
+                                                    runTCPClient)
 import           Data.Conduit.Serialization.Binary
 import           Data.MessagePack
-import           Data.Typeable
+import qualified Data.Result                       as R
+import           Data.Typeable                     (Typeable)
 
 newtype Client a
   = ClientT { runClient :: StateT Connection IO a }
@@ -74,9 +77,9 @@ execClient host port m =
 
 -- | RPC error type
 data RpcError
-  = ServerError Object     -- ^ Server error
-  | ResultTypeError String -- ^ Result type mismatch
-  | ProtocolError String   -- ^ Protocol error
+  = ServerError Object            -- ^ Server error
+  | ResultTypeError String Object -- ^ Result type mismatch
+  | ProtocolError String          -- ^ Protocol error
   deriving (Show, Eq, Ord, Typeable)
 
 instance Exception RpcError
@@ -85,14 +88,16 @@ class RpcType r where
   rpcc :: String -> [Object] -> r
 
 instance MessagePack o => RpcType (Client o) where
-  rpcc m args = do
-    res <- rpcCall m (reverse args)
+  rpcc name args = do
+    res <- rpcCall name (reverse args)
     case fromObject res of
-      Just r  -> return r
-      Nothing -> throwM $ ResultTypeError $ "type mismatch: " ++ show res
+      R.Success ok  ->
+        return ok
+      R.Failure msg ->
+        throwM $ ResultTypeError msg res
 
 instance (MessagePack o, RpcType r) => RpcType (o -> r) where
-  rpcc m args arg = rpcc m (toObject arg:args)
+  rpcc name args arg = rpcc name (toObject arg : args)
 
 rpcCall :: String -> [Object] -> Client Object
 rpcCall methodName args = ClientT $ do

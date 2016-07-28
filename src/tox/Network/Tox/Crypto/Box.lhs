@@ -1,15 +1,44 @@
 \section{Box}
 
 \begin{code}
-{-# LANGUAGE Trustworthy #-}
-module Network.Tox.Crypto.Box where
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE Trustworthy                #-}
+module Network.Tox.Crypto.Box
+  ( PlainText (..)
+  , CipherText
+  , cipherText
+  , unCipherText
+  , decode
+  , encode
+  , decrypt, decryptC, decryptS
+  , encrypt, encryptC, encryptS
+  ) where
 
-import           Control.Applicative     ((<$>))
-import qualified Crypto.Saltine.Core.Box as Sodium (boxAfterNM, boxOpenAfterNM)
+import           Control.Applicative               ((<$>), (<*>))
+import qualified Crypto.Saltine.Core.Box           as Sodium (boxAfterNM,
+                                                              boxOpenAfterNM)
+import qualified Crypto.Saltine.Internal.ByteSizes as ByteSizes
+import           Data.Binary                       (Binary, get, put)
+import           Data.Binary.Get                   (Decoder (..), pushChunk,
+                                                    runGetIncremental)
+import           Data.Binary.Put                   (runPut)
+import           Data.ByteString                   (ByteString)
+import qualified Data.ByteString                   as ByteString
+import qualified Data.ByteString.Base16            as Base16
+import qualified Data.ByteString.Lazy              as LazyByteString
+import           Data.MessagePack                  (MessagePack (..))
+import           Data.Typeable                     (Typeable)
+import           GHC.Generics                      (Generic)
+import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
+import           Text.Read                         (readPrec)
 
-import           Network.Tox.Crypto.Key  (CombinedKey, Key (..), Nonce)
-import           Network.Tox.Crypto.Text (CipherText (..), PlainText (..))
-import qualified Network.Tox.RPC         as RPC
+
+import           Network.Tox.Crypto.Key            (CombinedKey, Key (..),
+                                                    Nonce)
+import qualified Network.Tox.RPC                   as RPC
 
 
 {-------------------------------------------------------------------------------
@@ -17,6 +46,70 @@ import qualified Network.Tox.RPC         as RPC
  - :: Implementation.
  -
  ------------------------------------------------------------------------------}
+
+
+\end{code}
+
+The Tox protocol differentiates between two types of text: Plain Text and
+Cipher Text.  Cipher Text may be transmitted over untrusted data channels.
+Plain Text can be Sensitive or Non Sensitive.  Sensitive Plain Text must be
+transformed into Cipher Text using the encryption function before it can be
+transmitted over untrusted data channels.
+
+\begin{code}
+
+
+newtype PlainText = PlainText { unPlainText :: ByteString }
+  deriving (Eq, Binary, Generic, Typeable)
+
+instance MessagePack PlainText
+
+instance Show PlainText where
+  show = show . Base16.encode . unPlainText
+
+instance Read PlainText where
+  readPrec = PlainText . fst . Base16.decode <$> readPrec
+
+
+newtype CipherText = CipherText { unCipherText :: ByteString }
+  deriving (Eq, Typeable)
+
+cipherText :: Monad m => ByteString -> m CipherText
+cipherText bs
+  | ByteString.length bs >= ByteSizes.boxMac = return $ CipherText bs
+  | otherwise                                = fail "ciphertext is too short"
+
+instance Binary CipherText where
+  put = put . unCipherText
+  get = get >>= cipherText
+
+instance MessagePack CipherText where
+  toObject = toObject . unCipherText
+  fromObject x = do
+    bs <- fromObject x
+    cipherText bs
+
+instance Show CipherText where
+  show = show . Base16.encode . unCipherText
+
+instance Read CipherText where
+  readPrec = fst . Base16.decode <$> readPrec >>= cipherText
+
+
+encode :: Binary a => a -> PlainText
+encode =
+  PlainText . LazyByteString.toStrict . runPut . put
+
+
+decode :: (Monad m, Binary a) => PlainText -> m a
+decode (PlainText bytes) =
+  finish $ pushChunk (runGetIncremental get) bytes
+  where
+    finish = \case
+      Done _ _ output -> return output
+      Fail _ _ msg    -> fail msg
+      Partial f       -> finish $ f Nothing
+
 
 \end{code}
 
@@ -64,3 +157,23 @@ The create and handle request functions are the encrypt and decrypt functions
 for a type of DHT packets used to send data directly to other DHT nodes.  To be
 honest they should probably be in the DHT module but they seem to fit better
 here.  TODO: What exactly are these functions?
+
+
+\begin{code}
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Tests.
+ -
+ ------------------------------------------------------------------------------}
+
+
+instance Arbitrary PlainText where
+  arbitrary = PlainText . ByteString.pack <$> arbitrary
+
+
+instance Arbitrary CipherText where
+  arbitrary = encrypt <$> arbitrary <*> arbitrary <*> arbitrary
+
+\end{code}

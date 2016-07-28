@@ -2,16 +2,16 @@
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Encoding where
 
-import           Data.Binary             (Binary, get, put)
-import           Data.Binary.Bits.Get    (BitGet)
-import           Data.Binary.Bits.Put    (BitPut)
-import           Data.Binary.Get         (Decoder (..), Get, getWord8,
-                                          pushChunk, runGetIncremental)
-import           Data.Binary.Put         (Put, putWord8, runPut)
-import           Data.ByteString         (ByteString)
-import qualified Data.ByteString         as ByteString
-import qualified Data.ByteString.Lazy    as LazyByteString
-import           Network.Tox.Crypto.Text (PlainText (..))
+import           Data.Binary            (Binary, get, put)
+import           Data.Binary.Bits.Get   (BitGet)
+import           Data.Binary.Bits.Put   (BitPut)
+import           Data.Binary.Get        (Decoder (..), Get, getWord8, pushChunk,
+                                         runGetIncremental)
+import           Data.Binary.Put        (Put, putWord8, runPut)
+import           Data.ByteString        (ByteString)
+import qualified Data.ByteString        as ByteString
+import qualified Data.ByteString.Lazy   as LazyByteString
+import           Network.Tox.Crypto.Box (PlainText (..))
 
 
 class BitEncoding a where

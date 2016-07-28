@@ -36,13 +36,12 @@ import qualified Data.ByteString.Lazy           as LazyByteString
 import           Data.MessagePack               (MessagePack)
 import           Data.Typeable                  (Typeable)
 import           GHC.Generics                   (Generic)
+import           Network.Tox.Crypto.Box         (CipherText, PlainText (..),
+                                                 unCipherText)
 import qualified Network.Tox.Crypto.Box         as Box
 import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
 import           Network.Tox.Crypto.Key         (Nonce, PublicKey)
 import           Network.Tox.Crypto.KeyPair     (KeyPair (..))
-import           Network.Tox.Crypto.Text        (CipherText (..),
-                                                 PlainText (..))
-import qualified Network.Tox.Crypto.Text        as Text
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 
@@ -71,7 +70,7 @@ instance Binary DhtPacket where
     putByteString . unCipherText . encryptedPayload $ packet
 
   get =
-    DhtPacket <$> get <*> get <*> (CipherText . LazyByteString.toStrict <$> getRemainingLazyByteString)
+    DhtPacket <$> get <*> get <*> (LazyByteString.toStrict <$> getRemainingLazyByteString >>= Box.cipherText)
 
 
 encrypt :: KeyPair -> PublicKey -> Nonce -> PlainText -> DhtPacket
@@ -96,7 +95,7 @@ decrypt (KeyPair receiverSecretKey _) DhtPacket { senderPublicKey, encryptionNo
 
 
 decode :: Binary payload => KeyPair -> DhtPacket -> Maybe payload
-decode keyPair packet = decrypt keyPair packet >>= Text.decode
+decode keyPair packet = decrypt keyPair packet >>= Box.decode
 
 
 {-------------------------------------------------------------------------------
