@@ -26,24 +26,33 @@ METHOD (bin, Binary_decode, CipherText)
 
 METHOD (bin, Binary_decode, DhtPacket)
 {
-  CHECK(args.size >= crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES);
-
   uint8_t pbkey[crypto_box_PUBLICKEYBYTES];
   uint8_t nonce[crypto_box_NONCEBYTES];
-  uint8_t payld[args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES)];
+
+  int64_t payld_size = args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES);
+
+  if (payld_size < 0) {
+    payld_size = 0;
+  }
+
+  uint8_t payld[payld_size];
 
   memcpy(pbkey, args.ptr, crypto_box_PUBLICKEYBYTES);
   memcpy(nonce, args.ptr + crypto_box_PUBLICKEYBYTES, crypto_box_NONCEBYTES);
-  memcpy(payld, args.ptr + crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+  memcpy(payld, args.ptr + crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES, payld_size);
 
   SUCCESS {
-    msgpack_pack_array(res, 3);
-    msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
-    msgpack_pack_bin_body(res, pbkey, crypto_box_PUBLICKEYBYTES);
-    msgpack_pack_bin(res, crypto_box_NONCEBYTES);
-    msgpack_pack_bin_body(res, nonce, crypto_box_NONCEBYTES);
-    msgpack_pack_bin(res, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
-    msgpack_pack_bin_body(res, payld, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+    if (args.size < crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES + crypto_box_MACBYTES) {
+      msgpack_pack_nil(res);
+    } else {
+      msgpack_pack_array(res, 3);
+      msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
+      msgpack_pack_bin_body(res, pbkey, crypto_box_PUBLICKEYBYTES);
+      msgpack_pack_bin(res, crypto_box_NONCEBYTES);
+      msgpack_pack_bin_body(res, nonce, crypto_box_NONCEBYTES);
+      msgpack_pack_bin(res, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+      msgpack_pack_bin_body(res, payld, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+    }
   }
   return 0;
 }
