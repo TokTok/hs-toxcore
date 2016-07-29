@@ -1,9 +1,79 @@
 #include "methods.h"
 
-METHOD (bin, Binary_decode, CipherText) { return pending; }
-METHOD (bin, Binary_decode, DhtPacket) { return pending; }
+#include <DHT.h>
+
+METHOD (bin, Binary_decode, CipherText)
+{
+  uint64_t size   = args.size;
+  uint64_t length = 0;
+  uint64_t tmp    = 0;
+
+  if (size >= sizeof(uint64_t)) {
+    memcpy(&tmp, args.ptr, sizeof(uint64_t));
+    length = be64toh(tmp);
+  }
+
+  SUCCESS {
+    if (size >= sizeof(uint64_t) && size == length + sizeof(uint64_t)) {
+      msgpack_pack_bin(res, args.size - sizeof(uint64_t));
+      msgpack_pack_bin_body(res, (args.ptr + sizeof(uint64_t)), args.size - sizeof(uint64_t));
+    } else {
+      msgpack_pack_nil(res);
+    }
+  }
+  return 0;
+}
+
+METHOD (bin, Binary_decode, DhtPacket)
+{
+  uint8_t pbkey[crypto_box_PUBLICKEYBYTES];
+  uint8_t nonce[crypto_box_NONCEBYTES];
+
+  int64_t payld_size = args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES);
+
+  if (payld_size < 0) {
+    payld_size = 0;
+  }
+
+  uint8_t payld[payld_size];
+
+  memcpy(pbkey, args.ptr, crypto_box_PUBLICKEYBYTES);
+  memcpy(nonce, args.ptr + crypto_box_PUBLICKEYBYTES, crypto_box_NONCEBYTES);
+  memcpy(payld, args.ptr + crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES, payld_size);
+
+  SUCCESS {
+    if (args.size < crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES + crypto_box_MACBYTES) {
+      msgpack_pack_nil(res);
+    } else {
+      msgpack_pack_array(res, 3);
+      msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
+      msgpack_pack_bin_body(res, pbkey, crypto_box_PUBLICKEYBYTES);
+      msgpack_pack_bin(res, crypto_box_NONCEBYTES);
+      msgpack_pack_bin_body(res, nonce, crypto_box_NONCEBYTES);
+      msgpack_pack_bin(res, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+      msgpack_pack_bin_body(res, payld, args.size - (crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES));
+    }
+  }
+  return 0;
+}
+
 METHOD (bin, Binary_decode, HostAddress) { return pending; }
-METHOD (bin, Binary_decode, Word64) { return pending; }
+
+METHOD (bin, Binary_decode, Word64)
+{
+  SUCCESS {
+    if (args.size != sizeof(uint64_t)) {
+      msgpack_pack_nil(res);
+    } else {
+      uint64_t net_u64, host_u64;
+      memcpy(&net_u64, args.ptr, sizeof(net_u64));
+      host_u64 = htobe64(net_u64);
+      msgpack_pack_uint64(res, host_u64);
+    }
+  }
+  return 0;
+}
+
 METHOD (bin, Binary_decode, Key) { return pending; }
 
 METHOD (bin, Binary_decode, KeyPair)
@@ -24,7 +94,53 @@ METHOD (bin, Binary_decode, KeyPair)
   return 0;
 }
 
-METHOD (bin, Binary_decode, NodeInfo) { return pending; }
+METHOD (bin, Binary_decode, NodeInfo)
+{
+  uint16_t data_processed = 0;
+  Node_format node;
+  int len = unpack_nodes(&node, 1, &data_processed, (const uint8_t*)args.ptr, args.size, 1);
+
+  bool ip6_node = ((node.ip_port.ip.family == AF_INET6) || (node.ip_port.ip.family == TCP_INET6));
+  bool tcp      = ((node.ip_port.ip.family == TCP_INET) || (node.ip_port.ip.family == TCP_INET6));
+
+  uint16_t port  = ntohs(node.ip_port.port);
+  uint32_t ip4   = ntohl(node.ip_port.ip.ip4.uint32);
+  uint32_t ip6_0 = ntohl(node.ip_port.ip.ip6.uint32[0]);
+  uint32_t ip6_1 = ntohl(node.ip_port.ip.ip6.uint32[1]);
+  uint32_t ip6_2 = ntohl(node.ip_port.ip.ip6.uint32[2]);
+  uint32_t ip6_3 = ntohl(node.ip_port.ip.ip6.uint32[3]);
+
+  if (len > 0 && data_processed > 0) {
+    SUCCESS {
+      msgpack_pack_array(res, 3);
+        msgpack_pack_uint8(res, tcp);
+        msgpack_pack_array(res, 2);
+          msgpack_pack_array(res, 2);
+            msgpack_pack_uint8(res, ip6_node);
+            if (ip6_node) {
+              msgpack_pack_array(res, 4);
+                msgpack_pack_uint32(res, ip6_0);
+                msgpack_pack_uint32(res, ip6_1);
+                msgpack_pack_uint32(res, ip6_2);
+                msgpack_pack_uint32(res, ip6_3);
+            } else {
+              msgpack_pack_uint32(res, ip4);
+            }
+          msgpack_pack_uint16(res, port);
+        msgpack_pack_bin(res, crypto_box_PUBLICKEYBYTES);
+        msgpack_pack_bin_body(res, &node.public_key, crypto_box_PUBLICKEYBYTES);
+    }
+  } else {
+    SUCCESS {
+      msgpack_pack_nil(res);
+    }
+  }
+
+  return 0;
+}
+
+
+
 METHOD (bin, Binary_decode, NodesRequest) { return pending; }
 METHOD (bin, Binary_decode, NodesResponse) { return pending; }
 METHOD (bin, Binary_decode, Packet) { return pending; }
