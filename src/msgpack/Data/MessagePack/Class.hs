@@ -212,7 +212,7 @@ instance (MessagePack k, MessagePack v, Hashable k, Eq k) => MessagePack (HashMa
 instance (MessagePack a1, MessagePack a2) => MessagePack (a1, a2) where
   toObject (a1, a2) = ObjectArray [toObject a1, toObject a2]
   fromObject (ObjectArray [a1, a2]) = (,) <$> fromObject a1 <*> fromObject a2
-  fromObject _ = fail "invalid encoding for tuple"
+  fromObject _                      = fail "invalid encoding for tuple"
 
 instance (MessagePack a1, MessagePack a2, MessagePack a3) => MessagePack (a1, a2, a3) where
   toObject (a1, a2, a3) = ObjectArray [toObject a1, toObject a2, toObject a3]

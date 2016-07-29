@@ -30,8 +30,9 @@ import qualified Network.Tox.Protocol.Packet            as T
 import qualified Network.Tox.Protocol.PacketKind        as T
 
 
-typeName :: Typeable a => a -> String
-typeName = Typeable.tyConName . Typeable.typeRepTyCon . Typeable.typeOf
+typeName :: Typeable a => Proxy a -> String
+typeName (Proxy :: Proxy a) =
+  Typeable.tyConName . Typeable.typeRepTyCon . Typeable.typeOf $ (undefined :: a)
 
 
 --------------------------------------------------------------------------------
@@ -46,7 +47,7 @@ decode = Encoding.decode
 
 decodeC :: forall a. (Typeable a, RPC.MessagePack a)
         => ByteString -> RPC.Client (Maybe a)
-decodeC = RPC.call "Binary.decode" $ typeName (undefined :: a)
+decodeC = RPC.call "Binary.decode" $ typeName (Proxy :: Proxy a)
 
 decodeM :: (Monad m, RPC.MessagePack a, Binary a) => Proxy a -> ByteString -> m (Maybe RPC.Object)
 decodeM (Proxy :: Proxy a) bs =
@@ -88,7 +89,7 @@ encode = Encoding.encode
 
 encodeC :: forall a. (Typeable a, RPC.MessagePack a)
         => a -> RPC.Client ByteString
-encodeC = RPC.call "Binary.encode" $ typeName (undefined :: a)
+encodeC = RPC.call "Binary.encode" $ typeName (Proxy :: Proxy a)
 
 encodeM :: (Monad m, RPC.MessagePack a, Binary a)
         => Proxy a -> RPC.Object -> m ByteString

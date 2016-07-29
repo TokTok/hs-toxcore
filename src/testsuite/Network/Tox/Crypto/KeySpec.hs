@@ -1,14 +1,18 @@
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.KeySpec where
 
 import           Test.Hspec
 import           Test.QuickCheck
 
 import qualified Crypto.Saltine.Class     as Sodium
+import           Data.Binary              (Binary)
 import           Data.ByteString          (ByteString)
 import qualified Data.ByteString          as ByteString
 import           Data.Proxy               (Proxy (..))
 import qualified Data.Result              as R
+import           Data.Typeable            (Typeable)
+import qualified Network.Tox.Binary       as Binary
 import           Network.Tox.Crypto.Key   (Key (..))
 import qualified Network.Tox.Crypto.Key   as Key
 import           Network.Tox.EncodingSpec
@@ -33,17 +37,25 @@ encodeDecodePublicKey key =
   Sodium.decode (Sodium.encode key) `shouldBe` Just key
 
 
+localEncodingSpec
+  :: (Typeable a, Read a, Show a, Binary a, Arbitrary a, Eq a)
+  => Proxy a -> Spec
+localEncodingSpec proxy =
+  describe (Binary.typeName proxy) $ do
+    binarySpec proxy
+    readShowSpec proxy
+
+
 spec :: Spec
 spec = do
-  -- PublicKey for both binary and human-readable.
+  -- PublicKey for RPC tests.
   rpcSpec (Proxy :: Proxy Key.PublicKey)
-  binarySpec (Proxy :: Proxy Key.PublicKey)
-  readShowSpec (Proxy :: Proxy Key.PublicKey)
 
-  -- Binary only for the others.
-  binarySpec (Proxy :: Proxy Key.SecretKey)
-  binarySpec (Proxy :: Proxy Key.CombinedKey)
-  binarySpec (Proxy :: Proxy Key.Nonce)
+  -- All others only local tests.
+  localEncodingSpec (Proxy :: Proxy Key.CombinedKey)
+  localEncodingSpec (Proxy :: Proxy Key.Nonce)
+  localEncodingSpec (Proxy :: Proxy Key.PublicKey)
+  localEncodingSpec (Proxy :: Proxy Key.SecretKey)
 
   describe "IsEncoding" $
     it "decodes encoded public keys correctly" $

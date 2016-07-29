@@ -131,7 +131,7 @@ serve port methods =
             rsrc $$++
             do obj <- sinkGet get
                case fromObject obj of
-                   Nothing -> throwM $ ServerError "invalid request"
+                   Nothing  -> throwM $ ServerError "invalid request"
                    Just req -> lift $ getResponse (req :: Request)
         _ <- CB.sourceLbs (pack res) $$ sink
         processRequests rsrc' sink

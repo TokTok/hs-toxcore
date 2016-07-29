@@ -2,13 +2,15 @@
 {-# LANGUAGE Safe          #-}
 module Data.Result where
 
-import           Control.Applicative (Applicative, pure, (<*>))
+import           Control.Applicative       (Applicative, pure, (<$>), (<*>))
+import           Test.QuickCheck.Arbitrary (Arbitrary (..))
+import qualified Test.QuickCheck.Gen       as Gen
 
 
 data Result a
   = Success a
   | Failure String
-  deriving (Functor)
+  deriving (Read, Show, Eq, Functor)
 
 
 instance Applicative Result where
@@ -24,3 +26,10 @@ instance Monad Result where
 
   Success x   >>= f = f x
   Failure msg >>= _ = Failure msg
+
+
+instance Arbitrary a => Arbitrary (Result a) where
+  arbitrary = Gen.oneof
+    [ Success <$> arbitrary
+    , Failure <$> arbitrary
+    ]
