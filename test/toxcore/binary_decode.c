@@ -1,10 +1,20 @@
 #include "methods.h"
 
+
 METHOD (bin, Binary_decode, CipherText) { return pending; }
+
+
 METHOD (bin, Binary_decode, DhtPacket) { return pending; }
+
+
 METHOD (bin, Binary_decode, HostAddress) { return pending; }
+
+
 METHOD (bin, Binary_decode, Word64) { return pending; }
+
+
 METHOD (bin, Binary_decode, Key) { return pending; }
+
 
 METHOD (bin, Binary_decode, KeyPair)
 {
@@ -24,16 +34,37 @@ METHOD (bin, Binary_decode, KeyPair)
   return 0;
 }
 
+
 METHOD (bin, Binary_decode, NodeInfo) { return pending; }
+
+
 METHOD (bin, Binary_decode, NodesRequest) { return pending; }
+
+
 METHOD (bin, Binary_decode, NodesResponse) { return pending; }
+
+
 METHOD (bin, Binary_decode, Packet) { return pending; }
+
+
 METHOD (bin, Binary_decode, PacketKind) { return pending; }
+
+
 METHOD (bin, Binary_decode, PingPacket) { return pending; }
+
+
 METHOD (bin, Binary_decode, PlainText) { return pending; }
+
+
 METHOD (bin, Binary_decode, PortNumber) { return pending; }
+
+
 METHOD (bin, Binary_decode, RpcPacket) { return pending; }
+
+
 METHOD (bin, Binary_decode, SocketAddress) { return pending; }
+
+
 METHOD (bin, Binary_decode, TransportProtocol) { return pending; }
 
 

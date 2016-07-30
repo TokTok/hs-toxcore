@@ -2,10 +2,19 @@
 
 
 METHOD (bin, Binary_encode, CipherText) { return pending; }
+
+
 METHOD (array, Binary_encode, DhtPacket) { return pending; }
+
+
 METHOD (array, Binary_encode, HostAddress) { return pending; }
+
+
 METHOD (u64, Binary_encode, Word64) { return pending; }
+
+
 METHOD (bin, Binary_encode, Key) { return pending; }
+
 
 METHOD (array, Binary_encode, KeyPair)
 {
@@ -31,15 +40,35 @@ METHOD (array, Binary_encode, KeyPair)
 }
 
 METHOD (array, Binary_encode, NodeInfo) { return pending; }
+
+
 METHOD (bin, Binary_encode, NodesRequest) { return pending; }
+
+
 METHOD (array, Binary_encode, NodesResponse) { return pending; }
+
+
 METHOD (array, Binary_encode, Packet) { return pending; }
+
+
 METHOD (u64, Binary_encode, PacketKind) { return pending; }
+
+
 METHOD (u64, Binary_encode, PingPacket) { return pending; }
+
+
 METHOD (bin, Binary_encode, PlainText) { return pending; }
+
+
 METHOD (u64, Binary_encode, PortNumber) { return pending; }
+
+
 METHOD (array, Binary_encode, RpcPacket) { return pending; }
+
+
 METHOD (array, Binary_encode, SocketAddress) { return pending; }
+
+
 METHOD (u64, Binary_encode, TransportProtocol) { return pending; }
 
 
