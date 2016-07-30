@@ -1,10 +1,25 @@
 # Test suite IDL.
 
-# builtin types: object, bin, str, uint (positive int), sint (negative int)
+# builtin types: object, bin<Size>, str<Size>, uint (positive int),
+# sint (negative int), array<Type, Size>
+#
+# bin, str, and array take optional parameters that are the exact size of the
+# object. For bin and str, the size is the number of bytes in the bin or str,
+# for array, it is the number of objects in the array.
+#
+# Arrays can have only a type, in which case the size is variable. There is
+# intentionally no support for size ranges in the IDL, because this should be
+# checked by the function under test. Exact sizes correspond to fixed size
+# arrays in C.
+#
+# Types with ? after them are nullable types. If they are not null, they are
+# represented simply as a value of that type. If they are null, they are msgpack
+# objects of type "nil".
 
-type SecretKey = bin
-type PublicKey = bin
+type SecretKey = bin<32>
+type PublicKey = bin<32>
 type PortNumber = uint
+type CombinedKey = bin<32>
 
 enum TransportProtocol {
   UDP
@@ -12,32 +27,51 @@ enum TransportProtocol {
 }
 
 message KeyPair {
-  secret_key : SecretKey
-  public_key : PublicKey
+  secret_key: SecretKey
+  public_key: PublicKey
 }
 
 enum HostAddress {
-  IPv4 : uint
-  IPv6 : uint[4]
+  IPv4: uint
+  IPv6: array<uint, 4>
 }
 
 message SocketAddress {
-  host_address : HostAddress
-  port : PortNumber
+  host_address: HostAddress
+  port: PortNumber
 }
 
 message NodeInfo {
-  protocol : TransportProtocol
-  address : SocketAddress
-  public_key : PublicKey
+  protocol: TransportProtocol
+  address: SocketAddress
+  public_key: PublicKey
 }
 
 service Binary {
-  encode (type : str, value : object) : bin
-  encode ("KeyPair", value : KeyPair) : bin
-  encode ("NodeInfo", value : NodeInfo) : bin
+  encode (type: str, value: object): bin
+  encode ("KeyPair", value: KeyPair): bin
+  encode ("NodeInfo", value: NodeInfo): bin
 
-  decode (type : str, value : bin) : object
-  decode ("KeyPair", value : bin) : KeyPair
-  decode ("NodeInfo", value : bin) : NodeInfo
+  decode (type: str, value: bin): object
+  decode ("KeyPair", value: bin): KeyPair
+  decode ("NodeInfo", value: bin): NodeInfo
+}
+
+service CombinedKey {
+  precompute (sk: SecretKey, pk: PublicKey): CombinedKey
+}
+
+service Box {
+  decrypt (key: CombinedKey, nonce: Nonce, cipher_text: bin): bin
+  encrypt (key: CombinedKey, nonce: Nonce, plain_text: bin): bin?
+}
+
+service KeyPair {
+  fromSecretKey (sk: SecretKey): KeyPair
+  newKeyPair (): KeyPair
+}
+
+service Nonce {
+  increment (nonce: Nonce): Nonce
+  newNonce (): Nonce
 }
