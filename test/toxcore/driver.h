@@ -4,8 +4,7 @@
 #include <stdint.h>
 
 // Settings for the test runner.
-struct settings
-{
+struct settings {
   // Print the msgpack object on test failure.
   bool debug;
   // Write test sample files into test/toxcore/test-inputs. These files, one per
@@ -15,7 +14,7 @@ struct settings
 
 // Main loop communicating via read/write file descriptors. The two fds can be
 // the same in case of a network socket.
-int communicate (struct settings cfg, int read_fd, int write_fd);
+int communicate(struct settings cfg, int read_fd, int write_fd);
 
 // Open a TCP socket on the given port and start communicate().
-uint32_t network_main (struct settings cfg, uint16_t port, unsigned int timeout);
+uint32_t network_main(struct settings cfg, uint16_t port, unsigned int timeout);

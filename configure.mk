@@ -34,7 +34,7 @@ endif
 ifneq ($(shell which clang_tidy),)
 CLANG_TIDY := clang_tidy
 endif
-ifneq ($(shell which clang-tidy-4.9),)
+ifneq ($(shell which clang-tidy-3.8),)
 CLANG_TIDY := clang-tidy-3.8
 endif
 CLANG_TIDY ?= nonexistent-program
