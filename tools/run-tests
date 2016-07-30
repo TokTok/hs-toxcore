@@ -19,5 +19,9 @@ unless ($server_pid = fork) {
    exec $server or die "Unable to execute $server: $!";
 }
 
-system "dist/build/testsuite/testsuite", @ARGV
-   and die "testsuite exited with code $?";
+system (
+   "dist/build/testsuite/testsuite",
+   "--print-cpu-time",
+   "--color",
+   @ARGV,
+) and die "testsuite exited with code $?";

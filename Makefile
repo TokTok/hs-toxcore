@@ -1,29 +1,9 @@
-CABAL_VER_NUM := $(shell cabal --numeric-version)
-CABAL_VER_MAJOR := $(shell echo $(CABAL_VER_NUM) | cut -f1 -d.)
-CABAL_VER_MINOR := $(shell echo $(CABAL_VER_NUM) | cut -f2 -d.)
-CABAL_GT_1_22 := $(shell [ $(CABAL_VER_MAJOR) -gt 1 -o \( $(CABAL_VER_MAJOR) -eq 1 -a $(CABAL_VER_MINOR) -ge 22 \) ] && echo true)
-
-ifeq ($(CABAL_GT_1_22),true)
-ENABLE_COVERAGE	= --enable-coverage
-DISABLE_PROFILING = --disable-profiling
-HPC_DIRS = `ls -d dist/hpc/vanilla/mix/* | sed -e 's/^/--hpcdir=/'`
-else
-ENABLE_COVERAGE = --enable-library-coverage
-DISABLE_PROFILING =
-HPC_DIRS = `ls -d dist/hpc/mix/* | sed -e 's/^/--hpcdir=/'`
-endif
+include configure.mk
 
 # Test flavour. See test/toxcore/Makefile for choices.
 TEST	:= vanilla
 
 SOURCES	:= $(shell find src test tools -name "*.*hs" -or -name "*.c" -or -name "*.h")
-
-ifneq ($(wildcard ../tox-spec/pandoc.mk),)
-ifneq ($(shell which pandoc),)
-DOCS	:= ../tox-spec/spec.md
-include ../tox-spec/pandoc.mk
-endif
-endif
 
 export LD_LIBRARY_PATH := $(HOME)/.cabal/extra-dist/lib
 
@@ -37,6 +17,14 @@ CONFIGURE_FLAGS :=		\
 	--enable-tests		\
 	$(DISABLE_PROFILING)	\
 	$(EXTRA_DIRS)
+
+CLANG_TIDY_FLAGS :=					\
+	$(wildcard test/toxcore/*.[ch])			\
+	-fix						\
+	--						\
+	-Itest/toxcore/libsodium/src/libsodium/include	\
+	-Itest/toxcore/msgpack-c/include		\
+	-Itest/toxcore/toxcore/toxcore
 
 
 all: check $(DOCS)
@@ -103,6 +91,8 @@ libsodium: .libsodium.stamp
 format: .format.stamp
 .format.stamp: $(SOURCES) .configure.stamp
 	if which stylish-haskell; then tools/format-haskell -i src; fi
+	if which $(CLANG_FORMAT); then $(CLANG_FORMAT) -i test/toxcore/*.[ch]; fi
+	if which $(CLANG_TIDY); then $(CLANG_TIDY) $(CLANG_TIDY_FLAGS); fi
 	@touch $@
 
 lint: .lint.stamp
