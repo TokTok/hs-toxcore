@@ -1,6 +1,7 @@
 #include "methods.h"
 
 #include <DHT.h>
+#include <network.h>
 
 METHOD(bin, Binary_encode, CipherText) { return pending; }
 
@@ -122,7 +123,33 @@ METHOD(array, Binary_encode, NodesResponse) { return pending; }
 
 METHOD(array, Binary_encode, Packet) { return pending; }
 
-METHOD(u64, Binary_encode, PacketKind) { return pending; }
+METHOD(u64, Binary_encode, PacketKind) {
+  CHECK(args <= UINT8_MAX);
+
+  SUCCESS {
+    uint8_t type = args;
+    if (type == NET_PACKET_PING_REQUEST || type == NET_PACKET_PING_RESPONSE ||
+        type == NET_PACKET_GET_NODES || type == NET_PACKET_SEND_NODES_IPV6 ||
+        type == NET_PACKET_COOKIE_REQUEST ||
+        type == NET_PACKET_COOKIE_RESPONSE || type == NET_PACKET_CRYPTO_HS ||
+        type == NET_PACKET_CRYPTO_DATA || type == NET_PACKET_CRYPTO ||
+        type == NET_PACKET_LAN_DISCOVERY ||
+        type == NET_PACKET_ONION_SEND_INITIAL ||
+        type == NET_PACKET_ONION_SEND_1 || type == NET_PACKET_ONION_SEND_2 ||
+        type == NET_PACKET_ANNOUNCE_REQUEST ||
+        type == NET_PACKET_ANNOUNCE_RESPONSE ||
+        type == NET_PACKET_ONION_DATA_REQUEST ||
+        type == NET_PACKET_ONION_DATA_RESPONSE ||
+        type == NET_PACKET_ONION_RECV_3 || type == NET_PACKET_ONION_RECV_2 ||
+        type == NET_PACKET_ONION_RECV_1) {
+      msgpack_pack_bin(res, 1);
+      msgpack_pack_bin_body(res, &type, 1);
+    } else {
+      msgpack_pack_nil(res);
+    }
+  }
+  return 0;
+}
 
 METHOD(u64, Binary_encode, PingPacket) { return pending; }
 
