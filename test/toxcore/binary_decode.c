@@ -13,11 +13,9 @@ METHOD(bin, Binary_decode, CipherText) {
     memcpy(&tmp, args.ptr, sizeof(uint64_t));
     length = be64toh(tmp);
 
-    if (args.size >= sizeof(uint64_t) &&
-        args.size == length + sizeof(uint64_t)) {
+    if (args.size >= sizeof(uint64_t) && args.size == length + sizeof(uint64_t)) {
       msgpack_pack_bin(res, args.size - sizeof(uint64_t));
-      msgpack_pack_bin_body(res, args.ptr + sizeof(uint64_t),
-                            args.size - sizeof(uint64_t));
+      msgpack_pack_bin_body(res, args.ptr + sizeof(uint64_t), args.size - sizeof(uint64_t));
     } else {
       msgpack_pack_nil(res);
     }
@@ -50,18 +48,15 @@ METHOD(bin, Binary_decode, KeyPair) {
 }
 
 METHOD(bin, Binary_decode, NodeInfo) {
-  uint16_t data_processed;
+  uint16_t    data_processed;
   Node_format node;
-  int len = unpack_nodes(&node, 1, &data_processed, (uint8_t const *)args.ptr,
-                         args.size, 1);
+  int len = unpack_nodes(&node, 1, &data_processed, (uint8_t const *)args.ptr, args.size, 1);
 
-  bool ip6_node =
-      node.ip_port.ip.family == AF_INET6 || node.ip_port.ip.family == TCP_INET6;
-  bool tcp =
-      node.ip_port.ip.family == TCP_INET || node.ip_port.ip.family == TCP_INET6;
+  bool ip6_node = node.ip_port.ip.family == AF_INET6 || node.ip_port.ip.family == TCP_INET6;
+  bool tcp      = node.ip_port.ip.family == TCP_INET || node.ip_port.ip.family == TCP_INET6;
 
-  uint16_t port = ntohs(node.ip_port.port);
-  uint32_t ip4 = ntohl(node.ip_port.ip.ip4.uint32);
+  uint16_t port  = ntohs(node.ip_port.port);
+  uint32_t ip4   = ntohl(node.ip_port.ip.ip4.uint32);
   uint32_t ip6_0 = ntohl(node.ip_port.ip.ip6.uint32[0]);
   uint32_t ip6_1 = ntohl(node.ip_port.ip.ip6.uint32[1]);
   uint32_t ip6_2 = ntohl(node.ip_port.ip.ip6.uint32[2]);
@@ -150,9 +145,8 @@ METHOD(array, Binary, decode) {
   CHECK_TYPE(args.ptr[1], MSGPACK_OBJECT_BIN);
 
   msgpack_object_str type = args.ptr[0].via.str;
-#define DISPATCH(TYPE)                                                         \
-  if (type.size == sizeof #TYPE - 1 &&                                         \
-      memcmp(type.ptr, #TYPE, type.size) == 0)                                 \
+#define DISPATCH(TYPE)                                                                             \
+  if (type.size == sizeof #TYPE - 1 && memcmp(type.ptr, #TYPE, type.size) == 0)                    \
   return Binary_decode_##TYPE(args.ptr[1].via.bin, res)
   DISPATCH(CipherText);
   DISPATCH(DhtPacket);

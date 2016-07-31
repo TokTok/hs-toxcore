@@ -46,8 +46,7 @@ METHOD(array, Binary_encode, KeyPair) {
   return 0;
 }
 
-#define PACKED_NODE_SIZE_IP6                                                   \
-  (1 + SIZE_IP6 + sizeof(uint16_t) + crypto_box_PUBLICKEYBYTES)
+#define PACKED_NODE_SIZE_IP6 (1 + SIZE_IP6 + sizeof(uint16_t) + crypto_box_PUBLICKEYBYTES)
 METHOD(array, Binary_encode, NodeInfo) {
   CHECK_SIZE(args, 3);
 
@@ -77,39 +76,39 @@ METHOD(array, Binary_encode, NodeInfo) {
   ipp.port = htons(port_number);
 
   switch (address_family) {
-  case 0: {
-    /* IPv4*/
-    if (protocol == 1) {
-      ipp.ip.family = TCP_INET;
-    } else {
-      ipp.ip.family = AF_INET;
+    case 0: {
+      /* IPv4*/
+      if (protocol == 1) {
+        ipp.ip.family = TCP_INET;
+      } else {
+        ipp.ip.family = AF_INET;
+      }
+
+      CHECK_TYPE(host_address.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);
+      uint64_t addr = host_address.ptr[1].via.u64;
+
+      ipp.ip.ip4.uint32 = htonl(addr);
+      break;
     }
+    case 1: {
+      /* IPv6 */
+      if (protocol == 1) {
+        ipp.ip.family = TCP_INET6;
+      } else {
+        ipp.ip.family = AF_INET6;
+      }
 
-    CHECK_TYPE(host_address.ptr[1], MSGPACK_OBJECT_POSITIVE_INTEGER);
-    uint64_t addr = host_address.ptr[1].via.u64;
+      CHECK_TYPE(host_address.ptr[1], MSGPACK_OBJECT_ARRAY);
+      msgpack_object_array addr = host_address.ptr[1].via.array;
 
-    ipp.ip.ip4.uint32 = htonl(addr);
-    break;
-  }
-  case 1: {
-    /* IPv6 */
-    if (protocol == 1) {
-      ipp.ip.family = TCP_INET6;
-    } else {
-      ipp.ip.family = AF_INET6;
+      int i;
+      for (i = 0; i < 4; ++i) {
+        CHECK_TYPE(addr.ptr[i], MSGPACK_OBJECT_POSITIVE_INTEGER);
+        uint64_t component   = addr.ptr[i].via.u64;
+        ipp.ip.ip6.uint32[i] = htonl(component);
+      }
+      break;
     }
-
-    CHECK_TYPE(host_address.ptr[1], MSGPACK_OBJECT_ARRAY);
-    msgpack_object_array addr = host_address.ptr[1].via.array;
-
-    int i;
-    for (i = 0; i < 4; ++i) {
-      CHECK_TYPE(addr.ptr[i], MSGPACK_OBJECT_POSITIVE_INTEGER);
-      uint64_t component = addr.ptr[i].via.u64;
-      ipp.ip.ip6.uint32[i] = htonl(component);
-    }
-    break;
-  }
   }
 
   Node_format node;
@@ -176,13 +175,12 @@ METHOD(array, Binary, encode) {
   CHECK_TYPE(args.ptr[0], MSGPACK_OBJECT_STR);
 
   msgpack_object_str type = args.ptr[0].via.str;
-#define DISPATCH(TYPE, UTYPE, LTYPE)                                           \
-  do {                                                                         \
-    if (type.size == sizeof #TYPE - 1 &&                                       \
-        memcmp(type.ptr, #TYPE, type.size) == 0) {                             \
-      CHECK_TYPE(args.ptr[1], MSGPACK_OBJECT_##UTYPE);                         \
-      return Binary_encode_##TYPE(args.ptr[1].via.LTYPE, res);                 \
-    }                                                                          \
+#define DISPATCH(TYPE, UTYPE, LTYPE)                                                               \
+  do {                                                                                             \
+    if (type.size == sizeof #TYPE - 1 && memcmp(type.ptr, #TYPE, type.size) == 0) {                \
+      CHECK_TYPE(args.ptr[1], MSGPACK_OBJECT_##UTYPE);                                             \
+      return Binary_encode_##TYPE(args.ptr[1].via.LTYPE, res);                                     \
+    }                                                                                              \
   } while (0)
   DISPATCH(CipherText, BIN, bin);
   DISPATCH(DhtPacket, ARRAY, array);

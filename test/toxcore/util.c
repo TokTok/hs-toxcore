@@ -4,26 +4,16 @@
 
 char const *type_name(msgpack_object_type type) {
   switch (type) {
-  case MSGPACK_OBJECT_NIL:
-    return "nil";
-  case MSGPACK_OBJECT_BOOLEAN:
-    return "boolean";
-  case MSGPACK_OBJECT_POSITIVE_INTEGER:
-    return "positive_integer";
-  case MSGPACK_OBJECT_NEGATIVE_INTEGER:
-    return "negative_integer";
-  case MSGPACK_OBJECT_FLOAT:
-    return "float";
-  case MSGPACK_OBJECT_STR:
-    return "str";
-  case MSGPACK_OBJECT_ARRAY:
-    return "array";
-  case MSGPACK_OBJECT_MAP:
-    return "map";
-  case MSGPACK_OBJECT_BIN:
-    return "bin";
-  case MSGPACK_OBJECT_EXT:
-    return "ext";
+    case MSGPACK_OBJECT_NIL: return "nil";
+    case MSGPACK_OBJECT_BOOLEAN: return "boolean";
+    case MSGPACK_OBJECT_POSITIVE_INTEGER: return "positive_integer";
+    case MSGPACK_OBJECT_NEGATIVE_INTEGER: return "negative_integer";
+    case MSGPACK_OBJECT_FLOAT: return "float";
+    case MSGPACK_OBJECT_STR: return "str";
+    case MSGPACK_OBJECT_ARRAY: return "array";
+    case MSGPACK_OBJECT_MAP: return "map";
+    case MSGPACK_OBJECT_BIN: return "bin";
+    case MSGPACK_OBJECT_EXT: return "ext";
   }
   return "<unknown type>";
 }

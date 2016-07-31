@@ -44,8 +44,8 @@ static int protocol_error(msgpack_packer *pk, char const *fmt, ...) {
 static bool type_check(msgpack_packer *pk, msgpack_object req, int index,
                        msgpack_object_type type) {
   if (req.via.array.ptr[index].type != type) {
-    protocol_error(pk, "element %d should be %s, but is %s", index,
-                   type_name(type), type_name(req.via.array.ptr[index].type));
+    protocol_error(pk, "element %d should be %s, but is %s", index, type_name(type),
+                   type_name(req.via.array.ptr[index].type));
     return false;
   }
   return true;
@@ -54,10 +54,9 @@ static bool type_check(msgpack_packer *pk, msgpack_object req, int index,
 static int write_sample_input(msgpack_object req) {
   static unsigned int n;
 
-  char filename[256];
+  char               filename[256];
   msgpack_object_str name = req.via.array.ptr[2].via.str;
-  snprintf(filename, sizeof filename - name.size,
-           "test/toxcore/test-inputs/%04u-", n++);
+  snprintf(filename, sizeof filename - name.size, "test/toxcore/test-inputs/%04u-", n++);
 
   assert(sizeof filename - strlen(filename) > name.size + 4);
   memcpy(filename + strlen(filename) + name.size, ".mp", 4);
@@ -83,21 +82,17 @@ static int write_sample_input(msgpack_object req) {
   return E_OK;
 }
 
-static int handle_request(struct settings cfg, int write_fd,
-                          msgpack_object req) {
-  msgpack_sbuffer sbuf
-      __attribute__((__cleanup__(msgpack_sbuffer_destroy))); /* buffer */
+static int handle_request(struct settings cfg, int write_fd, msgpack_object req) {
+  msgpack_sbuffer sbuf __attribute__((__cleanup__(msgpack_sbuffer_destroy))); /* buffer */
   msgpack_sbuffer_init(&sbuf); /* initialize buffer */
 
-  msgpack_packer pk; /* packer */
-  msgpack_packer_init(&pk, &sbuf,
-                      msgpack_sbuffer_write); /* initialize packer */
+  msgpack_packer pk;                                      /* packer */
+  msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write); /* initialize packer */
 
   if (req.type != MSGPACK_OBJECT_ARRAY)
     protocol_error(&pk, "expected array, but got %s", type_name(req.type));
   else if (req.via.array.size != 4)
-    protocol_error(&pk, "array length should be 4, but is %d",
-                   req.via.array.size);
+    protocol_error(&pk, "array length should be 4, but is %d", req.via.array.size);
   else if (type_check(&pk, req, 0, MSGPACK_OBJECT_POSITIVE_INTEGER) &&
            type_check(&pk, req, 1, MSGPACK_OBJECT_POSITIVE_INTEGER) &&
            type_check(&pk, req, 2, MSGPACK_OBJECT_STR) &&
@@ -105,13 +100,13 @@ static int handle_request(struct settings cfg, int write_fd,
     if (cfg.collect_samples)
       propagate(write_sample_input(req));
 
-    msgpack_pack_array(&pk, 4); // 4 elements in the array
-    msgpack_pack_uint8(&pk, 1); // 1. type = response
+    msgpack_pack_array(&pk, 4);                             // 4 elements in the array
+    msgpack_pack_uint8(&pk, 1);                             // 1. type = response
     msgpack_pack_uint64(&pk, req.via.array.ptr[1].via.u64); // 2. msgid
 
     // if error is null, this writes 3. no error, and 4. result
-    char const *error = call_method(req.via.array.ptr[2].via.str,
-                                    req.via.array.ptr[3].via.array, &pk);
+    char const *error =
+        call_method(req.via.array.ptr[2].via.str, req.via.array.ptr[3].via.array, &pk);
     if (error) {
       if (cfg.debug) {
         printf("Error '%s' in request: ", error);
@@ -134,7 +129,7 @@ int communicate(struct settings cfg, int read_fd, int write_fd) {
 
   while (true) {
     char buf[64];
-    int size = check_return(E_READ, read(read_fd, buf, sizeof buf));
+    int  size = check_return(E_READ, read(read_fd, buf, sizeof buf));
     if (size == 0)
       break;
 
@@ -148,18 +143,11 @@ int communicate(struct settings cfg, int read_fd, int write_fd) {
     msgpack_unpacked req __attribute__((__cleanup__(msgpack_unpacked_destroy)));
     msgpack_unpacked_init(&req);
     switch (msgpack_unpacker_next(&unp, &req)) {
-    case MSGPACK_UNPACK_SUCCESS:
-      propagate(handle_request(cfg, write_fd, req.data));
-      break;
-    case MSGPACK_UNPACK_EXTRA_BYTES:
-      printf("EXTRA_BYTES\n");
-      break;
-    case MSGPACK_UNPACK_CONTINUE:
-      break;
-    case MSGPACK_UNPACK_PARSE_ERROR:
-      return E_PARSE;
-    case MSGPACK_UNPACK_NOMEM_ERROR:
-      return E_NOMEM;
+      case MSGPACK_UNPACK_SUCCESS: propagate(handle_request(cfg, write_fd, req.data)); break;
+      case MSGPACK_UNPACK_EXTRA_BYTES: printf("EXTRA_BYTES\n"); break;
+      case MSGPACK_UNPACK_CONTINUE: break;
+      case MSGPACK_UNPACK_PARSE_ERROR: return E_PARSE;
+      case MSGPACK_UNPACK_NOMEM_ERROR: return E_NOMEM;
     }
   }
 
@@ -171,16 +159,14 @@ static int closep(int *fd) { return close(*fd); }
 static int run_tests(struct settings cfg, int port) {
   int listen_fd __attribute__((__cleanup__(closep))) = 0;
   listen_fd = check_return(E_SOCKET, socket(AF_INET, SOCK_STREAM, 0));
-  check_return(E_SOCKET, setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR,
-                                    &(int){1}, sizeof(int)));
+  check_return(E_SOCKET, setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)));
 
   struct sockaddr_in servaddr;
-  servaddr.sin_family = AF_INET;
+  servaddr.sin_family      = AF_INET;
   servaddr.sin_addr.s_addr = htons(INADDR_ANY);
-  servaddr.sin_port = htons(port);
+  servaddr.sin_port        = htons(port);
 
-  check_return(E_BIND,
-               bind(listen_fd, (struct sockaddr *)&servaddr, sizeof servaddr));
+  check_return(E_BIND, bind(listen_fd, (struct sockaddr *)&servaddr, sizeof servaddr));
   check_return(E_LISTEN, listen(listen_fd, 10));
 
   while (true) {
@@ -192,8 +178,7 @@ static int run_tests(struct settings cfg, int port) {
   return E_OK;
 }
 
-uint32_t network_main(struct settings cfg, uint16_t port,
-                      unsigned int timeout) {
+uint32_t network_main(struct settings cfg, uint16_t port, unsigned int timeout) {
   signal(SIGALRM, handle_interrupt);
   signal(SIGINT, handle_interrupt);
   check_return(E_SODIUM, sodium_init());

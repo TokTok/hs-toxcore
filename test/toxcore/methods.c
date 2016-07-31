@@ -5,8 +5,8 @@
 #include <crypto_core.h>
 #include <net_crypto.h>
 
-char const *const failure = "Failure";
-char const *const pending = "Pending";
+char const *const failure       = "Failure";
+char const *const pending       = "Pending";
 char const *const unimplemented = "Unimplemented";
 
 METHOD(array, Box, encrypt) { return pending; }
@@ -38,7 +38,7 @@ METHOD(array, KeyPair, fromSecretKey) {
   CHECK_SIZE(args.ptr[0].via.bin, crypto_box_SECRETKEYBYTES);
 
   Net_Crypto c;
-  uint8_t secret_key[crypto_box_SECRETKEYBYTES];
+  uint8_t    secret_key[crypto_box_SECRETKEYBYTES];
   memcpy(secret_key, args.ptr[0].via.bin.ptr, crypto_box_SECRETKEYBYTES);
   load_secret_key(&c, secret_key);
 
@@ -82,11 +82,10 @@ METHOD(array, Nonce, increment) {
   return 0;
 }
 
-char const *call_method(msgpack_object_str name, msgpack_object_array args,
-                        msgpack_packer *res) {
-#define DISPATCH(SERVICE, NAME)                                                \
-  if (name.size == sizeof #SERVICE "." #NAME - 1 &&                            \
-      memcmp(name.ptr, #SERVICE "." #NAME, name.size) == 0)                    \
+char const *call_method(msgpack_object_str name, msgpack_object_array args, msgpack_packer *res) {
+#define DISPATCH(SERVICE, NAME)                                                                    \
+  if (name.size == sizeof #SERVICE "." #NAME - 1 &&                                                \
+      memcmp(name.ptr, #SERVICE "." #NAME, name.size) == 0)                                        \
   return SERVICE##_##NAME(args, res)
   DISPATCH(Binary, decode);
   DISPATCH(Binary, encode);
