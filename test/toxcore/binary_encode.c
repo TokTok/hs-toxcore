@@ -149,7 +149,18 @@ METHOD(u64, Binary_encode, PingPacket) { return pending; }
 
 METHOD(bin, Binary_encode, PlainText) { return pending; }
 
-METHOD(u64, Binary_encode, PortNumber) { return pending; }
+METHOD(u64, Binary_encode, PortNumber) {
+  SUCCESS {
+    if (args <= UINT16_MAX) {
+      uint16_t port = ntohs(args);
+      msgpack_pack_bin(res, 2);
+      msgpack_pack_bin_body(res, &port, 2);
+    } else {
+      msgpack_pack_nil(res);
+    }
+  }
+  return 0;
+}
 
 METHOD(array, Binary_encode, RpcPacket) { return pending; }
 
