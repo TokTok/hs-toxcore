@@ -1,6 +1,7 @@
 #include "methods.h"
 
 #include <DHT.h>
+#include <network.h>
 
 METHOD(bin, Binary_decode, CipherText) {
   uint64_t size = args.size;
@@ -97,7 +98,38 @@ METHOD(bin, Binary_decode, NodesResponse) { return pending; }
 
 METHOD(bin, Binary_decode, Packet) { return pending; }
 
-METHOD(bin, Binary_decode, PacketKind) { return pending; }
+/* Only used for bootstrap nodes */
+#define BOOTSTRAP_INFO_PACKET_ID 240
+
+METHOD(bin, Binary_decode, PacketKind) {
+
+  SUCCESS {
+    if (args.size == 1) {
+      uint8_t type = *args.ptr;
+      if (type == NET_PACKET_PING_REQUEST || type == NET_PACKET_PING_RESPONSE ||
+          type == NET_PACKET_GET_NODES || type == NET_PACKET_SEND_NODES_IPV6 ||
+          type == NET_PACKET_COOKIE_REQUEST ||
+          type == NET_PACKET_COOKIE_RESPONSE || type == NET_PACKET_CRYPTO_HS ||
+          type == NET_PACKET_CRYPTO_DATA || type == NET_PACKET_CRYPTO ||
+          type == NET_PACKET_LAN_DISCOVERY ||
+          type == NET_PACKET_ONION_SEND_INITIAL ||
+          type == NET_PACKET_ONION_SEND_1 || type == NET_PACKET_ONION_SEND_2 ||
+          type == NET_PACKET_ANNOUNCE_REQUEST ||
+          type == NET_PACKET_ANNOUNCE_RESPONSE ||
+          type == NET_PACKET_ONION_DATA_REQUEST ||
+          type == NET_PACKET_ONION_DATA_RESPONSE ||
+          type == NET_PACKET_ONION_RECV_3 || type == NET_PACKET_ONION_RECV_2 ||
+          type == NET_PACKET_ONION_RECV_1) {
+        msgpack_pack_uint8(res, type);
+      } else {
+        msgpack_pack_nil(res);
+      }
+    } else {
+      msgpack_pack_nil(res);
+    }
+  }
+  return 0;
+}
 
 METHOD(bin, Binary_decode, PingPacket) { return pending; }
 
