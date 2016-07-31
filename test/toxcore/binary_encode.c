@@ -1,5 +1,8 @@
 #include "methods.h"
 
+#include "byteswap.h"
+#include "packet_kinds.h"
+
 #include <DHT.h>
 
 METHOD(bin, Binary_encode, CipherText) {
@@ -113,8 +116,8 @@ METHOD(array, Binary_encode, NodeInfo) {
   node.ip_port = ipp;
   memcpy(&node.public_key, public_key.ptr, crypto_box_PUBLICKEYBYTES);
 
-  uint8_t
-      packed_node[PACKED_NODE_SIZE_IP6]; /* We assume IP6 because it's bigger */
+  /* We assume IP6 because it's bigger */
+  uint8_t packed_node[PACKED_NODE_SIZE_IP6];
 
   int len = pack_nodes(packed_node, sizeof packed_node, &node, 1);
 
@@ -131,7 +134,16 @@ METHOD(array, Binary_encode, NodesResponse) { return pending; }
 
 METHOD(array, Binary_encode, Packet) { return pending; }
 
-METHOD(u64, Binary_encode, PacketKind) { return pending; }
+METHOD(u64, Binary_encode, PacketKind) {
+  CHECK(args < sizeof packet_kinds / sizeof *packet_kinds);
+
+  SUCCESS {
+    uint8_t data[] = {packet_kinds[args]};
+    msgpack_pack_bin(res, sizeof data);
+    msgpack_pack_bin_body(res, data, sizeof data);
+  }
+  return 0;
+}
 
 METHOD(u64, Binary_encode, PingPacket) { return pending; }
 

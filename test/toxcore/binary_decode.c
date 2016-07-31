@@ -1,5 +1,8 @@
 #include "methods.h"
 
+#include "byteswap.h"
+#include "packet_kinds.h"
+
 #include <DHT.h>
 
 METHOD(bin, Binary_decode, CipherText) {
@@ -97,7 +100,24 @@ METHOD(bin, Binary_decode, NodesResponse) { return pending; }
 
 METHOD(bin, Binary_decode, Packet) { return pending; }
 
-METHOD(bin, Binary_decode, PacketKind) { return pending; }
+METHOD(bin, Binary_decode, PacketKind) {
+  SUCCESS {
+    if (args.size != 1) {
+      msgpack_pack_nil(res);
+    } else {
+      uint8_t kind = args.ptr[0];
+      for (size_t i = 0; i < sizeof packet_kinds / sizeof *packet_kinds; i++) {
+        if (packet_kinds[i] == kind) {
+          msgpack_pack_fix_uint8(res, i);
+          return 0;
+        }
+      }
+      // Packet kind not found => error.
+      msgpack_pack_nil(res);
+    }
+  }
+  return 0;
+}
 
 METHOD(bin, Binary_decode, PingPacket) { return pending; }
 
