@@ -5,6 +5,7 @@
 #include <crypto_core.h>
 #include <net_crypto.h>
 
+char const *const failure = "Failure";
 char const *const pending = "Pending";
 char const *const unimplemented = "Unimplemented";
 

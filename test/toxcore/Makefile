@@ -1,6 +1,10 @@
+# Don't bind to a CPU core. afl-fuzz doesn't release them again.
+export AFL_NO_AFFINITY := 1
+
 CFLAGS	:=					\
 	-std=gnu99				\
 	-Wall					\
+	-g3					\
 	-DCONFIGURED=1				\
 	-Imsgpack-c/include			\
 	-Itoxcore/toxcore			\
@@ -87,7 +91,7 @@ test-findings: /Volumes/RAM\ Disk
 else
 test-findings: /dev/shm
 	mkdir -p "$</$@"
-	ln -sf "$</$@" $@
+	test -d $@ || ln -sf "$</$@" $@
 endif
 
 clean:

@@ -44,5 +44,6 @@ METHOD(array, Binary, encode);
 char const *call_method(msgpack_object_str name, msgpack_object_array args,
                         msgpack_packer *res);
 
+extern char const *const failure;
 extern char const *const pending;
 extern char const *const unimplemented;

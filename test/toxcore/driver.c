@@ -52,10 +52,16 @@ static bool type_check(msgpack_packer *pk, msgpack_object req, int index,
 }
 
 static int write_sample_input(msgpack_object req) {
+  static unsigned int n;
+
+  char filename[256];
   msgpack_object_str name = req.via.array.ptr[2].via.str;
-  char filename[128] = "test/toxcore/test-inputs/";
-  memcpy(filename + strlen(filename), name.ptr, name.size);
+  snprintf(filename, sizeof filename - name.size,
+           "test/toxcore/test-inputs/%04u-", n++);
+
+  assert(sizeof filename - strlen(filename) > name.size + 4);
   memcpy(filename + strlen(filename) + name.size, ".mp", 4);
+  memcpy(filename + strlen(filename), name.ptr, name.size);
 
   int fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
   if (fd < 0)

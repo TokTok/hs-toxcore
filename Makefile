@@ -29,6 +29,14 @@ CLANG_TIDY_FLAGS :=					\
 
 all: check $(DOCS)
 
+fuzz: .build.stamp
+	@echo "Cleaning up previous results"
+	@$(MAKE) -C test/toxcore clean
+	@echo "Generating initial test inputs"
+	@rm -f test/toxcore/test-inputs/*
+	@tools/run-tests toxcore --qc-max-success=1 --format=silent
+	@$(MAKE) -C test/toxcore master
+
 check: dist/hpc/tix/hstox/hstox.tix
 	hpc markup $(HPC_DIRS) --destdir=dist/hpc/html $< > /dev/null
 	hpc report $(HPC_DIRS) $<
