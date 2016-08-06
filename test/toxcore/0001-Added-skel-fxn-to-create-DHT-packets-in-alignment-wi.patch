@@ -1,0 +1,45 @@
+From 56f2b5d1a46f3df62cdb6a20b2d798b19ccb263f Mon Sep 17 00:00:00 2001
+From: "Gregory Mullen (grayhatter)" <greg@grayhatter.com>
+Date: Sat, 6 Aug 2016 00:01:16 -0700
+Subject: [PATCH] Added skel fxn to create DHT packets in alignment with the
+ spec
+
+---
+ toxcore/DHT.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/toxcore/DHT.c b/toxcore/DHT.c
+index 6d9479a..8a3ca71 100644
+--- a/toxcore/DHT.c
++++ b/toxcore/DHT.c
+@@ -198,6 +198,27 @@ int to_host_family(IP *ip)
+     }
+ }
+ 
++int write_dht_packet(uint8_t *target, uint16_t target_size, const uint8_t pkt_type,
++                     const uint8_t pub_key[crypto_box_PUBLICKEYBYTES],
++                     const uint8_t nonce[crypto_box_NONCEBYTES], const uint8_t *data,
++                     const uint16_t data_size) {
++  if (!target) {
++    return -1;
++  }
++
++  if (target_size - 1 - crypto_box_PUBLICKEYBYTES - crypto_box_NONCEBYTES < data_size) {
++    return -2;
++  }
++
++  target[0] = pkt_type;
++  memcpy(target + 1, pub_key, crypto_box_PUBLICKEYBYTES);
++  memcpy(target + 1 + crypto_box_PUBLICKEYBYTES, nonce, crypto_box_NONCEBYTES);
++  memcpy(target + 1 + crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES, data, data_size);
++
++  return 1 + crypto_box_PUBLICKEYBYTES + crypto_box_NONCEBYTES + data_size;
++}
++
++
+ #define PACKED_NODE_SIZE_IP4 (1 + SIZE_IP4 + sizeof(uint16_t) + crypto_box_PUBLICKEYBYTES)
+ #define PACKED_NODE_SIZE_IP6 (1 + SIZE_IP6 + sizeof(uint16_t) + crypto_box_PUBLICKEYBYTES)
+ 
+-- 
+2.9.2
+
