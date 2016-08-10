@@ -50,6 +50,10 @@ instance Binary KeyPair
 instance MessagePack KeyPair
 
 
+toTuple :: KeyPair -> (Key.SecretKey, Key.PublicKey)
+toTuple KeyPair { secretKey, publicKey } = (secretKey, publicKey)
+
+
 newKeyPair :: IO KeyPair
 newKeyPair = do
   (sk, pk) <- Sodium.newKeypair
