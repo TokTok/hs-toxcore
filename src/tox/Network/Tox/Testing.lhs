@@ -10,7 +10,7 @@ correct.
 \begin{code}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE Safe       #-}
-module Main (main) where
+module Network.Tox.Testing (serve) where
 
 import           Control.Applicative            ((<$>))
 import           System.Environment             (getArgs)
@@ -39,8 +39,8 @@ services =
   ]
 
 
-main :: IO ()
-main = map readMaybe <$> getArgs >>= \case
+serve :: IO ()
+serve = map readMaybe <$> getArgs >>= \case
     [Just port] -> RPC.runServer port            services
     _           -> RPC.runServer RPC.defaultPort services
 \end{code}
