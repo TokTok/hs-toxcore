@@ -25,12 +25,14 @@ library
   hs-source-dirs:
       src/msgpack
     , src/tox
+    , src/testsuite
   ghc-options:
       -Wall
       -fno-warn-unused-imports
   build-depends:
       base < 5
     , QuickCheck >= 2.9.1
+    , async
     , base16-bytestring
     , binary
     , binary-bits
@@ -43,6 +45,7 @@ library
     , deepseq
     , exceptions
     , hashable
+    , hspec
     , integer-gmp
     , iproute
     , monad-control
@@ -62,6 +65,39 @@ library
       Data.MessagePack.Get
       Data.MessagePack.Object
       Data.MessagePack.Put
+  other-modules:
+      Data.MessagePack.AssocSpec
+      Data.MessagePackSpec
+      Data.ResultSpec
+      Network.MessagePack.ServerSpec
+      Network.Tox.BinarySpec
+      Network.Tox.Crypto.BoxSpec
+      Network.Tox.Crypto.CombinedKeySpec
+      Network.Tox.Crypto.KeyPairSpec
+      Network.Tox.Crypto.KeySpec
+      Network.Tox.Crypto.NonceSpec
+      Network.Tox.CryptoSpec
+      Network.Tox.DHT.DhtPacketSpec
+      Network.Tox.DHT.DhtStateSpec
+      Network.Tox.DHT.DistanceSpec
+      Network.Tox.DHT.KBucketsSpec
+      Network.Tox.DHT.NodesRequestSpec
+      Network.Tox.DHT.NodesResponseSpec
+      Network.Tox.DHT.PingPacketSpec
+      Network.Tox.DHT.RpcPacketSpec
+      Network.Tox.DHTSpec
+      Network.Tox.EncodingSpec
+      Network.Tox.NodeInfo.HostAddressSpec
+      Network.Tox.NodeInfo.NodeInfoSpec
+      Network.Tox.NodeInfo.PortNumberSpec
+      Network.Tox.NodeInfo.SocketAddressSpec
+      Network.Tox.NodeInfoSpec
+      Network.Tox.NodeInfo.TransportProtocolSpec
+      Network.Tox.Protocol.PacketKindSpec
+      Network.Tox.Protocol.PacketSpec
+      Network.Tox.ProtocolSpec
+      Network.Tox.RPCTest
+      Network.ToxSpec
   exposed-modules:
       Data.MessagePack
       Data.Result
@@ -95,57 +131,13 @@ library
       Network.Tox.Protocol.Packet
       Network.Tox.Protocol.PacketKind
       Network.Tox.RPC
-
-executable testsuite
-  default-language: Haskell2010
-  hs-source-dirs:
-      src/testsuite
-  ghc-options:
-      -Wall
-      -fno-warn-unused-imports
-  build-depends:
-      base < 5
-    , QuickCheck
-    , async
-    , base16-bytestring
-    , binary
-    , binary-bits
-    , bytestring
-    , containers
-    , hashable
-    , hspec
-    , hstox
-    , mtl
-    , network
-    , saltine
-    , tagged
-    , text
-    , transformers
-    , unordered-containers
-  main-is:
-      TestSuite.hs
-  if flag(library-only)
-    buildable: False
-
-executable test-hstox
-  default-language: Haskell2010
-  hs-source-dirs:
-      test/hstox
-  ghc-options:
-      -Wall
-      -fno-warn-unused-imports
-  build-depends:
-      base < 5
-    , hstox
-  main-is:
-      TestServer.lhs
-  if flag(library-only)
-    buildable: False
+      Network.Tox.Testing
+      TestSuite
 
 executable msgpack-parser
   default-language: Haskell2010
   hs-source-dirs:
-      tools/MessagePackParser
+      tools
   ghc-options:
       -Wall
       -fno-warn-unused-imports
@@ -154,7 +146,34 @@ executable msgpack-parser
     , bytestring
     , groom
     , hstox
-  main-is:
-      MessagePackParser.hs
+  main-is: msgpack-parser.hs
   if flag(library-only)
     buildable: False
+
+test-suite test-hstox
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+      test
+  ghc-options:
+      -Wall
+      -fno-warn-unused-imports
+  build-depends:
+      base < 5
+    , async
+    , hstox
+  main-is: test-hstox.hs
+
+test-suite test-toxcore
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+      test
+  ghc-options:
+      -Wall
+      -fno-warn-unused-imports
+  build-depends:
+      base < 5
+    , hstox
+    , process
+  main-is: test-toxcore.hs

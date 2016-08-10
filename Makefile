@@ -12,7 +12,6 @@ EXTRA_DIRS :=							\
 	--extra-lib-dirs=$(HOME)/.cabal/extra-dist/lib
 
 CONFIGURE_FLAGS :=		\
-	-fasan			\
 	--enable-benchmarks	\
 	--enable-tests		\
 	$(DISABLE_PROFILING)	\
@@ -26,6 +25,10 @@ CLANG_TIDY_FLAGS :=					\
 	-Itest/toxcore/msgpack-c/include		\
 	-Itest/toxcore/toxcore/toxcore
 
+CLANG_FORMAT_FLAGS :=	\
+	-style=file	\
+	-i
+
 
 all: check $(DOCS)
 
@@ -34,19 +37,17 @@ fuzz: .build.stamp
 	@$(MAKE) -C test/toxcore clean
 	@echo "Generating initial test inputs"
 	@rm -f test/toxcore/test-inputs/*
-	@tools/run-tests toxcore --qc-max-success=1 --format=silent
+	@dist/build/test-toxcore/test-toxcore --qc-max-success=1 --format=silent
 	@$(MAKE) -C test/toxcore master
 
 check: dist/hpc/tix/hstox/hstox.tix
 	hpc markup $(HPC_DIRS) --destdir=dist/hpc/html $< > /dev/null
 	hpc report $(HPC_DIRS) $<
 
-dist/hpc/tix/hstox/hstox.tix: check-hstox check-toxcore
+dist/hpc/tix/hstox/hstox.tix: .build.stamp
+	cabal test --jobs=$(PROCS) | grep -v '^Writing: '
 	mkdir -p $(@D)
-	hpc sum --exclude=Main --union *.tix --output=$@
-
-check-%: .build.stamp
-	tools/run-tests $*
+	hpc sum --exclude=Main --union `find dist -name "*.tix" -and -not -wholename "*$@"` --output=$@
 
 repl:
 	rm -f .configure.stamp
@@ -59,12 +60,12 @@ clean:
 
 
 build: .build.stamp
-.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp dist/build/test-toxcore/test-toxcore
+.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp dist/build/sut-toxcore/sut-toxcore
 	rm -f $(wildcard *.tix)
-	cabal build
+	cabal build --jobs=$(PROCS)
 	@touch $@
 
-dist/build/test-toxcore/test-toxcore: test/toxcore/test_main-$(TEST)
+dist/build/sut-toxcore/sut-toxcore: test/toxcore/test_main-$(TEST)
 	mkdir -p $(@D)
 	cp $< $@
 
@@ -72,9 +73,9 @@ test/toxcore/test_main-$(TEST): $(shell find test/toxcore -name "*.[ch]") test/t
 	make -C $(@D) $(@F)
 
 configure: .configure.stamp
-.configure.stamp: .libsodium.stamp
+.configure.stamp: .libsodium.stamp hstox.cabal
 	cabal update
-	cabal install $(CONFIGURE_FLAGS) --only-dependencies hstox.cabal
+	cabal install $(CONFIGURE_FLAGS) --only-dependencies --jobs=$(PROCS)
 	cabal configure $(CONFIGURE_FLAGS) $(ENABLE_COVERAGE)
 	@touch $@
 
@@ -99,7 +100,7 @@ libsodium: .libsodium.stamp
 format: .format.stamp
 .format.stamp: $(SOURCES) .configure.stamp
 	if which stylish-haskell; then tools/format-haskell -i src; fi
-	if which $(CLANG_FORMAT); then $(CLANG_FORMAT) -i test/toxcore/*.[ch]; fi
+	if which $(CLANG_FORMAT); then $(CLANG_FORMAT) $(CLANG_FORMAT_FLAGS) test/toxcore/*.[ch]; fi
 	if which $(CLANG_TIDY); then $(CLANG_TIDY) $(CLANG_TIDY_FLAGS); fi
 	@touch $@
 

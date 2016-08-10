@@ -38,3 +38,9 @@ ifneq ($(shell which clang-tidy-3.8),)
 CLANG_TIDY := clang-tidy-3.8
 endif
 CLANG_TIDY ?= nonexistent-program
+
+ifneq ($(shell which nproc),)
+PROCS	:= $(shell nproc)
+else
+PROCS	:= $(shell sysctl -n hw.ncpu)
+endif
