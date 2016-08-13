@@ -37,7 +37,7 @@ fuzz: .build.stamp
 	@tools/run-tests toxcore --qc-max-success=1 --format=silent
 	@$(MAKE) -C test/toxcore master
 
-check: dist/hpc/tix/hstox/hstox.tix
+check: dist/hpc/tix/hstox/hstox.tix .format.stamp
 	hpc markup $(HPC_DIRS) --destdir=dist/hpc/html $< > /dev/null
 	hpc report $(HPC_DIRS) $<
 
@@ -59,7 +59,7 @@ clean:
 
 
 build: .build.stamp
-.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp dist/build/test-toxcore/test-toxcore
+.build.stamp: $(SOURCES) .configure.stamp .lint.stamp dist/build/test-toxcore/test-toxcore
 	rm -f $(wildcard *.tix)
 	cabal build
 	@touch $@

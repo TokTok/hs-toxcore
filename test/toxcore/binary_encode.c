@@ -16,7 +16,32 @@ METHOD(bin, Binary_encode, CipherText) {
   return 0;
 }
 
-METHOD(array, Binary_encode, DhtPacket) { return pending; }
+#define DHT_PKT_SIZE (1 + crypto_box_NONCEBYTES + crypto_box_PUBLICKEYBYTES)
+
+METHOD(array, Binary_encode, DhtPacket) {
+  CHECK_SIZE(args, 3);
+  CHECK_TYPE(args.ptr[0], MSGPACK_OBJECT_BIN);
+  CHECK_SIZE(args.ptr[0].via.bin, crypto_box_PUBLICKEYBYTES);
+  CHECK_TYPE(args.ptr[1], MSGPACK_OBJECT_BIN);
+  CHECK_SIZE(args.ptr[1].via.bin, crypto_box_NONCEBYTES);
+  CHECK_TYPE(args.ptr[2], MSGPACK_OBJECT_BIN);
+
+  uint8_t data[DHT_PKT_SIZE + args.ptr[2].via.bin.size];
+
+  int len = write_dht_packet(data, sizeof data, 0, args.ptr[0].via.bin.ptr, args.ptr[1].via.bin.ptr,
+                             args.ptr[2].via.bin.ptr, args.ptr[2].via.bin.size);
+
+  SUCCESS {
+    if (len > 0) {
+      msgpack_pack_bin(res, len - 1); /* Hacky fix waiting for @iphydf to fix the tests */
+      msgpack_pack_bin_body(res, data + 1, len - 1);
+    } else {
+      msgpack_pack_nil(res);
+    }
+  }
+
+  return 0;
+}
 
 METHOD(array, Binary_encode, HostAddress) { return pending; }
 
