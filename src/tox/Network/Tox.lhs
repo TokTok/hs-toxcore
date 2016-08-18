@@ -3482,4 +3482,4 @@ means that the integers stored in these nodes are stored in Big Endian as well.
 This section indicates the end of the state file. This section doesn't have any
 content and thus it's length is 0.
 
-\input{test/hstox/TestServer.lhs}
+\input{src/tox/Network/Tox/Testing.lhs}

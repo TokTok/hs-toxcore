@@ -5,23 +5,27 @@ use strict;
 use IO::Socket::INET;
 
 
-my $SUT = shift @ARGV or die "Usage: run-tests <server|toxcore> [args...]\n";
-my $server = "dist/build/test-$SUT/test-$SUT";
+my $SUT = shift @ARGV or die "Usage: run-tests <hstox|toxcore> [args...]\n";
+my $server = "dist/build/sut-$SUT/sut-$SUT";
 
-my @valid_suts = map { m|/([^/]*)| } <test/*>;
+my @valid_suts = map { m|/sut-([^/]*)| } <dist/build/sut-*>;
 die "$SUT is not a valid SUT. Choose one of [@valid_suts]\n" unless -f $server;
 
+my $client_pid = $$;
 my $server_pid;
 $SIG{INT} = sub { kill 2, $server_pid };
 END { $server_pid and kill 2, $server_pid }
 unless ($server_pid = fork) {
-   my $server = "dist/build/test-$SUT/test-$SUT";
-   exec $server or die "Unable to execute $server: $!";
+   my $server = "dist/build/sut-$SUT/sut-$SUT";
+   exec $server;
+   kill 15, $client_pid;
+   die "Unable to execute $server: $!";
 }
 
-system (
+exec (
    "dist/build/testsuite/testsuite",
    "--print-cpu-time",
    "--color",
    @ARGV,
-) and die "testsuite exited with code $?";
+);
+die "Unable to execute testsuite: $!";
