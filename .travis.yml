@@ -1,5 +1,13 @@
-language: haskell
-ghc: 7.8
+language: generic
+
+matrix:
+  include:
+    - env: JOB=hstox ENV=linux
+      language: haskell
+      ghc: 7.8
+    - env: JOB=hstox ENV=android
+      services:
+        - docker
 
 addons:
   apt:
@@ -16,33 +24,13 @@ cache:
     - $HOME/.cabal
     - $HOME/.ghc
 
-install:
-  # Make sure the submodules are up-to-date.
-  - (cd test/toxcore/libsodium && git checkout stable && git pull)
-  - (cd test/toxcore/msgpack-c && git checkout master && git pull)
-  - (cd test/toxcore/toxcore   && git checkout master && git pull)
-  # Install libsodium into $HOME/.cabal/extra-dist.
-  - tools/install-libsodium
-  - EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
-  - cabal install --only-dependencies $EXTRA_DIRS
-  - cabal install codecov-haskell hpc-coveralls aeson-0.9.0.1
-  - cabal install stylish-haskell hlint happy
-#  - cabal install pandoc
+install:      .travis/phase $JOB $ENV install
+script:       .travis/phase $JOB $ENV script
+after_script: .travis/phase $JOB $ENV after_script
 
-script:
-  - export LD_LIBRARY_PATH=$HOME/.cabal/extra-dist/lib
-  - make
-  # Make a temporary commit with just the submodules to avoid errors on diff
-  # checking due to ref changes in submodules.
-  - git config --global user.email "travis@travis-ci.org"
-  - git config --global user.name "Travis Builder"
-  - >
-      git commit --allow-empty -m'Submodule updates.' \
-        test/toxcore/libsodium \
-        test/toxcore/msgpack-c \
-        test/toxcore/toxcore
-  - git diff --exit-code
+notifications:
+  irc: "chat.freenode.net#toktok-status"
 
-after_script:
-  - codecov-haskell hstox
-  - hpc-coveralls   hstox
+branches:
+  only:
+    - master

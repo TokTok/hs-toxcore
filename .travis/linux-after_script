@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set +e # Ignore errors here.
+codecov-haskell hstox
+hpc-coveralls   hstox
+set -e

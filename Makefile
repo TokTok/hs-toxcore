@@ -64,6 +64,7 @@ repl:
 clean:
 	cabal clean
 	rm -f $(wildcard .*.stamp *.tix)
+	@$(MAKE) -C test/toxcore clean
 
 
 build: .build.stamp

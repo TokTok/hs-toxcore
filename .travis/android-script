@@ -1,0 +1,4 @@
+#!/bin/sh
+
+tools/docker/dockrun arm-linux-androideabi-cabal configure -flibrary-only
+tools/docker/dockrun arm-linux-androideabi-cabal build

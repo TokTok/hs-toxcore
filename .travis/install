@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Make sure the submodules are up-to-date.
+(cd test/toxcore/libsodium && git checkout stable && git pull)
+(cd test/toxcore/msgpack-c && git checkout master && git pull)
+(cd test/toxcore/toxcore   && git checkout master && git pull)

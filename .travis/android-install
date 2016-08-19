@@ -1,0 +1,5 @@
+#!/bin/sh
+
+DOCKER_IMAGE=iphydf/haskell:8.0.1-hstox
+
+docker pull $DOCKER_IMAGE

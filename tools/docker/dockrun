@@ -1,0 +1,10 @@
+#!/bin/sh
+
+docker run --rm \
+  -v $PWD:/work \
+  -e BUILDER_UID=`id -u` \
+  -e BUILDER_GID=`id -g` \
+  -e BUILDER_USER=`id -un` \
+  -e BUILDER_GROUP=`id -gn` \
+  iphydf/haskell:8.0.1-hstox \
+  "$@"

@@ -25,7 +25,6 @@ library
   hs-source-dirs:
       src/msgpack
     , src/tox
-    , src/testsuite
   ghc-options:
       -Wall
       -fno-warn-unused-imports
@@ -45,7 +44,6 @@ library
     , deepseq
     , exceptions
     , hashable
-    , hspec
     , integer-gmp
     , iproute
     , monad-control
@@ -65,39 +63,6 @@ library
       Data.MessagePack.Get
       Data.MessagePack.Object
       Data.MessagePack.Put
-  other-modules:
-      Data.MessagePack.AssocSpec
-      Data.MessagePackSpec
-      Data.ResultSpec
-      Network.MessagePack.ServerSpec
-      Network.Tox.BinarySpec
-      Network.Tox.Crypto.BoxSpec
-      Network.Tox.Crypto.CombinedKeySpec
-      Network.Tox.Crypto.KeyPairSpec
-      Network.Tox.Crypto.KeySpec
-      Network.Tox.Crypto.NonceSpec
-      Network.Tox.CryptoSpec
-      Network.Tox.DHT.DhtPacketSpec
-      Network.Tox.DHT.DhtStateSpec
-      Network.Tox.DHT.DistanceSpec
-      Network.Tox.DHT.KBucketsSpec
-      Network.Tox.DHT.NodesRequestSpec
-      Network.Tox.DHT.NodesResponseSpec
-      Network.Tox.DHT.PingPacketSpec
-      Network.Tox.DHT.RpcPacketSpec
-      Network.Tox.DHTSpec
-      Network.Tox.EncodingSpec
-      Network.Tox.NodeInfo.HostAddressSpec
-      Network.Tox.NodeInfo.NodeInfoSpec
-      Network.Tox.NodeInfo.PortNumberSpec
-      Network.Tox.NodeInfo.SocketAddressSpec
-      Network.Tox.NodeInfoSpec
-      Network.Tox.NodeInfo.TransportProtocolSpec
-      Network.Tox.Protocol.PacketKindSpec
-      Network.Tox.Protocol.PacketSpec
-      Network.Tox.ProtocolSpec
-      Network.Tox.RPCTest
-      Network.ToxSpec
   exposed-modules:
       Data.MessagePack
       Data.Result
@@ -132,7 +97,46 @@ library
       Network.Tox.Protocol.PacketKind
       Network.Tox.RPC
       Network.Tox.Testing
-      TestSuite
+  if !flag(library-only)
+    hs-source-dirs:
+        src/testsuite
+    build-depends:
+        hspec
+    other-modules:
+        Data.MessagePack.AssocSpec
+        Data.MessagePackSpec
+        Data.ResultSpec
+        Network.MessagePack.ServerSpec
+        Network.Tox.BinarySpec
+        Network.Tox.Crypto.BoxSpec
+        Network.Tox.Crypto.CombinedKeySpec
+        Network.Tox.Crypto.KeyPairSpec
+        Network.Tox.Crypto.KeySpec
+        Network.Tox.Crypto.NonceSpec
+        Network.Tox.CryptoSpec
+        Network.Tox.DHT.DhtPacketSpec
+        Network.Tox.DHT.DhtStateSpec
+        Network.Tox.DHT.DistanceSpec
+        Network.Tox.DHT.KBucketsSpec
+        Network.Tox.DHT.NodesRequestSpec
+        Network.Tox.DHT.NodesResponseSpec
+        Network.Tox.DHT.PingPacketSpec
+        Network.Tox.DHT.RpcPacketSpec
+        Network.Tox.DHTSpec
+        Network.Tox.EncodingSpec
+        Network.Tox.NodeInfo.HostAddressSpec
+        Network.Tox.NodeInfo.NodeInfoSpec
+        Network.Tox.NodeInfo.PortNumberSpec
+        Network.Tox.NodeInfo.SocketAddressSpec
+        Network.Tox.NodeInfoSpec
+        Network.Tox.NodeInfo.TransportProtocolSpec
+        Network.Tox.Protocol.PacketKindSpec
+        Network.Tox.Protocol.PacketSpec
+        Network.Tox.ProtocolSpec
+        Network.Tox.RPCTest
+        Network.ToxSpec
+    exposed-modules:
+        TestSuite
 
 executable msgpack-parser
   default-language: Haskell2010
