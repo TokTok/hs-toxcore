@@ -29,6 +29,10 @@ CLANG_FORMAT_FLAGS :=	\
 	-style=file	\
 	-i
 
+HSTOX_TIX	= dist/hpc/tix/hstox/hstox.tix
+SUT_TOXCORE	= dist/build/sut-toxcore/sut-toxcore
+TEST_TOXCORE	= dist/build/test-toxcore/test-toxcore
+
 
 all: check $(DOCS)
 
@@ -37,17 +41,20 @@ fuzz: .build.stamp
 	@$(MAKE) -C test/toxcore clean
 	@echo "Generating initial test inputs"
 	@rm -f test/toxcore/test-inputs/*
-	@dist/build/test-toxcore/test-toxcore --qc-max-success=1 --format=silent
+	@$(TEST_TOXCORE) --qc-max-success=1 --format=silent
 	@$(MAKE) -C test/toxcore master
 
-check: dist/hpc/tix/hstox/hstox.tix
+check: $(HSTOX_TIX)
 	hpc markup $(HPC_DIRS) --destdir=dist/hpc/html $< > /dev/null
 	hpc report $(HPC_DIRS) $<
 
-dist/hpc/tix/hstox/hstox.tix: .build.stamp
+$(HSTOX_TIX): .build.stamp
 	cabal test --jobs=$(PROCS) | grep -v '^Writing: '
 	mkdir -p $(@D)
 	hpc sum --exclude=Main --union `find dist -name "*.tix" -and -not -wholename "*$@"` --output=$@
+
+check-toxcore: $(SUT_TOXCORE)
+	cabal test test-toxcore --jobs=$(PROCS)
 
 repl:
 	rm -f .configure.stamp
@@ -60,12 +67,12 @@ clean:
 
 
 build: .build.stamp
-.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp dist/build/sut-toxcore/sut-toxcore
+.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp $(SUT_TOXCORE)
 	rm -f $(wildcard *.tix)
 	cabal build --jobs=$(PROCS)
 	@touch $@
 
-dist/build/sut-toxcore/sut-toxcore: test/toxcore/test_main-$(TEST)
+$(SUT_TOXCORE): test/toxcore/test_main-$(TEST)
 	mkdir -p $(@D)
 	cp $< $@
 
