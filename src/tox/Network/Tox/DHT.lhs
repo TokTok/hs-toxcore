@@ -271,3 +271,18 @@ sending ping packets to his one IP/port.  B will detect that A has a symmetric
 NAT and will send packets to it to try guessing his ports.  If B manages to
 guess the port A is sending packets from they will connect together.
 
+\section{DHT Bootstrap Info (0xf0)}
+
+Bootstrap nodes are regular Tox nodes with a stable DHT public key. This means
+the DHT public key does not change across restarts. DHT bootstrap nodes have one
+additional request kind: Bootstrap Info. The request is simply a packet of
+length 78 bytes where the first byte is 0xf0. The other bytes are ignored.
+
+The response format is as follows:
+
+\begin{tabular}{l|l|l}
+  Length             & Type        & \href{#protocol-packet}{Contents} \\
+  \hline
+  \texttt{4}         & Word32      & Bootstrap node version \\
+  \texttt{73}        & Bytes       & Message of the day \\
+\end{tabular}

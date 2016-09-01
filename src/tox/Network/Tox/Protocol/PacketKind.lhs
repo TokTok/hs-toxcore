@@ -28,6 +28,7 @@ parentheses, e.g. \href{#ping-request-0x00}{Ping Request (0x00)}.
   \texttt{0x8c}     & Onion Response 3 \\
   \texttt{0x8d}     & Onion Response 2 \\
   \texttt{0x8e}     & Onion Response 1 \\
+  \texttt{0xf0}     & Bootstrap Info \\
 \end{tabular}
 
 \begin{code}
@@ -75,6 +76,7 @@ data PacketKind
   | OnionResponse3    -- 0x8c: Third level wrapped onion response
   | OnionResponse2    -- 0x8d: Second level wrapped onion response
   | OnionResponse1    -- 0x8e: First level wrapped onion response
+  | BootstrapInfo     -- 0xf0: Bootstrap node info request and response
   deriving (Eq, Read, Show, Bounded, Enum, Generic, Typeable)
 
 
@@ -103,6 +105,7 @@ kindToByte = \case
   OnionResponse3    -> 0x8c
   OnionResponse2    -> 0x8d
   OnionResponse1    -> 0x8e
+  BootstrapInfo     -> 0xf0
 
 
 byteToKind :: Word8 -> Maybe PacketKind
