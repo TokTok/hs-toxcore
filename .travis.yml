@@ -5,7 +5,10 @@ matrix:
     - env: JOB=hstox ENV=linux
       language: haskell
       ghc: 7.8
-    - env: JOB=hstox ENV=android
+    - env: JOB=hstox ENV=android ARCH=arm
+      services:
+        - docker
+    - env: JOB=hstox ENV=android ARCH=x86
       services:
         - docker
 

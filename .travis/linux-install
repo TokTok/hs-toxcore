@@ -4,8 +4,6 @@ EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dir
 
 # Install libsodium into $HOME/.cabal/extra-dist.
 tools/install-libsodium
-cabal install happy
 cabal install --only-dependencies $EXTRA_DIRS
-cabal install codecov-haskell hpc-coveralls aeson-0.9.0.1
-cabal install stylish-haskell hlint
+cabal install codecov-haskell hpc-coveralls aeson-0.9.0.1 stylish-haskell hlint
 # cabal install pandoc
