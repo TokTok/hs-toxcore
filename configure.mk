@@ -1,16 +1,7 @@
-CABAL_VER_NUM := $(shell cabal --numeric-version)
-CABAL_VER_MAJOR := $(shell echo $(CABAL_VER_NUM) | cut -f1 -d.)
-CABAL_VER_MINOR := $(shell echo $(CABAL_VER_NUM) | cut -f2 -d.)
-CABAL_GT_1_22 := $(shell [ $(CABAL_VER_MAJOR) -gt 1 -o \( $(CABAL_VER_MAJOR) -eq 1 -a $(CABAL_VER_MINOR) -ge 22 \) ] && echo true)
-
-ifeq ($(CABAL_GT_1_22),true)
-ENABLE_COVERAGE	= --enable-coverage
-DISABLE_PROFILING = --disable-profiling
-HPC_DIRS = `ls -d dist/hpc/vanilla/mix/* | sed -e 's/^/--hpcdir=/'`
+ifneq ($(shell which nproc),)
+PROCS	:= $(shell nproc)
 else
-ENABLE_COVERAGE = --enable-library-coverage
-DISABLE_PROFILING =
-HPC_DIRS = `ls -d dist/hpc/mix/* | sed -e 's/^/--hpcdir=/'`
+PROCS	:= $(shell sysctl -n hw.ncpu)
 endif
 
 ifneq ($(wildcard ../tox-spec/pandoc.mk),)
@@ -39,8 +30,21 @@ CLANG_TIDY := clang-tidy-3.8
 endif
 CLANG_TIDY ?= nonexistent-program
 
-ifneq ($(shell which nproc),)
-PROCS	:= $(shell nproc)
+
+# Cabal version-dependent flags.
+CABAL_VER_NUM := $(shell cabal --numeric-version)
+CABAL_VER_MAJOR := $(shell echo $(CABAL_VER_NUM) | cut -f1 -d.)
+CABAL_VER_MINOR := $(shell echo $(CABAL_VER_NUM) | cut -f2 -d.)
+CABAL_GT_1_22 := $(shell [ $(CABAL_VER_MAJOR) -gt 1 -o \( $(CABAL_VER_MAJOR) -eq 1 -a $(CABAL_VER_MINOR) -ge 22 \) ] && echo true)
+
+ifeq ($(CABAL_GT_1_22),true)
+ENABLE_COVERAGE		= --enable-coverage
+DISABLE_PROFILING	= --disable-profiling
+HPC_DIRS		= --hpcdir=. --srcdir=. `ls -d dist/hpc/vanilla/mix/* | sed -e 's/^/--srcdir=/'`
+CABAL_JOBS		= --jobs=$(PROCS)
 else
-PROCS	:= $(shell sysctl -n hw.ncpu)
+ENABLE_COVERAGE		= --enable-library-coverage
+DISABLE_PROFILING	=
+HPC_DIRS		= --hpcdir=. --srcdir=. `ls -d dist/hpc/mix/* | sed -e 's/^/--srcdir=/'`
+CABAL_JOBS		=
 endif

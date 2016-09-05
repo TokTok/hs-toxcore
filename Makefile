@@ -49,12 +49,12 @@ check: $(HSTOX_TIX)
 	hpc report $(HPC_DIRS) $<
 
 $(HSTOX_TIX): .build.stamp
-	cabal test --jobs=$(PROCS) | grep -v '^Writing: '
+	cabal test $(CABAL_JOBS) | grep -v '^Writing: '
 	mkdir -p $(@D)
 	hpc sum --exclude=Main --union `find dist -name "*.tix" -and -not -wholename "*$@"` --output=$@
 
 check-toxcore: $(SUT_TOXCORE)
-	cabal test test-toxcore --jobs=$(PROCS)
+	cabal test test-toxcore $(CABAL_JOBS)
 
 repl:
 	rm -f .configure.stamp
@@ -70,7 +70,7 @@ clean:
 build: .build.stamp
 .build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp $(SUT_TOXCORE)
 	rm -f $(wildcard *.tix)
-	cabal build --jobs=$(PROCS)
+	cabal build $(CABAL_JOBS)
 	@touch $@
 
 $(SUT_TOXCORE): test/toxcore/test_main-$(TEST)
@@ -83,7 +83,7 @@ test/toxcore/test_main-$(TEST): $(shell find test/toxcore -name "*.[ch]") test/t
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp hstox.cabal
 	cabal update
-	cabal install $(CONFIGURE_FLAGS) --only-dependencies --jobs=$(PROCS)
+	cabal install $(CONFIGURE_FLAGS) --only-dependencies $(CABAL_JOBS)
 	cabal configure $(CONFIGURE_FLAGS) $(ENABLE_COVERAGE)
 	@touch $@
 
