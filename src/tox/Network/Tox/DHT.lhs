@@ -284,5 +284,5 @@ The response format is as follows:
   Length             & Type        & \href{#protocol-packet}{Contents} \\
   \hline
   \texttt{4}         & Word32      & Bootstrap node version \\
-  \texttt{73}        & Bytes       & Message of the day \\
+  \texttt{256}       & Bytes       & Message of the day \\
 \end{tabular}
