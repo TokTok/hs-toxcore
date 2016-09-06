@@ -9,8 +9,8 @@ import qualified Crypto.Saltine.Class     as Sodium
 import           Data.Binary              (Binary)
 import           Data.ByteString          (ByteString)
 import qualified Data.ByteString          as ByteString
+import qualified Data.MessagePack.Result  as R
 import           Data.Proxy               (Proxy (..))
-import qualified Data.Result              as R
 import           Data.Typeable            (Typeable)
 import qualified Network.Tox.Binary       as Binary
 import           Network.Tox.Crypto.Key   (Key (..))
