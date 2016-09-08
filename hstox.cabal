@@ -17,7 +17,7 @@ source-repository head
   location: https://github.com/iphydf/hstox
 
 flag library-only
-  description: Only build libraries, no programs.
+  description: Build only library, no executables or tests.
   default: False
 
 library
@@ -48,7 +48,9 @@ library
     , iproute
     , monad-control
     , mtl
-    , network
+    -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
+    -- it explicitly here.
+    , network <= 2.6.2.1
     , network-msgpack-rpc
     , saltine
     , scientific

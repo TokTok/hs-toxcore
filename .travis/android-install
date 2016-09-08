@@ -1,3 +1,4 @@
 #!/bin/sh
 
 docker pull $DOCKER_IMAGE
+make -C tools/docker build-$ARCH

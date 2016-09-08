@@ -15,17 +15,17 @@ COPY patches/*.patch $BASE/patches/
 COPY user-scripts/cabal-install-zlib.sh $BASE/
 RUN ./cabal-install-zlib.sh
 
+# distributive and comonad have a broken Setup.hs, so we need to configure with
+# the host cabal and build with the target cabal.
 COPY user-scripts/cabal-install-setup.sh $BASE/
 RUN ./cabal-install-setup.sh distributive 0.5.0.2 \
  && ./cabal-install-setup.sh comonad 5
 
+COPY user-scripts/install-deps.sh $BASE/
+RUN ${NDK_TARGET}-cabal update \
+ && ./install-deps.sh
+
 WORKDIR $HOME
-
-RUN ${NDK_TARGET}-cabal install network-2.6.2.1
-
-RUN git clone --depth=1 --branch=ffi https://github.com/iphydf/hstox \
- && ${NDK_TARGET}-cabal install hstox/hstox.cabal -flibrary-only --only-dependencies \
- && rm -rf hstox
 
 USER root
 RUN apt-get install -y runit

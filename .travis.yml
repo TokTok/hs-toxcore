@@ -29,9 +29,10 @@ cache:
     - $HOME/.cabal
     - $HOME/.ghc
 
-install:      .travis/phase $JOB $ENV install
-script:       .travis/phase $JOB $ENV script
-after_script: .travis/phase $JOB $ENV after_script
+install:       .travis/phase $JOB $ENV install
+script:        .travis/phase $JOB $ENV script
+after_script:  .travis/phase $JOB $ENV after_script
+after_success: .travis/phase $JOB $ENV after_success
 
 notifications:
   irc: "chat.freenode.net#toktok-status"
