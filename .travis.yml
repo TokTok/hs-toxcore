@@ -11,6 +11,8 @@ matrix:
     - env: JOB=hstox ENV=android ARCH=x86
       services:
         - docker
+    - env: JOB=hstox ENV=osx
+      os: osx
 
 addons:
   apt:
