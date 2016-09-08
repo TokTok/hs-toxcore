@@ -3,7 +3,8 @@ include configure.mk
 # Test flavour. See test/toxcore/Makefile for choices.
 TEST	:= vanilla
 
-SOURCES	:= $(shell find src test tools -name "*.*hs" -or -name "*.c" -or -name "*.h")
+SRCDIRS	:= src test tools
+SOURCES	:= $(shell find $(SRCDIRS) -name "*.*hs" -or -name "*.c" -or -name "*.h")
 
 export LD_LIBRARY_PATH := $(HOME)/.cabal/extra-dist/lib
 
@@ -68,7 +69,7 @@ clean:
 
 
 build: .build.stamp
-.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp $(SUT_TOXCORE)
+.build.stamp: $(SOURCES) .configure.stamp .format.stamp .lint.stamp
 	rm -f $(wildcard *.tix)
 	cabal build $(CABAL_JOBS)
 	@touch $@
@@ -107,7 +108,7 @@ libsodium: .libsodium.stamp
 
 format: .format.stamp
 .format.stamp: $(SOURCES) .configure.stamp
-	if which stylish-haskell; then tools/format-haskell -i src; fi
+	if which stylish-haskell; then tools/format-haskell -i $(SRCDIRS); fi
 	if which $(CLANG_FORMAT); then $(CLANG_FORMAT) $(CLANG_FORMAT_FLAGS) test/toxcore/*.[ch]; fi
 	if which $(CLANG_TIDY); then $(CLANG_TIDY) $(CLANG_TIDY_FLAGS); fi
 	@touch $@

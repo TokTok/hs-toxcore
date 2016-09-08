@@ -30,6 +30,9 @@ static char const *error_desc(int code) {
   return "Unknown error code";
 }
 
+#ifdef __GLASGOW_HASKELL__
+#define main test_main
+#endif
 int main(void) {
   struct settings cfg    = {true, true};
   uint32_t        result = network_main(cfg, PORT, TIMEOUT);

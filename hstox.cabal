@@ -140,6 +140,56 @@ executable msgpack-parser
   if flag(library-only)
     buildable: False
 
+executable sut-toxcore
+  default-language: Haskell2010
+  hs-source-dirs: test/toxcore
+  ghc-options: -Wall
+  build-depends: base < 5
+  main-is: sut-toxcore.hs
+  extra-libraries: pthread sodium
+  include-dirs:
+      test/toxcore/msgpack-c/include
+      test/toxcore/toxcore/toxcore
+  c-sources:
+      test/toxcore/binary_decode.c
+      test/toxcore/binary_encode.c
+      test/toxcore/driver.c
+      test/toxcore/fuzz_main.c
+      test/toxcore/methods.c
+      test/toxcore/msgpack-c/src/objectc.c
+      test/toxcore/msgpack-c/src/unpack.c
+      test/toxcore/msgpack-c/src/version.c
+      test/toxcore/msgpack-c/src/vrefbuffer.c
+      test/toxcore/msgpack-c/src/zone.c
+      test/toxcore/packet_kinds.c
+      test/toxcore/test_main.c
+      test/toxcore/toxcore/toxcore/assoc.c
+      test/toxcore/toxcore/toxcore/crypto_core.c
+      test/toxcore/toxcore/toxcore/DHT.c
+      test/toxcore/toxcore/toxcore/friend_connection.c
+      test/toxcore/toxcore/toxcore/friend_requests.c
+      test/toxcore/toxcore/toxcore/group.c
+      test/toxcore/toxcore/toxcore/LAN_discovery.c
+      test/toxcore/toxcore/toxcore/list.c
+      test/toxcore/toxcore/toxcore/logger.c
+      test/toxcore/toxcore/toxcore/Messenger.c
+      test/toxcore/toxcore/toxcore/net_crypto.c
+      test/toxcore/toxcore/toxcore/network.c
+      test/toxcore/toxcore/toxcore/onion_announce.c
+      test/toxcore/toxcore/toxcore/onion.c
+      test/toxcore/toxcore/toxcore/onion_client.c
+      test/toxcore/toxcore/toxcore/ping_array.c
+      test/toxcore/toxcore/toxcore/ping.c
+      test/toxcore/toxcore/toxcore/TCP_client.c
+      test/toxcore/toxcore/toxcore/TCP_connection.c
+      test/toxcore/toxcore/toxcore/TCP_server.c
+      test/toxcore/toxcore/toxcore/tox.c
+      test/toxcore/toxcore/toxcore/tox_group.c
+      test/toxcore/toxcore/toxcore/util.c
+      test/toxcore/util.c
+  if flag(library-only)
+    buildable: False
+
 test-suite test-hstox
   default-language: Haskell2010
   type: exitcode-stdio-1.0

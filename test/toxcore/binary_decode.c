@@ -101,7 +101,8 @@ METHOD(bin, Binary_decode, PacketKind) {
       msgpack_pack_nil(res);
     } else {
       uint8_t kind = args.ptr[0];
-      for (size_t i = 0; i < sizeof packet_kinds / sizeof *packet_kinds; i++) {
+      size_t  i;
+      for (i = 0; i < sizeof packet_kinds / sizeof *packet_kinds; i++) {
         if (packet_kinds[i] == kind) {
           msgpack_pack_fix_uint8(res, i);
           return 0;

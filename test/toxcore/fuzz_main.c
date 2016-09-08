@@ -7,6 +7,9 @@
 // See https://github.com/mcarpenter/afl/blob/master/llvm_mode/README.llvm.
 #define ITERATIONS 1000
 
+#ifdef __GLASGOW_HASKELL__
+#define main fuzz_main
+#endif
 int main(int argc, char **argv) {
   struct settings cfg = {false, false};
 #ifdef __AFL_LOOP
