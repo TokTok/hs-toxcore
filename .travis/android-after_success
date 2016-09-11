@@ -2,7 +2,7 @@
 
 # Don't print this, as it contains the docker password.
 set +x
-[ -z "$DOCKER_PASSWORD" ] || exit
+[ -n "$DOCKER_PASSWORD" ] || exit
 docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
 set -x
 
