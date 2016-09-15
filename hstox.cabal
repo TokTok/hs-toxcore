@@ -185,8 +185,8 @@ executable sut-toxcore
       test/toxcore/toxcore/toxcore/TCP_client.c
       test/toxcore/toxcore/toxcore/TCP_connection.c
       test/toxcore/toxcore/toxcore/TCP_server.c
-      test/toxcore/toxcore/toxcore/tox.c
-      test/toxcore/toxcore/toxcore/tox_group.c
+      --test/toxcore/toxcore/toxcore/tox.c
+      --test/toxcore/toxcore/toxcore/tox_group.c
       test/toxcore/toxcore/toxcore/util.c
       test/toxcore/util.c
   if flag(library-only)
