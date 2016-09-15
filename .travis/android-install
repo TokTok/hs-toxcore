@@ -1,4 +1,5 @@
 #!/bin/sh
 
 docker pull $DOCKER_IMAGE
-make -C tools/docker build-$ARCH
+docker run --rm $DOCKER_IMAGE cat /root/dockrun > dockrun
+chmod +x dockrun

@@ -1,4 +1,4 @@
 #!/bin/sh
 
-tools/docker/dockrun target-cabal configure -flibrary-only
-tools/docker/dockrun target-cabal build
+./dockrun target-cabal configure -flibrary-only
+./dockrun target-cabal build

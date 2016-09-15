@@ -36,7 +36,6 @@ TEST_TOXCORE	= dist/build/test-toxcore/test-toxcore
 
 
 all: check $(DOCS)
-	$(MAKE) -C tools/docker scripts
 
 fuzz: .build.stamp
 	@echo "Cleaning up previous results"

@@ -2,4 +2,4 @@
 
 NPROC=`nproc`
 
-export DOCKER_IMAGE=iphydf/haskell-hstox:8.0.1-$ARCH
+export DOCKER_IMAGE=toktoknet/ghc-android-hstox:latest.$ARCH

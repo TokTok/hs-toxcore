@@ -8,7 +8,7 @@ matrix:
     - env: JOB=hstox ENV=android ARCH=arm
       services:
         - docker
-    - env: JOB=hstox ENV=android ARCH=x86
+    - env: JOB=hstox ENV=android ARCH=i686
       services:
         - docker
     - env: JOB=hstox ENV=osx
@@ -29,10 +29,9 @@ cache:
     - $HOME/.cabal
     - $HOME/.ghc
 
-install:       .travis/phase $JOB $ENV install
-script:        .travis/phase $JOB $ENV script
-after_script:  .travis/phase $JOB $ENV after_script
-after_success: .travis/phase $JOB $ENV after_success
+install:      .travis/phase $JOB $ENV install
+script:       .travis/phase $JOB $ENV script
+after_script: .travis/phase $JOB $ENV after_script
 
 notifications:
   irc: "chat.freenode.net#toktok-status"
