@@ -4,11 +4,13 @@
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.CombinedKey where
 
-import qualified Crypto.Saltine.Core.Box as Sodium (beforeNM)
+import           Control.Applicative        ((<$>))
+import qualified Crypto.Saltine.Core.Box    as Sodium (beforeNM)
 
-import           Network.Tox.Crypto.Key  (CombinedKey, Key (..), PublicKey,
-                                          SecretKey)
-import qualified Network.Tox.RPC         as RPC
+import           Network.Tox.Crypto.Key     (CombinedKey, Key (..), PublicKey,
+                                             SecretKey)
+import qualified Network.Tox.Crypto.KeyPair as KeyPair
+import qualified Network.Tox.RPC            as RPC
 
 
 {-------------------------------------------------------------------------------
@@ -36,6 +38,10 @@ precompute (Key sk) (Key pk) =
 precomputeC :: SecretKey -> PublicKey -> RPC.Client CombinedKey
 precomputeS :: RPC.Method IO
 (precomputeC, precomputeS) = RPC.stubs "CombinedKey.precompute" RPC.fun2 precompute
+
+
+randomKey :: IO CombinedKey
+randomKey = uncurry precompute . KeyPair.toTuple <$> KeyPair.newKeyPair
 
 
 \end{code}

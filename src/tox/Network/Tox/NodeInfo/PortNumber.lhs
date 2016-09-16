@@ -27,7 +27,12 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 
 newtype PortNumber = PortNumber Word16
-  deriving (Eq, Show, Read, Generic, Typeable, Binary, Num)
+  deriving
+    ( Generic, Typeable
+    , Eq, Ord
+    , Show, Read
+    , Binary
+    , Num, Integral, Real, Bounded, Enum)
 
 instance MessagePack PortNumber
 
