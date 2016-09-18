@@ -30,35 +30,21 @@ library
   build-depends:
       base < 5
     , QuickCheck >= 2.9.1
-    , async
     , base16-bytestring
     , binary
     , binary-bits
-    , binary-conduit
     , bytestring
-    , conduit
-    , conduit-extra
     , containers
-    , data-binary-ieee754
     , data-msgpack
-    , deepseq
-    , exceptions
-    , hashable
     , integer-gmp
     , iproute
-    , monad-control
-    , mtl
     -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
     -- it explicitly here.
     , network <= 2.6.2.1
     , network-msgpack-rpc
     , saltine
-    , scientific
-    , split
-    , tagged
     , text
     , transformers
-    , unordered-containers
   exposed-modules:
       Network.Tox
       Network.Tox.Binary
