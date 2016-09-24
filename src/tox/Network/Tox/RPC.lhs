@@ -38,7 +38,7 @@ defaultPort :: Int
 defaultPort = 1234
 
 
-runClient :: Client a -> IO ()
+runClient :: Client a -> IO a
 runClient = Client.execClient "localhost" defaultPort
 
 

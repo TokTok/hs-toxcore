@@ -17,10 +17,10 @@ import           Network.Tox.RPC            (runClient)
 -- | Run a 'Client' using 'runClient' and catch "Pending" errors from the
 -- system under test (SUT) to turn them into Hspec 'pending' calls. Other
 -- errors are turned into calls to 'expectationFailure'.
-runTest :: Client a -> IO ()
+runTest :: Client () -> IO ()
 runTest a3 =
   runClient a3 `catch` \case
-    ServerError (ObjectStr msg) | msg == Text.pack "Pending" -> pending
+    RemoteError (ObjectStr msg) | msg == Text.pack "Pending" -> pending
     e -> expectationFailure $ show e
 
 

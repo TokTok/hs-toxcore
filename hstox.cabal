@@ -41,7 +41,7 @@ library
     -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
     -- it explicitly here.
     , network <= 2.6.2.1
-    , network-msgpack-rpc
+    , network-msgpack-rpc >= 0.0.2
     , saltine
     , text
     , transformers
