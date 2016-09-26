@@ -2,6 +2,9 @@
 
 EXTRA_DIRS="--extra-include-dirs=$HOME/.cabal/extra-dist/include --extra-lib-dirs=$HOME/.cabal/extra-dist/lib"
 
+# Update/fetch the package database.
+cabal update
+
 # Install libsodium into $HOME/.cabal/extra-dist.
 tools/install-libsodium
 cabal install --only-dependencies $EXTRA_DIRS
