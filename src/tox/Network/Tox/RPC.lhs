@@ -1,7 +1,7 @@
 \begin{code}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE Safe              #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE Safe                  #-}
 module Network.Tox.RPC
   ( MessagePack.MessagePack (..)
   , MessagePack.Object (..)
@@ -29,8 +29,8 @@ import           Network.MessagePack.Server (Server)
 import qualified Network.MessagePack.Server as Server
 
 
---stubs :: forall t f (m :: * -> *). (Server.MethodType m f, Client.RpcType t)
---      => String -> f -> (t, Server.Method m)
+stubs :: (Server.MethodType m f, Client.RpcType t)
+      => String -> (a -> f) -> a -> (t, Server.Method m)
 stubs name fun method = (Client.call name, Server.method name (fun method))
 
 
@@ -38,12 +38,12 @@ defaultPort :: Int
 defaultPort = 1234
 
 
-runClient :: Client a -> IO ()
-runClient = Client.execClient "localhost" defaultPort
+runClient :: Client a -> IO a
+runClient = Client.runClient "localhost" defaultPort
 
 
 runServer :: Int -> [Server.Method IO] -> IO ()
-runServer = Server.serve
+runServer = Server.runServer
 
 
 fun1 :: (a -> result) -> a -> Server result

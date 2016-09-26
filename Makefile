@@ -89,7 +89,7 @@ configure: .configure.stamp
 	@touch $@
 
 doc: $(DOCS)
-../tox-spec/spec.md: src/tox/Network/Tox.lhs $(shell find src -name "*.lhs") ../tox-spec/pandoc.mk
+../spec/spec.md: src/tox/Network/Tox.lhs $(shell find src -name "*.lhs") ../spec/pandoc.mk Makefile
 	echo '% The Tox Reference' > $@
 	echo '' >> $@
 	pandoc $< $(PANDOC_ARGS)							\
@@ -98,8 +98,8 @@ doc: $(DOCS)
 		| perl -pe 'BEGIN{undef $$/} s/\`\`\` sourceCode\n.*?\`\`\`\n\n//sg'	\
 		>> $@
 	pandoc $(PANDOC_ARGS) -f $(FORMAT) -t $(FORMAT) $@ -o $@
-	if which mdl; then $(MAKE) -C ../tox-spec check; fi
-	if test -d ../toktok.github.io; then $(MAKE) -C ../toktok.github.io push; fi
+	if which mdl; then $(MAKE) -C $(@D) check; fi
+	cd $(@D) && git diff
 
 libsodium: .libsodium.stamp
 .libsodium.stamp: tools/install-libsodium

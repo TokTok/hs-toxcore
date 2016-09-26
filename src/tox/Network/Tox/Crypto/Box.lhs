@@ -35,7 +35,6 @@ import           GHC.Generics                      (Generic)
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
 import           Text.Read                         (readPrec)
 
-
 import           Network.Tox.Crypto.Key            (CombinedKey, Key (..),
                                                     Nonce)
 import qualified Network.Tox.RPC                   as RPC

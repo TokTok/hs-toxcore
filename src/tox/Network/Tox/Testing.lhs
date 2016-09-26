@@ -1,11 +1,14 @@
 \chapter{Testing}
 
 The final part of the architecture is the test protocol. We use a
-[MessagePack](http://msgpack.org) based RPC protocol to expose language agnostic
-interfaces to internal functions. Using property based testing with random
-inputs as well as specific edge case tests help ensure that an implementation of
-the Tox protocol following the architecture specified in this document is
-correct.
+\href{http://msgpack.org}{MessagePack} based RPC protocol to expose language
+agnostic interfaces to internal functions. Using property based testing with
+random inputs as well as specific edge case tests help ensure that an
+implementation of the Tox protocol following the architecture specified in this
+document is correct.
+
+See the \href{https://github.com/msgpack/msgpack/blob/master/spec.md}{spec} of
+msgpack for information on the binary representation.
 
 \begin{code}
 {-# LANGUAGE LambdaCase #-}
@@ -45,5 +48,4 @@ serve = map readMaybe <$> getArgs >>= \case
     _           -> RPC.runServer RPC.defaultPort services
 \end{code}
 
-See the \href{https://github.com/msgpack/msgpack/blob/master/spec.md}{spec} of
-msgpack for information on the binary representation.
+TODO(iphydf): Generate and add specifications of each test method here.
