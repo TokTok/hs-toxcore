@@ -26,11 +26,12 @@ import           Data.Binary                    (Binary)
 import           Data.MessagePack               (MessagePack (..))
 import           Data.Typeable                  (Typeable)
 import           GHC.Generics                   (Generic)
+import           Network.MessagePack.Rpc        (Doc (..))
+import qualified Network.MessagePack.Rpc        as Rpc
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
 import           Network.Tox.Crypto.Key         (Key (..))
 import qualified Network.Tox.Crypto.Key         as Key
-import qualified Network.Tox.RPC                as RPC
 
 
 {-------------------------------------------------------------------------------
@@ -55,9 +56,11 @@ newKeyPair = do
   (sk, pk) <- Sodium.newKeypair
   return $ KeyPair (Key sk) (Key pk)
 
-newKeyPairC :: RPC.Client KeyPair
-newKeyPairS :: RPC.Method IO
-(newKeyPairC, newKeyPairS) = RPC.stubs "KeyPair.newKeyPair" RPC.ioFun0 newKeyPair
+newKeyPairR :: Rpc.RpcIO (Rpc.Returns KeyPair)
+newKeyPairR =
+  Rpc.stubsIO "KeyPair.newKeyPair"
+    (Ret "keyPair")
+    newKeyPair
 
 
 fromSecretKey :: Key.SecretKey -> KeyPair
@@ -71,9 +74,11 @@ fromSecretKey sk =
   in
   KeyPair sk pk
 
-fromSecretKeyC :: Key.SecretKey -> RPC.Client KeyPair
-fromSecretKeyS :: RPC.Method IO
-(fromSecretKeyC, fromSecretKeyS) = RPC.stubs "KeyPair.fromSecretKey" RPC.fun1 fromSecretKey
+fromSecretKeyR :: Rpc.Rpc (Key.SecretKey -> Rpc.Returns KeyPair)
+fromSecretKeyR =
+  Rpc.stubs "KeyPair.fromSecretKey"
+    (Arg "key" $ Ret "keyPair")
+    fromSecretKey
 
 
 {-------------------------------------------------------------------------------

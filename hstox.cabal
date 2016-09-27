@@ -41,8 +41,9 @@ library
     -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
     -- it explicitly here.
     , network                   <= 2.6.2.1
-    , network-msgpack-rpc       >= 0.0.2
+    , network-msgpack-rpc       >= 0.0.3
     , saltine
+    , tagged
     , text
     , transformers
   exposed-modules:
@@ -73,7 +74,6 @@ library
       Network.Tox.Protocol
       Network.Tox.Protocol.Packet
       Network.Tox.Protocol.PacketKind
-      Network.Tox.RPC
       Network.Tox.Testing
   if !flag(library-only)
     hs-source-dirs:
@@ -81,7 +81,6 @@ library
     build-depends:
         hspec
     other-modules:
-        Network.Tox.BinarySpec
         Network.Tox.Crypto.BoxSpec
         Network.Tox.Crypto.CombinedKeySpec
         Network.Tox.Crypto.KeyPairSpec

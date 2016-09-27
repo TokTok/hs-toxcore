@@ -3,27 +3,29 @@
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.EncodingSpec where
 
-import           Control.Monad.IO.Class (liftIO)
-import qualified Network.Tox.RPC        as RPC
-import qualified Network.Tox.RPCTest    as RPC
+import           Control.Monad.IO.Class     (liftIO)
+import           Data.MessagePack           (MessagePack)
+import           Network.MessagePack.Client (Client)
+import qualified Network.Tox.RPCTest        as RPC
 import           Test.Hspec
-import           Test.QuickCheck        (Arbitrary, property)
+import           Test.QuickCheck            (Arbitrary, property)
 
-import           Data.Binary            (Binary)
-import qualified Data.Binary            as Binary (get, put)
-import qualified Data.Binary.Bits.Get   as Bits (BitGet, runBitGet)
-import qualified Data.Binary.Bits.Put   as Bits (BitPut, runBitPut)
-import qualified Data.Binary.Get        as Binary (Decoder (..), Get, pushChunk,
-                                                   runGet, runGetIncremental)
-import qualified Data.Binary.Put        as Binary (Put, runPut)
-import qualified Data.ByteString        as ByteString
-import qualified Data.ByteString.Lazy   as LazyByteString
-import           Data.Proxy             (Proxy (..))
-import           Data.Typeable          (Typeable)
-import           Data.Word              (Word64, Word8)
+import           Data.Binary                (Binary)
+import qualified Data.Binary                as Binary (get, put)
+import qualified Data.Binary.Bits.Get       as Bits (BitGet, runBitGet)
+import qualified Data.Binary.Bits.Put       as Bits (BitPut, runBitPut)
+import qualified Data.Binary.Get            as Binary (Decoder (..), Get,
+                                                       pushChunk, runGet,
+                                                       runGetIncremental)
+import qualified Data.Binary.Put            as Binary (Put, runPut)
+import qualified Data.ByteString            as ByteString
+import qualified Data.ByteString.Lazy       as LazyByteString
+import           Data.Proxy                 (Proxy (..))
+import           Data.Typeable              (Typeable)
+import           Data.Word                  (Word64, Word8)
 
-import qualified Network.Tox.Binary     as Binary
-import           Network.Tox.Encoding   (BitEncoding, bitGet, bitPut)
+import qualified Network.Tox.Binary         as Binary
+import           Network.Tox.Encoding       (BitEncoding, bitGet, bitPut)
 
 
 spec :: Spec
@@ -113,11 +115,11 @@ readShowSpec (Proxy :: Proxy a) =
         output `shouldBe` expected
 
 
-rpcSpec :: (Arbitrary a, Eq a, Show a, Typeable a, Binary a, RPC.MessagePack a) => Proxy a -> Spec
+rpcSpec :: (Arbitrary a, Eq a, Show a, Typeable a, Binary a, MessagePack a) => Proxy a -> Spec
 rpcSpec (Proxy :: Proxy a) =
   let
-    encodeAC = Binary.encodeC :: a -> RPC.Client ByteString.ByteString
-    decodeAC = Binary.decodeC :: ByteString.ByteString -> RPC.Client (Maybe a)
+    encodeAC = Binary.encodeC :: a -> Client ByteString.ByteString
+    decodeAC = Binary.decodeC :: ByteString.ByteString -> Client (Maybe a)
     encodeA  = Binary.encode  :: a -> ByteString.ByteString
     decodeA  = Binary.decode  :: ByteString.ByteString -> Maybe a
   in

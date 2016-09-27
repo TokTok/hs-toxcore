@@ -1,17 +1,29 @@
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE Safe                #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Network.Tox.Binary where
+module Network.Tox.Binary
+  ( typeName
+  , encode, encodeC, encodeS
+  , decode, decodeC, decodeS
+  ) where
 
 import           Control.Applicative                    ((<$>))
-import           Data.Binary                            (Binary)
+import           Control.Monad                          ((>=>))
+import           Data.Binary                            (Binary, get, put)
 import           Data.ByteString                        (ByteString)
+import           Data.MessagePack                       (MessagePack,
+                                                         fromObject, toObject)
+import qualified Data.MessagePack                       as MessagePack
 import           Data.Proxy                             (Proxy (..))
 import           Data.Typeable                          (Typeable)
 import qualified Data.Typeable                          as Typeable
 import           Data.Word                              (Word64)
+import           Network.MessagePack.Client             (Client)
+import qualified Network.MessagePack.Client             as Client
+import           Network.MessagePack.Server             (Server)
+import qualified Network.MessagePack.Server             as Server
 
 import qualified Network.Tox.Encoding                   as Encoding
-import qualified Network.Tox.RPC                        as RPC
 
 import qualified Network.Tox.Crypto.Box                 as T
 import qualified Network.Tox.Crypto.Key                 as T
@@ -32,7 +44,70 @@ import qualified Network.Tox.Protocol.PacketKind        as T
 
 typeName :: Typeable a => Proxy a -> String
 typeName (Proxy :: Proxy a) =
-  Typeable.tyConName . Typeable.typeRepTyCon . Typeable.typeOf $ (undefined :: a)
+  show . Typeable.typeOf $ (undefined :: a)
+
+
+data KnownType
+  = CipherText        T.CipherText
+  | DhtPacket         T.DhtPacket
+  | HostAddress       T.HostAddress
+  | Word64            Word64
+  | Key               T.PublicKey
+  | KeyPair           T.KeyPair
+  | NodeInfo          T.NodeInfo
+  | NodesRequest      T.NodesRequest
+  | NodesResponse     T.NodesResponse
+  | Packet            (T.Packet Word64)
+  | PacketKind        T.PacketKind
+  | PingPacket        T.PingPacket
+  | PlainText         T.PlainText
+  | PortNumber        T.PortNumber
+  | RpcPacket         (T.RpcPacket Word64)
+  | SocketAddress     T.SocketAddress
+  | TransportProtocol T.TransportProtocol
+
+
+knownTypeToObject :: KnownType -> MessagePack.Object
+knownTypeToObject = \case
+  CipherText        x -> toObject x
+  DhtPacket         x -> toObject x
+  HostAddress       x -> toObject x
+  Word64            x -> toObject x
+  Key               x -> toObject x
+  KeyPair           x -> toObject x
+  NodeInfo          x -> toObject x
+  NodesRequest      x -> toObject x
+  NodesResponse     x -> toObject x
+  Packet            x -> toObject x
+  PacketKind        x -> toObject x
+  PingPacket        x -> toObject x
+  PlainText         x -> toObject x
+  PortNumber        x -> toObject x
+  RpcPacket         x -> toObject x
+  SocketAddress     x -> toObject x
+  TransportProtocol x -> toObject x
+
+
+knownTypeEncode :: KnownType -> ByteString
+knownTypeEncode = \case
+  CipherText        x -> encode x
+  DhtPacket         x -> encode x
+  HostAddress       x -> encode x
+  Word64            x -> encode x
+  Key               x -> encode x
+  KeyPair           x -> encode x
+  NodeInfo          x -> encode x
+  NodesRequest      x -> encode x
+  NodesResponse     x -> encode x
+  Packet            x -> encode x
+  PacketKind        x -> encode x
+  PingPacket        x -> encode x
+  PlainText         x -> encode x
+  PortNumber        x -> encode x
+  RpcPacket         x -> encode x
+  SocketAddress     x -> encode x
+  TransportProtocol x -> encode x
+
 
 
 --------------------------------------------------------------------------------
@@ -45,36 +120,41 @@ typeName (Proxy :: Proxy a) =
 decode :: Binary a => ByteString -> Maybe a
 decode = Encoding.decode
 
-decodeC :: forall a. (Typeable a, RPC.MessagePack a)
-        => ByteString -> RPC.Client (Maybe a)
-decodeC = RPC.call "Binary.decode" $ typeName (Proxy :: Proxy a)
+decodeC :: forall a. (Typeable a, MessagePack a)
+        => ByteString -> Client (Maybe a)
+decodeC = Client.call "Binary.decode" $ typeName (Proxy :: Proxy a)
 
-decodeM :: (Monad m, RPC.MessagePack a, Binary a) => Proxy a -> ByteString -> m (Maybe RPC.Object)
-decodeM (Proxy :: Proxy a) bs =
-  return $ RPC.toObject <$> (decode bs :: Maybe a)
+decodeS :: Server.Method IO
+decodeS = Server.method "Binary.decode"
+  (Server.MethodDocs
+    [ Server.MethodVal "typeName" "String"
+    , Server.MethodVal "encoded" "ByteString"
+    ] $ Server.MethodVal "value" "a")
+  decodeKnownType
 
-decodeF :: String -> ByteString -> RPC.Server (Maybe RPC.Object)
-decodeF "CipherText"        = decodeM (Proxy :: Proxy T.CipherText        )
-decodeF "DhtPacket"         = decodeM (Proxy :: Proxy T.DhtPacket         )
-decodeF "HostAddress"       = decodeM (Proxy :: Proxy T.HostAddress       )
-decodeF "Word64"            = decodeM (Proxy :: Proxy Word64              )
-decodeF "Key"               = decodeM (Proxy :: Proxy T.PublicKey         )
-decodeF "KeyPair"           = decodeM (Proxy :: Proxy T.KeyPair           )
-decodeF "NodeInfo"          = decodeM (Proxy :: Proxy T.NodeInfo          )
-decodeF "NodesRequest"      = decodeM (Proxy :: Proxy T.NodesRequest      )
-decodeF "NodesResponse"     = decodeM (Proxy :: Proxy T.NodesResponse     )
-decodeF "Packet"            = decodeM (Proxy :: Proxy (T.Packet Word64)   )
-decodeF "PacketKind"        = decodeM (Proxy :: Proxy T.PacketKind        )
-decodeF "PingPacket"        = decodeM (Proxy :: Proxy T.PingPacket        )
-decodeF "PlainText"         = decodeM (Proxy :: Proxy T.PlainText         )
-decodeF "PortNumber"        = decodeM (Proxy :: Proxy T.PortNumber        )
-decodeF "RpcPacket"         = decodeM (Proxy :: Proxy (T.RpcPacket Word64))
-decodeF "SocketAddress"     = decodeM (Proxy :: Proxy T.SocketAddress     )
-decodeF "TransportProtocol" = decodeM (Proxy :: Proxy T.TransportProtocol )
-decodeF tycon = const $ fail $ "unsupported type in decode: " ++ tycon
+  where
+    decodeKnownType :: String -> ByteString -> Server (Maybe MessagePack.Object)
+    decodeKnownType = \case
+      "CipherText"        -> go CipherText
+      "DhtPacket"         -> go DhtPacket
+      "HostAddress"       -> go HostAddress
+      "Word64"            -> go Word64
+      "Key PublicKey"     -> go Key
+      "KeyPair"           -> go KeyPair
+      "NodeInfo"          -> go NodeInfo
+      "NodesRequest"      -> go NodesRequest
+      "NodesResponse"     -> go NodesResponse
+      "Packet Word64"     -> go Packet
+      "PacketKind"        -> go PacketKind
+      "PingPacket"        -> go PingPacket
+      "PlainText"         -> go PlainText
+      "PortNumber"        -> go PortNumber
+      "RpcPacket Word64"  -> go RpcPacket
+      "SocketAddress"     -> go SocketAddress
+      "TransportProtocol" -> go TransportProtocol
+      tycon               -> fail $ "unknown type: " ++ tycon
 
-decodeS :: RPC.Method IO
-decodeS = RPC.method "Binary.decode" decodeF
+    go f = return . fmap (knownTypeToObject . f) . Encoding.decode
 
 
 --------------------------------------------------------------------------------
@@ -87,36 +167,38 @@ decodeS = RPC.method "Binary.decode" decodeF
 encode :: Binary a => a -> ByteString
 encode = Encoding.encode
 
-encodeC :: forall a. (Typeable a, RPC.MessagePack a)
-        => a -> RPC.Client ByteString
-encodeC = RPC.call "Binary.encode" $ typeName (Proxy :: Proxy a)
+encodeC :: forall a. (Typeable a, MessagePack a)
+        => a -> Client ByteString
+encodeC x = Client.call "Binary.encode" (show $ Typeable.typeOf x) x
 
-encodeM :: (Monad m, RPC.MessagePack a, Binary a)
-        => Proxy a -> RPC.Object -> m ByteString
-encodeM (Proxy :: Proxy a) obj =
-  case (RPC.fromObject obj :: Maybe a) of
-    Nothing -> fail $ "failed to decode from object: " ++ show obj
-    Just a  -> return $ encode a
+encodeS :: Server.Method IO
+encodeS = Server.method "Binary.encode"
+  (Server.MethodDocs
+    [ Server.MethodVal "typeName" "String"
+    , Server.MethodVal "value" "a"
+    ] $ Server.MethodVal "encoded" "ByteString")
+  encodeKnownType
 
-encodeF :: String -> RPC.Object -> RPC.Server ByteString
-encodeF "CipherText"        = encodeM (Proxy :: Proxy T.CipherText        )
-encodeF "DhtPacket"         = encodeM (Proxy :: Proxy T.DhtPacket         )
-encodeF "HostAddress"       = encodeM (Proxy :: Proxy T.HostAddress       )
-encodeF "Word64"            = encodeM (Proxy :: Proxy Word64              )
-encodeF "Key"               = encodeM (Proxy :: Proxy T.PublicKey         )
-encodeF "KeyPair"           = encodeM (Proxy :: Proxy T.KeyPair           )
-encodeF "NodeInfo"          = encodeM (Proxy :: Proxy T.NodeInfo          )
-encodeF "NodesRequest"      = encodeM (Proxy :: Proxy T.NodesRequest      )
-encodeF "NodesResponse"     = encodeM (Proxy :: Proxy T.NodesResponse     )
-encodeF "Packet"            = encodeM (Proxy :: Proxy (T.Packet Word64)   )
-encodeF "PacketKind"        = encodeM (Proxy :: Proxy T.PacketKind        )
-encodeF "PingPacket"        = encodeM (Proxy :: Proxy T.PingPacket        )
-encodeF "PlainText"         = encodeM (Proxy :: Proxy T.PlainText         )
-encodeF "PortNumber"        = encodeM (Proxy :: Proxy T.PortNumber        )
-encodeF "RpcPacket"         = encodeM (Proxy :: Proxy (T.RpcPacket Word64))
-encodeF "SocketAddress"     = encodeM (Proxy :: Proxy T.SocketAddress     )
-encodeF "TransportProtocol" = encodeM (Proxy :: Proxy T.TransportProtocol )
-encodeF tycon = const $ fail $ "unsupported type in encode: " ++ tycon
+  where
+    encodeKnownType :: String -> MessagePack.Object -> Server ByteString
+    encodeKnownType = \case
+      "CipherText"        -> go CipherText
+      "DhtPacket"         -> go DhtPacket
+      "HostAddress"       -> go HostAddress
+      "Word64"            -> go Word64
+      "Key PublicKey"     -> go Key
+      "KeyPair"           -> go KeyPair
+      "NodeInfo"          -> go NodeInfo
+      "NodesRequest"      -> go NodesRequest
+      "NodesResponse"     -> go NodesResponse
+      "Packet Word64"     -> go Packet
+      "PacketKind"        -> go PacketKind
+      "PingPacket"        -> go PingPacket
+      "PlainText"         -> go PlainText
+      "PortNumber"        -> go PortNumber
+      "RpcPacket Word64"  -> go RpcPacket
+      "SocketAddress"     -> go SocketAddress
+      "TransportProtocol" -> go TransportProtocol
+      tycon               -> fail $ "unknown type: " ++ tycon
 
-encodeS :: RPC.Method IO
-encodeS = RPC.method "Binary.encode" encodeF
+    go f = fmap (knownTypeEncode . f) . fromObject
