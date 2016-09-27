@@ -5,10 +5,11 @@
 module Network.Tox.Crypto.CombinedKey where
 
 import qualified Crypto.Saltine.Core.Box as Sodium (beforeNM)
+import           Network.MessagePack.Rpc (Doc (..))
+import qualified Network.MessagePack.Rpc as Rpc
 
 import           Network.Tox.Crypto.Key  (CombinedKey, Key (..), PublicKey,
                                           SecretKey)
-import qualified Network.Tox.RPC         as RPC
 
 
 {-------------------------------------------------------------------------------
@@ -33,9 +34,11 @@ precompute (Key sk) (Key pk) =
   Key $ Sodium.beforeNM sk pk
 
 
-precomputeC :: SecretKey -> PublicKey -> RPC.Client CombinedKey
-precomputeS :: RPC.Method IO
-(precomputeC, precomputeS) = RPC.stubs "CombinedKey.precompute" RPC.fun2 precompute
+precomputeR :: Rpc.Rpc (SecretKey -> PublicKey -> Rpc.Returns CombinedKey)
+precomputeR =
+  Rpc.stubs "CombinedKey.precompute"
+    (Arg "sk" $ Arg "pk" $ Ret "key")
+    precompute
 
 
 \end{code}

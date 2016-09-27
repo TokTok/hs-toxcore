@@ -13,8 +13,8 @@ module Network.Tox.Crypto.Box
   , unCipherText
   , decode
   , encode
-  , decrypt, decryptC, decryptS
-  , encrypt, encryptC, encryptS
+  , decrypt, decryptR
+  , encrypt, encryptR
   ) where
 
 import           Control.Applicative               ((<$>), (<*>))
@@ -32,12 +32,13 @@ import qualified Data.ByteString.Lazy              as LazyByteString
 import           Data.MessagePack                  (MessagePack (..))
 import           Data.Typeable                     (Typeable)
 import           GHC.Generics                      (Generic)
+import           Network.MessagePack.Rpc           (Doc (..))
+import qualified Network.MessagePack.Rpc           as Rpc
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
 import           Text.Read                         (readPrec)
 
 import           Network.Tox.Crypto.Key            (CombinedKey, Key (..),
                                                     Nonce)
-import qualified Network.Tox.RPC                   as RPC
 
 
 {-------------------------------------------------------------------------------
@@ -124,9 +125,11 @@ encrypt :: CombinedKey -> Nonce -> PlainText -> CipherText
 encrypt (Key ck) (Key nonce) (PlainText bytes) =
   CipherText $ Sodium.boxAfterNM ck nonce bytes
 
-encryptC :: CombinedKey -> Nonce -> PlainText -> RPC.Client CipherText
-encryptS :: RPC.Method IO
-(encryptC, encryptS) = RPC.stubs "Box.encrypt" RPC.fun3 encrypt
+encryptR :: Rpc.Rpc (CombinedKey -> Nonce -> PlainText -> Rpc.Returns CipherText)
+encryptR =
+  Rpc.stubs "Box.encrypt"
+    (Arg "key" $ Arg "nonce" $ Arg "plain" $ Ret "encrypted")
+    encrypt
 
 \end{code}
 
@@ -143,9 +146,11 @@ decrypt :: CombinedKey -> Nonce -> CipherText -> Maybe PlainText
 decrypt (Key ck) (Key nonce) (CipherText bytes) =
   PlainText <$> Sodium.boxOpenAfterNM ck nonce bytes
 
-decryptC :: CombinedKey -> Nonce -> CipherText -> RPC.Client (Maybe PlainText)
-decryptS :: RPC.Method IO
-(decryptC, decryptS) = RPC.stubs "Box.decrypt" RPC.fun3 decrypt
+decryptR :: Rpc.Rpc (CombinedKey -> Nonce -> CipherText -> Rpc.Returns (Maybe PlainText))
+decryptR =
+  Rpc.stubs "Box.decrypt"
+    (Arg "key" $ Arg "nonce" $ Arg "encrypted" $ Ret "plain")
+    decrypt
 
 \end{code}
 

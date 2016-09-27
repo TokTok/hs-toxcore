@@ -5,9 +5,9 @@ module Network.Tox.Encoding where
 import           Data.Binary            (Binary, get, put)
 import           Data.Binary.Bits.Get   (BitGet)
 import           Data.Binary.Bits.Put   (BitPut)
-import           Data.Binary.Get        (Decoder (..), Get, getWord8, pushChunk,
+import           Data.Binary.Get        (Decoder (..), pushChunk,
                                          runGetIncremental)
-import           Data.Binary.Put        (Put, putWord8, runPut)
+import           Data.Binary.Put        (runPut)
 import           Data.ByteString        (ByteString)
 import qualified Data.ByteString        as ByteString
 import qualified Data.ByteString.Lazy   as LazyByteString

@@ -1,4 +1,5 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 -- | This module provides helper functions to make writing RPC tests slightly
 -- easier.
 module Network.Tox.RPCTest where
@@ -11,7 +12,12 @@ import           Test.QuickCheck            (Arbitrary, Testable, property)
 
 import           Data.MessagePack           (Object (..))
 import           Network.MessagePack.Client (Client, RpcError (..))
-import           Network.Tox.RPC            (runClient)
+import qualified Network.MessagePack.Client as Client
+import qualified Network.Tox.Testing        as Testing
+
+
+runClient :: Client a -> IO a
+runClient = Client.runClient "localhost" Testing.defaultPort
 
 
 -- | Run a 'Client' using 'runClient' and catch "Pending" errors from the
