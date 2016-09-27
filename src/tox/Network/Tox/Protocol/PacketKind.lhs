@@ -56,31 +56,56 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary,
 
 
 data PacketKind
-  = PingRequest       -- 0x00: Ping request
-  | PingResponse      -- 0x01: Ping response
-  | NodesRequest      -- 0x02: Nodes request
-  | NodesResponse     -- 0x04: Nodes response
-  | CookieRequest     -- 0x18: Cookie request
-  | CookieResponse    -- 0x19: Cookie response
-  | CryptoHandshake   -- 0x1a: Crypto handshake
-  | CryptoData        -- 0x1b: Crypto data
-  | Crypto            -- 0x20: Encrypted data
-  | LanDiscovery      -- 0x21: LAN discovery
-  | OnionRequest0     -- 0x80: Initial onion request
-  | OnionRequest1     -- 0x81: First level wrapped onion request
-  | OnionRequest2     -- 0x82: Second level wrapped onion request
-  | AnnounceRequest   -- 0x83: Announce request
-  | AnnounceResponse  -- 0x84: Announce response
-  | OnionDataRequest  -- 0x85: Onion data request
-  | OnionDataResponse -- 0x86: Onion data response
-  | OnionResponse3    -- 0x8c: Third level wrapped onion response
-  | OnionResponse2    -- 0x8d: Second level wrapped onion response
-  | OnionResponse1    -- 0x8e: First level wrapped onion response
-  | BootstrapInfo     -- 0xf0: Bootstrap node info request and response
+  = PingRequest
+  | PingResponse
+  | NodesRequest
+  | NodesResponse
+  | CookieRequest
+  | CookieResponse
+  | CryptoHandshake
+  | CryptoData
+  | Crypto
+  | LanDiscovery
+  | OnionRequest0
+  | OnionRequest1
+  | OnionRequest2
+  | AnnounceRequest
+  | AnnounceResponse
+  | OnionDataRequest
+  | OnionDataResponse
+  | OnionResponse3
+  | OnionResponse2
+  | OnionResponse1
+  | BootstrapInfo
   deriving (Eq, Read, Show, Bounded, Enum, Generic, Typeable)
 
 
 instance MessagePack PacketKind
+
+
+kindDescription :: PacketKind -> String
+kindDescription = \case
+  PingRequest       -> "Ping request"
+  PingResponse      -> "Ping response"
+  NodesRequest      -> "Nodes request"
+  NodesResponse     -> "Nodes response"
+  CookieRequest     -> "Cookie request"
+  CookieResponse    -> "Cookie response"
+  CryptoHandshake   -> "Crypto handshake"
+  CryptoData        -> "Crypto data"
+  Crypto            -> "Encrypted data"
+  LanDiscovery      -> "LAN discovery"
+  OnionRequest0     -> "Initial onion request"
+  OnionRequest1     -> "First level wrapped onion request"
+  OnionRequest2     -> "Second level wrapped onion request"
+  AnnounceRequest   -> "Announce request"
+  AnnounceResponse  -> "Announce response"
+  OnionDataRequest  -> "Onion data request"
+  OnionDataResponse -> "Onion data response"
+  OnionResponse3    -> "Third level wrapped onion response"
+  OnionResponse2    -> "Second level wrapped onion response"
+  OnionResponse1    -> "First level wrapped onion response"
+  BootstrapInfo     -> "Bootstrap node info request and response"
 
 
 kindToByte :: PacketKind -> Word8

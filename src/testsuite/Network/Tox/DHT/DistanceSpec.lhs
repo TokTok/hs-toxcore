@@ -14,17 +14,35 @@ import           Network.Tox.EncodingSpec
 
 \end{code}
 
-The XOR metric \texttt{d} satisfies the required conditions:
+XOR is a valid metric, i.e. it satisfies the required conditions:
 
 \begin{enumerate}
-  \item Non-negativity \texttt{d(x, y) >= 0}: Since public keys are Crypto
-    Numbers, which are by definition positive, their XOR is necessarily
+  \item Non-negativity \texttt{distance(x, y) >= 0}: Since public keys are
+    Crypto Numbers, which are by definition positive, their XOR is necessarily
     positive.
-  \item Identity of indiscernibles \texttt{d(x, y) == 0} iff \texttt{x == y}:
-    The XOR of two integers is zero iff they are equal.
-  \item Symmetry \texttt{d(x, y) == d(y, x)}: XOR is a symmetric operation.
-  \item Subadditivity \texttt{d(x, z) <= d(x, y) + d(y, z)}: TODO.
+  \item Identity of indiscernibles \texttt{distance(x, y) == 0} iff \texttt{x ==
+    y}: The XOR of two integers is zero iff they are equal.
+  \item Symmetry \texttt{distance(x, y) == distance(y, x)}: XOR is a symmetric
+    operation.
+  \item Subadditivity \texttt{distance(x, z) <= distance(x, y) + distance(y,
+    z)}: follows from associativity, since \texttt{x XOR z = x XOR (y XOR y) XOR
+    z = distance(x, y) XOR distance(y, z)} which is not greater than
+    \texttt{distance(x, y) + distance(y, z)}.
 \end{enumerate}
+
+In addition, XOR has other useful properties:
+
+\begin{itemize}
+  \item Unidirectionality: given the key \texttt{x} and the distance \texttt{d}
+    there exist one and only one key \texttt{y} such that \texttt{distance(x,
+    y) = d}.
+
+    The implication is that repeated lookups are likely to pass along the same
+    way and thus caching makes sense.
+
+    Source:
+    \href{http://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf}{maymounkov-kademlia}
+\end{itemize}
 
 \begin{code}
 

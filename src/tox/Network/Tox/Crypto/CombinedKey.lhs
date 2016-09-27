@@ -22,7 +22,7 @@ import           Network.Tox.Crypto.Key  (CombinedKey, Key (..), PublicKey,
 
 A Combined Key is computed from a Secret Key and a Public Key using the NaCl
 function \texttt{crypto_box_beforenm}.  Given two Key Pairs KP1 (SK1, PK1) and
-KP2 (SK2, PK1), the Combined Key computed from (SK1, PK2) equals the one
+KP2 (SK2, PK2), the Combined Key computed from (SK1, PK2) equals the one
 computed from (SK2, PK1).  This allows for symmetric encryption, as peers can
 derive the same shared key from their own secret key and their peer's public
 key.

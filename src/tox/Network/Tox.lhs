@@ -26,10 +26,76 @@ lengths (e.g.  \texttt{4 | 16}), or an inclusive range (e.g. \texttt{[0,
 100]}).  Open ranges are denoted \texttt{[n,]} to mean a minimum length of
 \texttt{n} with no specified maximum length.
 
+\section{TODO: Goals and threat model}
+
+This section should give an idea on what are the goals and non-goals of Tox, so
+that reader
+
+\begin{itemize}
+  \item understands what problems Tox intends to solve
+  \item can validate if they are addresed by this specification
+  \item can make better tradeoffs and decisions in his own reimplementation of the
+    protocol
+\end{itemize}
+
+(TODO: this is just a placeholder; some more technical description should be
+given)
+
+What Tox Does:
+
+\begin{itemize}
+  \item Authentication: user's address is its public key, thus "adding friend"
+    actually means verifying key (false in case of toxme?); drawback is that
+    after being compromised you have to generate absolutely new identity; also
+    it complicates working with multiple devices; (TODO: how about some web of
+    trust, master keys and subkeys here?)
+
+  \item End-to-end encryption: all the messages are encrypted via keys derived via
+    DH, thus keys are only known to sender and receiver and are never
+    transfered over network
+
+  \item Forward secrecy (?): can be achieved by using ephemeral keys (TODO: how are
+    they used in the current protocol? is the problem actually solved?)
+
+  \item Reliability:
+    \begin{itemize}
+      \item Tox is supposed to be fully decentralized network which doesn't depend
+        on any Single Point of Failure; this is achieved by using DHT, though
+        you still need an entry point;
+      \item Tox is supposed to work under (almost) any kind of NAT and firewall;
+        this is achieved by using hole-punching, UPnP and TCP-relays;
+      \item Resistance to basic DoS and other poisoning.
+    \end{itemize}
+
+  \item (Near-)Zero-conf: end-user should be able to \emph{just} use the
+    messenger;
+\end{itemize}
+
+What Tox Does NOT:
+
+\begin{itemize}
+  \item Tox does not care about anonymity; Unless TCP mode is used, participants
+    communicate directly to each other; One of the reasons for this is that
+    relaying real-time video is rather too costly (in terms of load) and also
+    means delays;
+    \begin{itemize}
+      \item Your IP Address is exposed to nodes in your friendlist; They can link
+        your ID directly to IP Address;
+      \item Temporary DHT nodes and onion tunnels are used to find friends, so that
+        your ID cannot be linked to your IP based solely on publicly available
+        data (TODO: i.e. data stored in DHT? what else is exposed?); Though
+        adversary intercepting traffic in large enough network segment
+        is (probably) able to perform some statistical-based attack; (TODO:
+        what problem it is supposed to solve? does it solve it? since we don't
+        care about anonymity, i can only think of prevention of some targeted
+        Denial-of-Service attacks)
+    \end{itemize}
+\end{itemize}
+
 \section{Integers}
 
 The protocol uses four bounded unsigned integer types.  Bounded means they have
-a upper bound beyond which incrementing is not defined.  The integer types
+an upper bound beyond which incrementing is not defined.  The integer types
 support modular arithmetic, so overflow wraps around to zero.  Unsigned means
 their lower bound is 0.  Signed integer types are not used.  The binary
 encoding of all integer types is a fixed-width byte sequence with the integer
@@ -88,7 +154,7 @@ The LAN Discovery packet:
 LAN Discovery packets contain the DHT public key of the sender.  When a LAN
 Discovery packet is received, a DHT get nodes packet will be sent to the sender
 of the packet.  This means that the DHT instance will bootstrap itself to every
-peer from which it receives one of these packet.  Through this mechanism, Tox
+peer from which it receives one of these packets.  Through this mechanism, Tox
 clients will bootstrap themselves automatically from other Tox clients running
 on the local network.
 
@@ -131,7 +197,7 @@ this method just adds the friend to \texttt{friend_connection} and creates a
 new friend entry in Messenger for the friend.
 
 The Tox ID is used to identify peers so that they can be added as friends in
-Tox.  In order to add a friend, a Tox user must have the friend's Tox ID.The
+Tox.  In order to add a friend, a Tox user must have the friend's Tox ID. The
 Tox ID contains the long term public key of the peer (32 bytes) followed by the
 4 byte nospam (see: \texttt{friend_requests}) value and a 2 byte XOR checksum.
 The method of sending the Tox ID to others is up to the user and the client but
@@ -759,7 +825,7 @@ The TCP server implementation in toxcore can currently either work on epoll on
 linux or using unoptimized but portable socket polling.
 
 TCP connections between the TCP client and the server are encrypted to prevent
-an outsider from knowing information like who is connecting to who just be
+an outsider from knowing information like who is connecting to whom just be
 looking at someones connection to a TCP server.  This is useful when someone
 connects though something like Tor for example.  It also prevents someone from
 injecting data in the stream and makes it so we can assume that any data
@@ -1152,7 +1218,7 @@ TCP server.
 
 Disconnect notification (Sent by server to client): Sent by the server to the
 client to tell them that the connection with \texttt{connection_id} that was
-connected is now disconnect.  It is sent either when the other client of the
+connected is now disconnected.  It is sent either when the other client of the
 connection disconnect or when they tell the server to kill the connection (see
 above).
 
@@ -1537,10 +1603,10 @@ generates each peer number randomly but makes sure newly generated peer numbers
 are not equal to current ones already used by other peers in the group chat.
 If two peers join the groupchat from two different endpoints there is a small
 possibility that both will be given the same peer number however this
-possibility is low enough in practice that is is not an issue.
+possibility is low enough in practice that is not an issue.
 
 Temporary invited groupchat connections are groupchat connections to the
-groupchat inviter used by groupchat peers to bootstrap themselves the the
+groupchat inviter used by groupchat peers to bootstrap themselves the
 groupchat.  They are the same thing as connections to groupchat peers via
 friend connections except that they are discarded after the peer is fully
 connected to the group chat.
@@ -1777,11 +1843,11 @@ list.
 Kill peer messages are used to indicate that a peer has quit the group chat.
 It is sent by the one quitting the group chat right before they quit it.
 
-name change messages are used to change or set the name of the peer sending it.
+Name change messages are used to change or set the name of the peer sending it.
 They are also sent by a joining peer right after receiving the list of peers in
 order to tell others what their name is.
 
-title change packets are used to change the title of the group chat and can be
+Title change packets are used to change the title of the group chat and can be
 sent by anyone in the group chat.
 
 Chat and action messages are used by the group chat peers to send messages to
@@ -1896,7 +1962,7 @@ cookie request packet (145 bytes):
 Encrypted message is encrypted with sender's DHT private key, receiver's DHT
 public key and the nonce.
 
-The packet id for cookie request packets is 24.  The request contain the DHT
+The packet id for cookie request packets is 24.  The request contains the DHT
 public key of the sender which is the key used (The DHT private key) (along
 with the DHT public key of the receiver) to encrypt the encrypted part of the
 cookie packet and a nonce also used to encrypt the encrypted part of the
@@ -2053,11 +2119,13 @@ The states of a connection:
 
 \begin{enumerate}
   \item Not accepted: Send handshake packets.
-  \item Accepted: A handshake packet has been received from the other peer but no
-     encrypted encrypted packets: continue (or start) sending handshake packets
-     because the peer can't know if the other has received them.
-  \item Confirmed: A valid encrypted packet has been received from the other peer:
-     Connection is fully established: stop sending handshake packets.
+
+  \item Accepted: A handshake packet has been received from the other peer but
+    no encrypted packets: continue (or start) sending handshake packets because
+    the peer can't know if the other has received them.
+
+  \item Confirmed: A valid encrypted packet has been received from the other
+    peer: Connection is fully established: stop sending handshake packets.
 \end{enumerate}
 
 Toxcore sends handshake packets every second 8 times and times out the
@@ -2229,7 +2297,7 @@ numbers (0, 1, 2, 5) and then later a lossy packet with this second number as:
 How the reliability is achieved:
 
 First it is important to say that packet numbers do roll over, the next number
-after 0xFFFFFFFF (maximum value in 4 bytes) is 0.  Hence all the mathematical
+after 0xFFFFFFFF (maximum value in 4 bytes) is 0.  Hence, all the mathematical
 operations dealing with packet numbers are assumed to be done only on unsigned
 32 bit integer unless said otherwise.  For example 0 - 0xFFFFFFFF would equal
 to 1 because of the rollover.
@@ -2498,7 +2566,7 @@ outer nonce.
 
 Onion packet (request):
 
-Initial (TCP) data sent as the data of a onion packet through the TCP client
+Initial (TCP) data sent as the data of an onion packet through the TCP client
 module:
 
 \begin{itemize}
@@ -2782,7 +2850,7 @@ public key of Node D and the nonce, and contains:
   \texttt{8}         & Data to send back in response \\
 \end{tabular}
 
-If the ping id is zero, respond with a announce response packet.
+If the ping id is zero, respond with an announce response packet.
 
 If the ping id matches the one the node sent in the announce response and the
 public key matches the one being searched for, add the part used to send data
@@ -3037,7 +3105,7 @@ Once the packet is contructed a random 24 byte nonce is generated, the packet
 is encrypted (the shared key used to decrypt the request can be saved and used
 to encrypt the response to save an expensive key derivation operation), the
 data to send back is copied to the unencrypted part and the packet is sent back
-as a onion response packet.
+as an onion response packet.
 
 In order to announce itself using onion announce packets toxcore first takes
 DHT peers, picks random ones and builds onion paths with them by saving 3
@@ -3086,7 +3154,7 @@ ping dead nodes too aggressively.
 
 Toxcore decides if it will send an announce packet to one of the 4 peers in the
 announce response by checking if the peer would be stored as one of the stored
-8 closest peers if it responded; if it would not be it doesn't send a announce
+8 closest peers if it responded; if it would not be it doesn't send an announce
 request, if it would be it sends one.
 
 Peers are only put in the 8 closest peers array if they respond to an announce
@@ -3120,7 +3188,7 @@ only need to do a search for friend public keys only when first starting the
 instance (or going offline and back online) as peers starting up after us would
 be able to find us immediately just by searching for us.  If we start searching
 for friends after we are announced we prevent a scenario where 2 friends start
-their clients at the same time but are enable to find each other right away
+their clients at the same time but are unable to find each other right away
 because they start searching for each other while they have not announced
 themselves.
 

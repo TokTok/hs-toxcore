@@ -35,7 +35,7 @@ can be used to simplify the implementation.
 The number \texttt{130} is used for an IPv4 TCP relay and \texttt{138} is used
 to indicate an IPv6 TCP relay.
 
-The reason for these numbers is because the numbers on Linux for IPv4 and IPv6
+The reason for these numbers is that the numbers on Linux for IPv4 and IPv6
 (the \texttt{AF_INET} and \texttt{AF_INET6} defines) are \texttt{2} and
 \texttt{10}.  The TCP numbers are just the UDP numbers \texttt{+ 128}.
 

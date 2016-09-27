@@ -56,7 +56,7 @@ that are the closest to a requested node.
 
 \subsection{Packed node format}
 
-The DHT Send nodes uses the Packed Node Format.
+The DHT Nodes RPC service uses the Packed Node Format.
 
 Only the UDP Protocol (IP Type \texttt{2} and \texttt{10}) are used in the DHT
 module when sending nodes with the packed node format.  This is because the TCP
@@ -85,8 +85,8 @@ key is closer than the DHT public key of at least one of the nodes in the list
 to the public key being searched with that list.  When a node is added to a
 full list, it will replace the furthest node.
 
-If the 32 nodes number where increased, it would increase the amount of packets
-needed to check if each of them are still alive which would increase the
+If the 32 nodes number were increased, it would increase the amount of packets
+needed to check if each of them is still alive which would increase the
 bandwidth usage but reliability would go up.  If the number of nodes were
 decreased, reliability would go down along with bandwidth usage.  The reason
 for this relationship between reliability and number of nodes is that if we
@@ -101,8 +101,8 @@ If the ping timeouts and delays between pings were higher it would decrease the
 bandwidth usage but increase the amount of disconnected nodes that are still
 being stored in the lists.  Decreasing these delays would do the opposite.
 
-If the 8 nodes closest to each public key were increased to 16 it would
-increase the bandwidth usage, might increase hole punching efficiency on
+If the number 8 of nodes closest to each public key were increased to 16 it
+would increase the bandwidth usage, might increase hole punching efficiency on
 symmetric NATs (more ports to guess from, see Hole punching) and might increase
 the reliability.  Lowering this number would have the opposite effect.
 
@@ -114,7 +114,7 @@ When receiving a get node packet, toxcore will find the 4 nodes, in its nodes
 lists, closest to the public key in the packet and send them in the send node
 response.
 
-The timeouts and number of nodes in lists for toxcore where picked by feeling
+The timeouts and number of nodes in lists for toxcore were picked by feeling
 alone and are probably not the best values.  This also applies to the behavior
 which is simple and should be improved in order to make the network resist
 better to sybil attacks.
@@ -135,12 +135,11 @@ DHT Request packets are packets that can be sent across one DHT node to one
 that they know.  They are used to send encrypted data to friends that we are
 not necessarily connected to directly in the DHT.
 
-A DHT node that receives a DHT request packet will check whether the node with
-the receivers public key is their DHT public key and, if it is, they will
-decrypt and handle the packet.  If it is not they will check whether they know
-that DHT public key (if it's in their list of close nodes).  If it isn't, they
-will drop the packet.  If it is they will resend the exact packet to that DHT
-node.
+A DHT node that receives a DHT request packet will check whether the receivers
+public key is their DHT public key and, if it is, they will decrypt and handle
+the packet.  If it is not they will check whether they know that DHT public key
+(if it's in their list of close nodes).  If it isn't, they will drop the
+packet.  If it is they will resend the exact packet to that DHT node.
 
 The encrypted message is encrypted using the receiver's DHT Public key, the
 sender's DHT private key and the nonce (randomly generated 24 bytes).
@@ -200,8 +199,7 @@ IP/port for the friend and we send a ping request to each of the returned
 IP/ports but get no response.  If we have sent 4 ping requests to 4 IP/ports
 that supposedly belong to the friend and get no response, then this is enough
 for toxcore to start the hole punching.  The numbers 8 and 4 are used in
-toxcore and where chosen based on feel alone and so may not be the best
-numbers.
+toxcore and were chosen based on feel alone and so may not be the best numbers.
 
 Before starting the hole punching, the peer will send a NAT ping packet to the
 friend via the peers that say they know the friend.  If a NAT ping response
@@ -236,7 +234,7 @@ nothing we can do for the first option it is recommended to just use the most
 common IP returned by the peers and to ignore the other IP/ports.
 
 In the case where the peers return the same IP and port it means that the other
-friend is on a restricted cone NAT.  These kind of NATs can be hole punched by
+friend is on a restricted cone NAT.  These kinds of NATs can be hole punched by
 getting the friend to send a packet to our public IP/port.  This means that
 hole punching can be achieved easily and that we should just continue sending
 DHT ping packets regularly to that IP/port until we get a ping response.  This

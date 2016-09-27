@@ -59,7 +59,7 @@ empty = KBuckets defaultBucketSize Map.empty
 
 \end{code}
 
-The number \texttt{n} is the bucket index.  It is positive integer with the
+The above number \texttt{n} is the bucket index.  It is positive integer with the
 range \texttt{[0, 255]}, i.e. the range of an 8 bit unsigned integer.
 
 \begin{code}
@@ -116,14 +116,16 @@ entryPublicKey = NodeInfo.publicKey . entryNode
 
 \subsection{Bucket Index}
 
-The bucket index can be computed using the following function:
+The index of the bucket can be computed using the following function:
 \texttt{bucketIndex(baseKey, nodeKey) = 255 - log_2(distance(baseKey,
 nodeKey))}.  This function is not defined when \texttt{baseKey == nodeKey},
-meaning k-buckets will never contain a Node Info about the local node.
+meaning k-buckets will never contain a Node Info about the base node.
 
 Thus, each k-bucket contains only Node Infos for whose keys the following
 holds: if node with key \texttt{nodeKey} is in k-bucket with index \texttt{n},
-then \texttt{bucketIndex(baseKey, nodeKey) == n}.
+then \texttt{bucketIndex(baseKey, nodeKey) == n}. Thus, n'th k-bucket consists
+of nodes for which distance to the base node lies in range
+\verb![2^n, 2^(n+1) - 1]!.
 
 The bucket index can be efficiently computed by determining the first bit at
 which the two keys differ, starting from the most significant bit.  So, if the

@@ -1,10 +1,10 @@
 \section{DHT Packet}
 
 The DHT Packet contains the sender's DHT Public Key, an encryption Nonce, and
-an encrypted payload.  The payload is encrypted with the the DHT secret key of
-the sender, the DHT public key of the receiver, and the nonce that is sent
-along with the packet.  DHT Packets are sent inside Protocol Packets with a
-varying Packet Kind.
+an encrypted payload.  The payload is encrypted with the DHT secret key of the
+sender, the DHT public key of the receiver, and the nonce that is sent along
+with the packet.  DHT Packets are sent inside Protocol Packets with a varying
+Packet Kind.
 
 \begin{tabular}{l|l|l}
   Length             & Type        & \href{#protocol-packet}{Contents} \\

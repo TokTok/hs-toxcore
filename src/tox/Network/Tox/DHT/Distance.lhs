@@ -27,11 +27,9 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 \end{code}
 
 A Distance is a positive integer.  Its human-readable representation is a
-base-16 number.  Distance is an
+base-16 number.  Distance (type) is an
 \href{https://en.wikipedia.org/wiki/Ordered_semigroup}{ordered monoid} with the
 associative binary operator \texttt{+} and the identity element \texttt{0}.
-When we speak of a "close node", we mean that their Distance to the node under
-consideration is small compared to the Distance to other nodes.
 
 \begin{code}
 
@@ -58,12 +56,16 @@ log2 (Distance x) = Just $ I# (integerLog2# x)
 
 \end{code}
 
-The DHT needs a
+The DHT uses a
 \href{https://en.wikipedia.org/wiki/Metric_(mathematics)}{metric} to determine
 distance between two nodes.  The Distance type is the co-domain of this metric.
 The metric currently used by the Tox DHT is the \texttt{XOR} of the nodes'
-public keys.  The public keys are interpreted as Big Endian integers (see
-\href{#key-1}{Crypto Numbers}).
+public keys: \texttt{distance(x, y) = x XOR y}.  For this computation, public
+keys are interpreted as Big Endian integers (see \href{#key-1}{Crypto
+Numbers}).
+
+When we speak of a "close node", we mean that its Distance to the node under
+consideration is small compared to the Distance to other nodes.
 
 \begin{code}
 
