@@ -1,3 +1,5 @@
+# DO NOT EDIT: This file was generated using the following command:
+# github-tools/tools/expand-yaml hs-toxcore/.leaf.yml hs-toxcore/.travis.yml
 ---
 addons:
   apt:

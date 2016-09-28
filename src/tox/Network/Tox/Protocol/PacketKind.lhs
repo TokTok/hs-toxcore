@@ -5,32 +5,6 @@ number.  Their payload is specified in dedicated sections.  Each section is
 named after the Packet Kind it describes followed by the byte value in
 parentheses, e.g. \href{#ping-request-0x00}{Ping Request (0x00)}.
 
-\begin{tabular}{l|l}
-  Byte value        & Packet Kind \\
-  \hline
-  \texttt{0x00}     & Ping Request \\
-  \texttt{0x01}     & Ping Response \\
-  \texttt{0x02}     & Nodes Request \\
-  \texttt{0x04}     & Nodes Response \\
-  \texttt{0x18}     & Cookie Request \\
-  \texttt{0x19}     & Cookie Response \\
-  \texttt{0x1a}     & Crypto Handshake \\
-  \texttt{0x1b}     & Crypto Data \\
-  \texttt{0x20}     & DHT Request \\
-  \texttt{0x21}     & LAN Discovery \\
-  \texttt{0x80}     & Onion Request 0 \\
-  \texttt{0x81}     & Onion Request 1 \\
-  \texttt{0x82}     & Onion Request 2 \\
-  \texttt{0x83}     & Announce Request \\
-  \texttt{0x84}     & Announce Response \\
-  \texttt{0x85}     & Onion Data Request \\
-  \texttt{0x86}     & Onion Data Response \\
-  \texttt{0x8c}     & Onion Response 3 \\
-  \texttt{0x8d}     & Onion Response 2 \\
-  \texttt{0x8e}     & Onion Response 1 \\
-  \texttt{0xf0}     & Bootstrap Info \\
-\end{tabular}
-
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
@@ -54,6 +28,24 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary,
  -
  ------------------------------------------------------------------------------}
 
+\end{code}
+
+\begin{lstlisting}[semdoc]
+row :: PacketKind -> [TableCell]
+row kind =
+  [ [Plain [Code ("", [], []) $ printf "0x%02x" $ kindToByte kind]]
+  , [Plain (List.intersperse Space . map Str . splitCamel . show $ kind)]
+  ]
+
+it =
+  Table [] [AlignLeft, AlignLeft] [0.0, 0.0]
+    [ [Plain [Str "Byte", Space, Str "value"]]
+    , [Plain [Str "Packet", Space, Str "Kind"]]
+    ]
+    (map row $ enumFrom minBound)
+\end{lstlisting}
+
+\begin{code}
 
 data PacketKind
   = PingRequest
@@ -64,7 +56,7 @@ data PacketKind
   | CookieResponse
   | CryptoHandshake
   | CryptoData
-  | Crypto
+  | DhtRequest
   | LanDiscovery
   | OnionRequest0
   | OnionRequest1
@@ -93,7 +85,7 @@ kindDescription = \case
   CookieResponse    -> "Cookie response"
   CryptoHandshake   -> "Crypto handshake"
   CryptoData        -> "Crypto data"
-  Crypto            -> "Encrypted data"
+  DhtRequest        -> "Forwarded DHT request"
   LanDiscovery      -> "LAN discovery"
   OnionRequest0     -> "Initial onion request"
   OnionRequest1     -> "First level wrapped onion request"
@@ -118,7 +110,7 @@ kindToByte = \case
   CookieResponse    -> 0x19
   CryptoHandshake   -> 0x1a
   CryptoData        -> 0x1b
-  Crypto            -> 0x20
+  DhtRequest        -> 0x20
   LanDiscovery      -> 0x21
   OnionRequest0     -> 0x80
   OnionRequest1     -> 0x81
