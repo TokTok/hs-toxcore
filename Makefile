@@ -1,8 +1,5 @@
 include configure.mk
 
-# Test flavour. See test/toxcore/Makefile for choices.
-TEST	:= vanilla
-
 SRCDIRS	:= src test tools
 SOURCES	:= $(shell find $(SRCDIRS) -name "*.*hs" -or -name "*.c" -or -name "*.h")
 
@@ -18,32 +15,10 @@ CONFIGURE_FLAGS :=		\
 	$(DISABLE_PROFILING)	\
 	$(EXTRA_DIRS)
 
-CLANG_TIDY_FLAGS :=					\
-	$(wildcard test/toxcore/*.[ch])			\
-	-fix						\
-	--						\
-	-Itest/toxcore/libsodium/src/libsodium/include	\
-	-Itest/toxcore/msgpack-c/include		\
-	-Itest/toxcore/toxcore/toxcore
-
-CLANG_FORMAT_FLAGS :=	\
-	-style=file	\
-	-i
-
 HSTOX_TIX	= dist/hpc/tix/hstox/hstox.tix
-SUT_TOXCORE	= dist/build/sut-toxcore/sut-toxcore
-TEST_TOXCORE	= dist/build/test-toxcore/test-toxcore
 
 
 all: check $(DOCS)
-
-fuzz: .build.stamp
-	@echo "Cleaning up previous results"
-	@$(MAKE) -C test/toxcore clean
-	@echo "Generating initial test inputs"
-	@rm -f test/toxcore/test-inputs/*
-	@$(TEST_TOXCORE) --qc-max-success=1 --format=silent
-	@$(MAKE) -C test/toxcore master
 
 check: $(HSTOX_TIX)
 	hpc markup $(HPC_DIRS) --destdir=dist/hpc/html $< > /dev/null
@@ -54,9 +29,6 @@ $(HSTOX_TIX): .build.stamp
 	mkdir -p $(@D)
 	hpc sum --exclude=Main --union `find dist -name "*.tix" -and -not -wholename "*$@"` --output=$@
 
-check-toxcore: $(SUT_TOXCORE)
-	cabal test test-toxcore $(CABAL_JOBS)
-
 repl:
 	rm -f .configure.stamp
 	cabal configure $(CONFIGURE_FLAGS)
@@ -65,7 +37,6 @@ repl:
 clean:
 	cabal clean
 	rm -f $(wildcard .*.stamp *.tix)
-	@$(MAKE) -C test/toxcore clean
 
 
 build: .build.stamp
@@ -73,13 +44,6 @@ build: .build.stamp
 	rm -f $(wildcard *.tix)
 	cabal build $(CABAL_JOBS)
 	@touch $@
-
-$(SUT_TOXCORE): test/toxcore/test_main-$(TEST)
-	mkdir -p $(@D)
-	cp $< $@
-
-test/toxcore/test_main-$(TEST): $(shell find test/toxcore -name "*.[ch]") test/toxcore/Makefile
-	make -C $(@D) $(@F)
 
 configure: .configure.stamp
 .configure.stamp: .libsodium.stamp hstox.cabal
@@ -109,8 +73,6 @@ libsodium: .libsodium.stamp
 format: .format.stamp
 .format.stamp: $(SOURCES) .configure.stamp
 	if which stylish-haskell; then tools/format-haskell -i $(SRCDIRS); fi
-	if which $(CLANG_FORMAT); then $(CLANG_FORMAT) $(CLANG_FORMAT_FLAGS) test/toxcore/*.[ch]; fi
-	if which $(CLANG_TIDY); then $(CLANG_TIDY) $(CLANG_TIDY_FLAGS); fi
 	@touch $@
 
 lint: .lint.stamp

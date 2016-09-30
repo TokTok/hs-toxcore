@@ -4,7 +4,7 @@ import           Control.Concurrent (threadDelay)
 import           System.Environment (getArgs, withArgs)
 import           System.Process     (createProcess, proc, terminateProcess)
 
-import qualified TestSuite
+import qualified ToxTestSuite
 
 
 getSutAndArgs :: IO (String, [String])
@@ -25,5 +25,5 @@ main = do
   threadDelay $ 100 * 1000
   -- TestSuite (the test runner) makes connections to port 1234 to communicate
   -- with the SUT.
-  withArgs (["--print-cpu-time", "--color"] ++ args) TestSuite.main
+  withArgs (["--print-cpu-time", "--color"] ++ args) ToxTestSuite.main
   terminateProcess sutProc

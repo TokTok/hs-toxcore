@@ -20,16 +20,6 @@ matrix:
     - env: JOB=hstox ENV=osx
       os: osx
 
-addons:
-  apt:
-    sources:
-      - llvm-toolchain-precise-3.8
-      # Required for libstdc++-4.9, which is required for llvm-3.8.
-      - ubuntu-toolchain-r-test
-    packages:
-      - clang-format-3.8
-      - clang-tidy-3.8
-
 cache:
   directories:
     - $HOME/.cabal

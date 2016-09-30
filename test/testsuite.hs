@@ -4,7 +4,7 @@ import           Control.Concurrent.Async (cancel, wait, withAsync)
 import           System.Environment       (withArgs)
 
 import           Network.Tox.Testing      (serve)
-import qualified TestSuite
+import qualified ToxTestSuite
 
 
 main :: IO ()
@@ -14,4 +14,4 @@ main =
       wait res
       cancel server
   where
-    client = withArgs ["--print-cpu-time", "--color"] TestSuite.main
+    client = withArgs ["--print-cpu-time", "--color"] ToxTestSuite.main
