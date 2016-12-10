@@ -158,9 +158,9 @@ peer from which it receives one of these packets.  Through this mechanism, Tox
 clients will bootstrap themselves automatically from other Tox clients running
 on the local network.
 
-When enabled, toxcore sends these packets every 10 seconds to keep delays low.  The packets
-could be sent up to every 60 seconds but this would make peer finding over the
-network 6 times slower.
+When enabled, toxcore sends these packets every 10 seconds to keep delays low.
+The packets could be sent up to every 60 seconds but this would make peer
+finding over the network 6 times slower.
 
 LAN discovery enables two friends on a local network to find each other as the
 DHT prioritizes LAN addresses over non LAN addresses for DHT peers.  Sending a
