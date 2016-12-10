@@ -8,13 +8,13 @@ build-type:           Simple
 author:               iphy
 maintainer:           iphy
 copyright:            © 2016 iphy
-homepage:             http://hstox.github.io
+homepage:             https://toktok.github.io
 category:             Network
 description:          A Tox protocol implementation in Haskell
 
 source-repository head
   type: git
-  location: https://github.com/iphydf/hstox
+  location: https://github.com/TokTok/hs-toxcore
 
 flag library-only
   description: Build only library, no executables or tests.
