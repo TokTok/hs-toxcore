@@ -5,6 +5,8 @@
 /.*.stamp
 
 /.cabal-sandbox
+/.stack-work
+/cabal.config
 /cabal.sandbox.config
 
 # Generated.
