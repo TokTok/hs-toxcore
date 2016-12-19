@@ -146,6 +146,11 @@ bucketIndex pk1 pk2 =
 
 \subsection{Manipulating k-buckets}
 
+TODO: this is different from kademlia's least-recently-seen eviction policy; why
+the existing solution was chosen, how does it affect security, performance and
+resistance to poisoning? original paper claims that preference of old live nodes
+results in better persistence and resistance to basic DDoS attacks;
+
 Any update or lookup operation on a k-buckets instance that involves a single
 node requires us to first compute the bucket index for that node.  An update
 involving a Node Info with \texttt{nodeKey == baseKey} has no effect.  If the
