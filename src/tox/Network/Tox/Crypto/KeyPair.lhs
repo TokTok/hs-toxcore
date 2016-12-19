@@ -15,6 +15,7 @@ standard group element and the Secret Key.  See the
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
+{-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE Trustworthy        #-}
 module Network.Tox.Crypto.KeyPair where
 
