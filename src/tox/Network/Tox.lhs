@@ -10,13 +10,92 @@ supporting modules required to implement it.  The goal of this document is to
 give enough guidance to permit a complete and correct implementation of the
 protocol.
 
+\section{Objectives}
+
+This section provides an overview of goals and non-goals of Tox.  It provides
+the reader with:
+
+\begin{itemize}
+  \item a basic understanding of what problems Tox intends to solve;
+  \item a means to validate whether those problems are indeed solved by the
+    protocol as specified;
+  \item the ability to make better tradeoffs and decisions in their own
+    reimplementation of the protocol.
+\end{itemize}
+
+\subsection{Goals}
+
+\begin{itemize}
+
+  \item \textbf{Authentication:} Tox aims to provide authenticated
+    communication. This means that during a communication session, both parties
+    can be sure of the other party's identity. Users are identified by their
+    public key. The initial key exchange is currently not in scope for the Tox
+    protocol. In the future, Tox may provide a means for initial authentication
+    using a challenge/response or shared secret based exchange.
+
+    If the secret key is compromised, the user's identity is compromised, and an
+    attacker can impersonate that user. When this happens, the user must create
+    a new identity with a new public key.
+
+  \item \textbf{End-to-end encryption:} The Tox protocol establishes end-to-end
+    encrypted communication links. Shared keys are deterministically derived
+    using a Diffie-Hellman-like method, so keys are never transferred over the
+    network.
+
+  \item \textbf{Forward secrecy}: Session keys are re-negotiated when the peer
+    connection is established.
+
+  \item \textbf{Resilience:}
+    \begin{itemize}
+      \item Independence of infrastructure: Tox avoids relying on servers as
+        much as possible. Communications are not transmitted via or stored on
+        central servers. Joining a Tox network requires connecting to a
+        well-known node called a bootstrap node. Anyone can run a bootstrap
+        node, and users need not put any trust in them.
+      \item Tox tries to establish communication paths in difficult network
+        situations. This includes connecting to peers behind a NAT or firewall.
+        Various techniques help achieve this, such as UDP hole-punching, UPnP,
+        NAT-PMP, other untrusted nodes acting as relays, and DNS tunnels.
+      \item Resistance to basic denial of service attacks: short timeouts make
+        the network dynamic and resilient against poisoning attempts.
+    \end{itemize}
+
+  \item \textbf{Minimum configuration:} Tox aims to be nearly zero-conf.
+    User-friendliness is an important aspect to security. Tox aims to make
+    security easy to achieve for average users.
+\end{itemize}
+
+\subsection{Non-goals}
+
+\begin{itemize}
+  \item \textbf{Anonymity} is not in scope for the Tox protocol itself, but it
+    provides an easy way to integrate with software providing anonymity, such as
+    Tor.
+
+    By default, Tox tries to establish direct connections between peers, so they
+    are aware of each other's IP address.  One of the reasons for this is that
+    relaying real-time multimedia conversations over anonymity networks is not
+    feasible with the current network infrastructure.
+
+    The exception is for the initial friend request, where Tox provides a simple
+    onion routing protocol to prevent an attacker from finding the IP address of
+    any arbitrary node by public key. This ability would give an attacker a
+    means for targetted denial of service attacks on users.
+\end{itemize}
+
+\section{Threat model}
+
+TODO(iphydf): Define one.
+
+\section{Data types}
+
 All data types are defined before their first use, and their binary protocol
 representation is given.  The protocol representations are normative and must
 be implemented exactly as specified.  For some types, human-readable
 representations are suggested.  An implementation may choose to provide no such
 representation or a different one.  The implementation is free to choose any
-in-memory representation of the specified types, as long as they can be encoded
-to and decoded from the specified protocol representation.
+in-memory representation of the specified types.
 
 Binary formats are specified in tables with length, type, and content
 descriptions.  If applicable, specific enumeration types are used, so types may
@@ -25,72 +104,6 @@ bytes (e.g. \texttt{32}), a number in bits (e.g. \texttt{7} bit), a choice of
 lengths (e.g.  \texttt{4 | 16}), or an inclusive range (e.g. \texttt{[0,
 100]}).  Open ranges are denoted \texttt{[n,]} to mean a minimum length of
 \texttt{n} with no specified maximum length.
-
-\section{TODO: Goals and threat model}
-
-This section should give an idea on what are the goals and non-goals of Tox, so
-that reader
-
-\begin{itemize}
-  \item understands what problems Tox intends to solve
-  \item can validate if they are addresed by this specification
-  \item can make better tradeoffs and decisions in his own reimplementation of the
-    protocol
-\end{itemize}
-
-(TODO: this is just a placeholder; some more technical description should be
-given)
-
-What Tox Does:
-
-\begin{itemize}
-  \item Authentication: user's address is its public key, thus "adding friend"
-    actually means verifying key (false in case of toxme?); drawback is that
-    after being compromised you have to generate absolutely new identity; also
-    it complicates working with multiple devices; (TODO: how about some web of
-    trust, master keys and subkeys here?)
-
-  \item End-to-end encryption: all the messages are encrypted via keys derived via
-    DH, thus keys are only known to sender and receiver and are never
-    transfered over network
-
-  \item Forward secrecy (?): can be achieved by using ephemeral keys (TODO: how are
-    they used in the current protocol? is the problem actually solved?)
-
-  \item Reliability:
-    \begin{itemize}
-      \item Tox is supposed to be fully decentralized network which doesn't depend
-        on any Single Point of Failure; this is achieved by using DHT, though
-        you still need an entry point;
-      \item Tox is supposed to work under (almost) any kind of NAT and firewall;
-        this is achieved by using hole-punching, UPnP and TCP-relays;
-      \item Resistance to basic DoS and other poisoning.
-    \end{itemize}
-
-  \item (Near-)Zero-conf: end-user should be able to \emph{just} use the
-    messenger;
-\end{itemize}
-
-What Tox Does NOT:
-
-\begin{itemize}
-  \item Tox does not care about anonymity; Unless TCP mode is used, participants
-    communicate directly to each other; One of the reasons for this is that
-    relaying real-time video is rather too costly (in terms of load) and also
-    means delays;
-    \begin{itemize}
-      \item Your IP Address is exposed to nodes in your friendlist; They can link
-        your ID directly to IP Address;
-      \item Temporary DHT nodes and onion tunnels are used to find friends, so that
-        your ID cannot be linked to your IP based solely on publicly available
-        data (TODO: i.e. data stored in DHT? what else is exposed?); Though
-        adversary intercepting traffic in large enough network segment
-        is (probably) able to perform some statistical-based attack; (TODO:
-        what problem it is supposed to solve? does it solve it? since we don't
-        care about anonymity, i can only think of prevention of some targeted
-        Denial-of-Service attacks)
-    \end{itemize}
-\end{itemize}
 
 \section{Integers}
 
