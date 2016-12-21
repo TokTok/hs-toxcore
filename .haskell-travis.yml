@@ -14,3 +14,5 @@ cabal:
 
 script:
   - semdoc src/tox/Network/Tox.lhs spec.md
+  - gem install gist
+  - gist spec.md
