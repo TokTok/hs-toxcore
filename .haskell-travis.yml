@@ -1,0 +1,16 @@
+package:
+  name: hstox
+  version: 0.0.1
+
+apt:
+  sources:
+    - sourceline: 'ppa:chris-lea/libsodium'
+  packages:
+    - libsodium-dev
+
+cabal:
+  packages:
+    - semdoc
+
+script:
+  - semdoc src/tox/Network/Tox.lhs spec.md
