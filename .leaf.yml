@@ -1,0 +1,23 @@
+inherits: haskell
+sudo: required
+
+package:
+  name: hstox
+  version: 0.0.1
+
+addons:
+  apt:
+    sources:
+      - sourceline: 'ppa:chris-lea/libsodium'
+    packages:
+      - libsodium-dev
+
+haskell:
+  packages:
+    - semdoc
+
+script:
+  after:
+    - semdoc src/tox/Network/Tox.lhs spec.md
+    - gem install gist
+    - gist spec.md
