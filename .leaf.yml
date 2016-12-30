@@ -18,6 +18,9 @@ haskell:
 
 script:
   after:
-    - semdoc src/tox/Network/Tox.lhs spec.md
+    - git checkout $TRAVIS_BRANCH
+    - semdoc src/tox/Network/Tox.lhs spec.old.md
+    - git checkout $TRAVIS_COMMIT
+    - semdoc src/tox/Network/Tox.lhs spec.new.md
     - gem install gist
-    - gist spec.md
+    - diff spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff
