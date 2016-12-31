@@ -66,5 +66,5 @@ script:
 - git checkout $TRAVIS_COMMIT
 - semdoc src/tox/Network/Tox.lhs spec.new.md
 - gem install gist
-- diff spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff
+- diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff
 sudo: required
