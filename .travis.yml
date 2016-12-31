@@ -24,6 +24,8 @@ cache:
   - $HOME/.ghc-build
   - $HOME/.ghc-tools
 env: CABALVER=1.18 GHCVER=7.8.4
+git:
+  depth: 1
 haskell:
   cabal: 1.18
   ghc: 7.8.4
