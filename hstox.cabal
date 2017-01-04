@@ -48,6 +48,7 @@ library
     , transformers
   exposed-modules:
       Network.Tox
+      Network.Tox.Application.GroupChats
       Network.Tox.Binary
       Network.Tox.Crypto
       Network.Tox.Crypto.Box

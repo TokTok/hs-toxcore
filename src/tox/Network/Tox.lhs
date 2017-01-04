@@ -1885,6 +1885,8 @@ number is in this list then it was received.
 
 This is how groupchats in Tox work.
 
+\input{src/tox/Network/Tox/Application/GroupChats.lhs}
+
 \chapter{Net crypto}
 
 The Tox transport protocol is what Tox uses to establish and send data securely

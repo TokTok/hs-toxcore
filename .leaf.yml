@@ -20,7 +20,7 @@ script:
   after:
     - git checkout $TRAVIS_BRANCH
     - semdoc src/tox/Network/Tox.lhs spec.old.md
-    - git checkout $TRAVIS_COMMIT
+    - git checkout -qf FETCH_HEAD
     - semdoc src/tox/Network/Tox.lhs spec.new.md
     - gem install gist
     - diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff
