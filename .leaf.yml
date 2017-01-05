@@ -25,4 +25,6 @@ script:
           semdoc src/tox/Network/Tox.lhs spec.new.md
           gem install gist
           diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff
+          gem install mdl
+          mdl -w -s .md-style.rb spec.new.md
         }

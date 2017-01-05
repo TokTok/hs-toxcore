@@ -260,10 +260,10 @@ founder key, then re-broadcast the sanctions list to the entire group. This is
 necessary to guarantee that all sanctions list entries and its credentials are
 signed by a current moderator or the founder at all times.
 
-\emph{Note: The sanctions list is not saved to the Tox save file, meaning that
-if the group ever becomes empty, the sanctions list will be reset. This is in
-contrast to the shared state and moderator list, which are both saved and will
-persist even if the group becomes empty.}
+\textbf{Note:} \emph{The sanctions list is not saved to the Tox save file,
+meaning that if the group ever becomes empty, the sanctions list will be reset.
+This is in contrast to the shared state and moderator list, which are both saved
+and will persist even if the group becomes empty.}
 
 \section{Topics}
 

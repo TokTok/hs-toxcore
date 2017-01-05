@@ -63,5 +63,6 @@ script:
 - git checkout $TRAVIS_BRANCH
 - semdoc src/tox/Network/Tox.lhs spec.old.md
 - "! git checkout -qf FETCH_HEAD || {\n  semdoc src/tox/Network/Tox.lhs spec.new.md\n
-  \ gem install gist\n  diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff\n}\n"
+  \ gem install gist\n  diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff\n
+  \ gem install mdl\n  mdl -w -s .md-style.rb spec.new.md\n}\n"
 sudo: required
