@@ -62,8 +62,6 @@ script:
 - cabal check
 - git checkout $TRAVIS_BRANCH
 - semdoc src/tox/Network/Tox.lhs spec.old.md
-- git checkout -qf FETCH_HEAD
-- semdoc src/tox/Network/Tox.lhs spec.new.md
-- gem install gist
-- diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff
+- "! git checkout -qf FETCH_HEAD || {\n  semdoc src/tox/Network/Tox.lhs spec.new.md\n
+  \ gem install gist\n  diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff\n}\n"
 sudo: required
