@@ -28,12 +28,6 @@ cache:
 env: CABALVER=1.18 GHCVER=7.8.4
 git:
   depth: 1
-haskell:
-  cabal: 1.18
-  ghc: 7.8.4
-  packages:
-  - semdoc
-  tools: []
 install:
 - export PATH=$HOME/.cabal/bin:$PATH
 - export PATH=$HOME/.cabal-build/bin:$PATH
@@ -49,9 +43,6 @@ install:
 - rm -f $HOME/.ghc && ln -s $HOME/.ghc-build $HOME/.ghc
 - cabal update
 language: generic
-package:
-  name: hstox
-  version: 0.0.1
 script:
 - rm -f $HOME/.cabal && ln -s $HOME/.cabal-tools $HOME/.cabal
 - rm -f $HOME/.ghc && ln -s $HOME/.ghc-tools $HOME/.ghc
