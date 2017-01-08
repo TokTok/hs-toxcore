@@ -220,7 +220,7 @@ manually send it to the friend using another program.
 Tox ID:
 
 \begin{figure}
-\includegraphics{img/tox-id.png}
+\includegraphics{res/images/tox-id.png}
 \caption{Tox ID}
 \end{figure}
 
