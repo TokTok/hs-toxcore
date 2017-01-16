@@ -6,15 +6,15 @@ module Network.Tox.DHT where
 \end{code}
 
 The DHT is a self-organizing swarm of all nodes in the Tox network.  A node in
-the Tox network is also called "Tox node".  When we talk about "peers", we mean
+the Tox network is also called a "Tox node".  When we talk about "peers", we mean
 any node that is not the local node (the subject).  This module takes care of
 finding the IP and port of nodes and establishing a route to them directly via
 UDP using \href{#hole-punching}{hole punching} if necessary.  The DHT only runs
 on UDP and so is only used if UDP works.
 
-Every node in the Tox DHT has an ephemeral Key Pair called the DHT Key Pair
+Every node in the Tox DHT has an ephemeral Key Pair called the DHT Key Pair,
 consisting of the DHT Secret Key and the DHT Public Key.  The DHT Public Key
-acts as the node address.  The DHT Key Pair is renewed every time the tox
+acts as the node address.  The DHT Key Pair is renewed every time the Tox
 instance is closed or restarted.  An implementation may choose to renew the key
 more often, but doing so will disconnect all peers.
 
@@ -58,7 +58,7 @@ that are the closest to a requested node.
 
 The DHT Nodes RPC service uses the Packed Node Format.
 
-Only the UDP Protocol (IP Type \texttt{2} and \texttt{10}) are used in the DHT
+Only the UDP Protocol (IP Type \texttt{2} and \texttt{10}) is used in the DHT
 module when sending nodes with the packed node format.  This is because the TCP
 Protocol is used to send TCP relay information and the DHT is UDP only.
 
@@ -80,7 +80,7 @@ being searched for being the ones in the DHT friends list.  Nodes are removed
 after 122 seconds of no response.  Nodes are added to the lists after a valid
 ping response or send node packet is received from them.  If the node is
 already present in the list it is updated if the IP address changed.  A node
-can only be added to a list if the list is not full or if the nodes DHT public
+can only be added to a list if the list is not full or if the node's DHT public
 key is closer than the DHT public key of at least one of the nodes in the list
 to the public key being searched with that list.  When a node is added to a
 full list, it will replace the furthest node.
@@ -135,7 +135,7 @@ DHT Request packets are packets that can be sent across one DHT node to one
 that they know.  They are used to send encrypted data to friends that we are
 not necessarily connected to directly in the DHT.
 
-A DHT node that receives a DHT request packet will check whether the receivers
+A DHT node that receives a DHT request packet will check whether the receiver's
 public key is their DHT public key and, if it is, they will decrypt and handle
 the packet.  If it is not they will check whether they know that DHT public key
 (if it's in their list of close nodes).  If it isn't, they will drop the
@@ -144,8 +144,8 @@ packet.  If it is they will resend the exact packet to that DHT node.
 The encrypted message is encrypted using the receiver's DHT Public key, the
 sender's DHT private key and the nonce (randomly generated 24 bytes).
 
-DHT request packets are used for DHTPK packets (see onion) and NAT ping
-packets.
+DHT request packets are used for DHT public key packets (see onion) and NAT
+ping packets.
 
 \subsection{NAT ping packets}
 

@@ -58,10 +58,10 @@ log2 (Distance x) = Just $ I# (integerLog2# x)
 
 The DHT uses a
 \href{https://en.wikipedia.org/wiki/Metric_(mathematics)}{metric} to determine
-distance between two nodes.  The Distance type is the co-domain of this metric.
-The metric currently used by the Tox DHT is the \texttt{XOR} of the nodes'
-public keys: \texttt{distance(x, y) = x XOR y}.  For this computation, public
-keys are interpreted as Big Endian integers (see \href{#key-1}{Crypto
+the distance between two nodes.  The Distance type is the co-domain of this
+metric. The metric currently used by the Tox DHT is the \texttt{XOR} of the
+nodes' public keys: \texttt{distance(x, y) = x XOR y}.  For this computation,
+public keys are interpreted as Big Endian integers (see \href{#key-1}{Crypto
 Numbers}).
 
 When we speak of a "close node", we mean that its Distance to the node under
