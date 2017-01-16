@@ -7,7 +7,8 @@ import           Test.QuickCheck
 
 import           Control.Monad                 (when)
 import qualified Data.Map                      as Map
-import           Data.List                     (sort)
+import           Data.Ord                      (comparing)
+import           Data.List                     (sort, sortBy)
 import           Data.Proxy                    (Proxy (..))
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.DHT.Distance      as Distance
@@ -126,3 +127,12 @@ spec = do
           keptEntries  = Map.elems $ KBuckets.bucketNodes bucket'
         in
           take (KBuckets.bucketSize kBuckets) (sort allEntries) `shouldBe` sort keptEntries
+
+  describe "foldNodes" $ do
+    it "iterates over nodes in order of distance from the base key" $
+      property $ \kBuckets ->
+        let
+          nodes             = KBuckets.foldNodes (\ns n -> ns++[n]) [] kBuckets
+          nodeDistance node = Distance.xorDistance (KBuckets.baseKey kBuckets) (NodeInfo.publicKey node)
+        in
+          nodes `shouldBe` sortBy (comparing nodeDistance) nodes
