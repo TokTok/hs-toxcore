@@ -15,7 +15,9 @@ import           Data.Binary                   (Binary)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
+import           Data.List                     (sort)
 import           Data.Word                     (Word8)
+import           Data.Foldable                 (maximumBy)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
 import           Test.QuickCheck.Gen           (Gen)
 import qualified Test.QuickCheck.Gen           as Gen
@@ -217,12 +219,18 @@ addNodeToBucket maxSize entry =
   KBucket . truncateMap maxSize . Map.insert (entryPublicKey entry) entry . bucketNodes
 
 
-truncateMap :: Ord a => Int -> Map k a -> Map k a
+truncateMap :: (Ord k, Ord a) => Int -> Map k a -> Map k a
 truncateMap maxSize m
   | Map.size m <= maxSize = m
   | otherwise =
       -- Remove the greatest element until the map is small enough again.
-      truncateMap maxSize $ Map.deleteMax m
+      truncateMap maxSize $ deleteMaxValue m
+
+deleteMaxValue :: (Ord k, Ord a) => Map k a -> Map k a
+deleteMaxValue m | Map.null m = m
+deleteMaxValue m =
+    let (k,_) = maximumBy (comparing snd) $ Map.assocs m
+    in Map.delete k m
 
 
 removeNodeFromBucket :: PublicKey -> KBucket -> KBucket
@@ -245,7 +253,7 @@ is the furthest away in terms of the distance metric.
 
 foldNodes :: (a -> NodeInfo -> a) -> a -> KBuckets -> a
 foldNodes f x =
-  foldl f x . concatMap (map entryNode . Map.elems . bucketNodes) . Map.elems . buckets
+  foldl f x . concatMap (map entryNode . sort . Map.elems . bucketNodes) . reverse . Map.elems . buckets
 
 
 {-------------------------------------------------------------------------------
