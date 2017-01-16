@@ -6,7 +6,9 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Control.Monad                 (when)
+import           Data.List                     (sort, sortBy)
 import qualified Data.Map                      as Map
+import           Data.Ord                      (comparing)
 import           Data.Proxy                    (Proxy (..))
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.DHT.Distance      as Distance
@@ -111,3 +113,26 @@ spec = do
         outputs = Nothing : map Just [0 .. 255]
       in
       map (KBuckets.bucketIndex zeroKey) inputs `shouldBe` outputs
+
+  describe "addNode" $
+    it "keeps the smallest k entries in the bucket indexed by the index of the added node" $
+      property $ \kBuckets nodeInfo -> KBuckets.baseKey kBuckets /= NodeInfo.publicKey nodeInfo ==>
+        let
+          newEntry     = KBuckets.KBucketEntry (KBuckets.baseKey kBuckets) nodeInfo
+          Just index   = KBuckets.bucketIndex (KBuckets.baseKey kBuckets) (NodeInfo.publicKey nodeInfo)
+          bucket       = Map.findWithDefault KBuckets.emptyBucket index $ KBuckets.buckets kBuckets
+          allEntries   = (newEntry:) $ Map.elems $ KBuckets.bucketNodes bucket
+          afterAdd     = KBuckets.addNode nodeInfo kBuckets
+          Just bucket' = index `Map.lookup` KBuckets.buckets afterAdd
+          keptEntries  = Map.elems $ KBuckets.bucketNodes bucket'
+        in
+          take (KBuckets.bucketSize kBuckets) (sort allEntries) `shouldBe` sort keptEntries
+
+  describe "foldNodes" $
+    it "iterates over nodes in order of distance from the base key" $
+      property $ \kBuckets ->
+        let
+          nodes             = KBuckets.foldNodes (\ns n -> ns++[n]) [] kBuckets
+          nodeDistance node = Distance.xorDistance (KBuckets.baseKey kBuckets) (NodeInfo.publicKey node)
+        in
+          nodes `shouldBe` sortBy (comparing nodeDistance) nodes
