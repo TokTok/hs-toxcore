@@ -61,8 +61,8 @@ empty = KBuckets defaultBucketSize Map.empty
 
 \end{code}
 
-The above number \texttt{n} is the bucket index.  It is positive integer with the
-range \texttt{[0, 255]}, i.e. the range of an 8 bit unsigned integer.
+The above number \texttt{n} is the bucket index.  It is a non-negative integer
+with the range \texttt{[0, 255]}, i.e. the range of an 8 bit unsigned integer.
 
 \begin{code}
 

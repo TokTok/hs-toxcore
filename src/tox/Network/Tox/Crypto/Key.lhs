@@ -42,7 +42,7 @@ import           Text.Read                         (readPrec)
 
 \end{code}
 
-A Crypto Number is a large fixed size unsigned (positive) integer.  Its binary
+A Crypto Number is a large fixed size unsigned (non-negative) integer.  Its binary
 encoding is as a Big Endian integer in exactly the encoded byte size.  Its
 human-readable encoding is as a base-16 number encoded as String.  The NaCl
 implementation \href{https://github.com/jedisct1/libsodium}{libsodium} supplies

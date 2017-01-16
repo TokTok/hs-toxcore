@@ -18,8 +18,8 @@ XOR is a valid metric, i.e. it satisfies the required conditions:
 
 \begin{enumerate}
   \item Non-negativity \texttt{distance(x, y) >= 0}: Since public keys are
-    Crypto Numbers, which are by definition positive, their XOR is necessarily
-    positive.
+    Crypto Numbers, which are by definition non-negative, their XOR is necessarily
+    non-negative.
   \item Identity of indiscernibles \texttt{distance(x, y) == 0} iff \texttt{x ==
     y}: The XOR of two integers is zero iff they are equal.
   \item Symmetry \texttt{distance(x, y) == distance(y, x)}: XOR is a symmetric
