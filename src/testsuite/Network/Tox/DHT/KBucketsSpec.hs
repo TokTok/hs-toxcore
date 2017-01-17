@@ -114,7 +114,7 @@ spec = do
       in
       map (KBuckets.bucketIndex zeroKey) inputs `shouldBe` outputs
     
-  describe "addNode" $ do
+  describe "addNode" $
     it "keeps the smallest k entries in the bucket indexed by the index of the added node" $
       property $ \kBuckets nodeInfo -> KBuckets.baseKey kBuckets /= NodeInfo.publicKey nodeInfo ==>
         let
@@ -128,7 +128,7 @@ spec = do
         in
           take (KBuckets.bucketSize kBuckets) (sort allEntries) `shouldBe` sort keptEntries
 
-  describe "foldNodes" $ do
+  describe "foldNodes" $
     it "iterates over nodes in order of distance from the base key" $
       property $ \kBuckets ->
         let
