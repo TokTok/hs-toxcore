@@ -39,6 +39,7 @@ import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 A k-buckets is a map from small integers \texttt{0 <= n < 256} to a set of up
 to \texttt{k} Node Infos.  The set is called a bucket.  \texttt{k} is called
 the bucket size.  The default bucket size is 8.
+A large bucket size was chosen to increase the speed at which peers are found.  
 
 \begin{code}
 

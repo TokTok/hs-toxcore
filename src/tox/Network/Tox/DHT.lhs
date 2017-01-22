@@ -62,16 +62,10 @@ Only the UDP Protocol (IP Type \texttt{2} and \texttt{10}) is used in the DHT
 module when sending nodes with the packed node format.  This is because the TCP
 Protocol is used to send TCP relay information and the DHT is UDP only.
 
-This is done to increase the speed at which peers are found.  Toxcore also
-stores the 8 nodes (Must be the same or smaller than the nodes toxcore stores
-for each index in its close list to make sure all the closest peers found will
-know the node being searched) closest to each of the public keys in its DHT
-friends list (or list of DHT public keys that it actively tries to find and
-connect to).  Toxcore pings every node in the lists every 60 seconds to see if
-they are alive.  It does not store itself in either list and does not send any
-requests to itself.  Nodes can be in more than one list for example if the DHT
-public key of the peer is very close to the DHT public key of a friend being
-searched.  It also sends get node requests to a random node (random makes it
+Toxcore pings every node in the close and search lists every 60 seconds to see
+if they are alive. It does not store itself in either list and does not send
+any requests to itself.
+It also sends get node requests to a random node (random makes it
 unpredictable, predictability or knowing which node a node will ping next could
 make some attacks that disrupt the network more easy as it adds a possible
 attack vector) in each of these lists of nodes every 20 seconds, with the

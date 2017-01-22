@@ -66,6 +66,15 @@ empty keyPair =
 
 \subsection{DHT Search Entry}
 
+Toxcore stores the 8 nodes (Must be the same or smaller than the nodes toxcore
+stores for each index in its close list to make sure all the closest peers
+found will know the node being searched) closest to each of the public keys
+in its DHT friends list (or list of DHT public keys that it actively tries to
+find and connect to).
+
+Nodes can be in more than one list for example if the DHT public key of the
+peer is very close to the DHT public key of a friend being searched.
+
 A DHT Search Entry contains a k-buckets instance, which serves the same purpose
 as the Close List, but the base key is the searched node's Public Key. Once the
 searched node is found, it is also stored in the Search Entry. Recall that
