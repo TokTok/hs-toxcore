@@ -11,10 +11,13 @@ import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
 import           Data.Proxy                    (Proxy (..))
 import           Network.Tox.Crypto.Key        (PublicKey)
+import           Network.Tox.DHT.ClientList    (ClientList)
+import qualified Network.Tox.DHT.ClientList    as ClientList
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.EncodingSpec
+import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
 
@@ -23,20 +26,14 @@ makeInputKey pos digit =
   read $ "\"" ++ map (const '0') [0 .. pos - 1] ++ digit : map (const '0') [pos .. 63] ++ "\""
 
 
-getAllBuckets :: KBuckets -> [[KBuckets.KBucketEntry]]
+getAllBuckets :: KBuckets -> [[NodeInfo]]
 getAllBuckets kBuckets =
-  map (Map.elems . KBuckets.bucketNodes) (Map.elems (KBuckets.buckets kBuckets))
+  map (Map.elems . ClientList.nodes) (Map.elems (KBuckets.buckets kBuckets))
 
 
 spec :: Spec
 spec = do
   readShowSpec (Proxy :: Proxy KBuckets)
-
-  it "has no buckets with more than bucketSize elements" $
-    property $ \kBuckets ->
-      case map length $ getAllBuckets kBuckets of
-        []    -> return ()
-        sizes -> maximum sizes `shouldSatisfy` (<= KBuckets.bucketSize kBuckets)
 
   it "does not accept adding a NodeInfo with the baseKey as publicKey" $
     property $ \kBuckets nodeInfo ->
@@ -73,14 +70,21 @@ spec = do
       in
       afterAdd0 `shouldBe` afterAdd1
 
-  describe "KBucketEntry" $ do
-    it "contains the same base key as the enclosing KBuckets" $
-      property $ \kBuckets ->
-        all (KBuckets.baseKey kBuckets ==) $ concatMap (map KBuckets.entryBaseKey) $ getAllBuckets kBuckets
+  it "never contains a NodeInfo with the public key equal to the base key" $
+    property $ \kBuckets ->
+      notElem (KBuckets.baseKey kBuckets) $ concatMap (map NodeInfo.publicKey) $ getAllBuckets kBuckets
 
-    it "never contains a NodeInfo with the public key equal to the base key" $
+  describe "each bucket list" $ do
+    it "has maximum size bucketSize" $
       property $ \kBuckets ->
-        notElem (KBuckets.baseKey kBuckets) $ concatMap (map $ NodeInfo.publicKey . KBuckets.entryNode) $ getAllBuckets kBuckets
+        mapM_
+          (`shouldSatisfy` (== KBuckets.bucketSize kBuckets) . ClientList.maxSize)
+          . Map.elems $ KBuckets.buckets kBuckets
+    it "has base key baseKey" $
+      property $ \kBuckets ->
+        mapM_
+          (`shouldSatisfy` (== KBuckets.baseKey kBuckets) . ClientList.baseKey)
+          . Map.elems $ KBuckets.buckets kBuckets
 
   describe "bucketIndex" $ do
     it "returns an integer between 0 and 255 for any two non-equal keys" $
@@ -114,25 +118,11 @@ spec = do
       in
       map (KBuckets.bucketIndex zeroKey) inputs `shouldBe` outputs
 
-  describe "addNode" $
-    it "keeps the smallest k entries in the bucket indexed by the index of the added node" $
-      property $ \kBuckets nodeInfo -> KBuckets.baseKey kBuckets /= NodeInfo.publicKey nodeInfo ==>
-        let
-          newEntry     = KBuckets.KBucketEntry (KBuckets.baseKey kBuckets) nodeInfo
-          Just index   = KBuckets.bucketIndex (KBuckets.baseKey kBuckets) (NodeInfo.publicKey nodeInfo)
-          bucket       = Map.findWithDefault KBuckets.emptyBucket index $ KBuckets.buckets kBuckets
-          allEntries   = (newEntry:) $ Map.elems $ KBuckets.bucketNodes bucket
-          afterAdd     = KBuckets.addNode nodeInfo kBuckets
-          Just bucket' = index `Map.lookup` KBuckets.buckets afterAdd
-          keptEntries  = Map.elems $ KBuckets.bucketNodes bucket'
-        in
-          take (KBuckets.bucketSize kBuckets) (sort allEntries) `shouldBe` sort keptEntries
-
   describe "foldNodes" $
     it "iterates over nodes in order of distance from the base key" $
       property $ \kBuckets ->
         let
-          nodes             = KBuckets.foldNodes (\ns n -> ns++[n]) [] kBuckets
+          nodes             = reverse $ KBuckets.foldNodes (flip (:)) [] kBuckets
           nodeDistance node = Distance.xorDistance (KBuckets.baseKey kBuckets) (NodeInfo.publicKey node)
         in
           nodes `shouldBe` sortBy (comparing nodeDistance) nodes

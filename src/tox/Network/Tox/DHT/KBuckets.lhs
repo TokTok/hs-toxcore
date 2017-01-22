@@ -23,6 +23,8 @@ import           Test.QuickCheck.Gen           (Gen)
 import qualified Test.QuickCheck.Gen           as Gen
 
 import           Network.Tox.Crypto.Key        (PublicKey)
+import           Network.Tox.DHT.ClientList    (ClientList)
+import qualified Network.Tox.DHT.ClientList    as ClientList
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
@@ -36,17 +38,17 @@ import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
 \end{code}
 
-A k-buckets is a map from small integers \texttt{0 <= n < 256} to a set of up
-to \texttt{k} Node Infos.  The set is called a bucket.  \texttt{k} is called
-the bucket size.  The default bucket size is 8.
+A k-buckets is a map from small integers \texttt{0 <= n < 256} to Client Lists
+of maximum size $k$. Each Client List is called a (k-)bucket. A k-buckets is
+equipped with a base key, and each bucket has this key as its base key.
+\texttt{k} is called the bucket size.  The default bucket size is 8.
 A large bucket size was chosen to increase the speed at which peers are found.  
 
 \begin{code}
 
-
 data KBuckets = KBuckets
   { bucketSize :: Int
-  , buckets    :: Map KBucketIndex KBucket
+  , buckets    :: Map KBucketIndex ClientList
   , baseKey    :: PublicKey
   }
   deriving (Eq, Read, Show)
@@ -70,49 +72,6 @@ with the range \texttt{[0, 255]}, i.e. the range of an 8 bit unsigned integer.
 
 newtype KBucketIndex = KBucketIndex Word8
   deriving (Eq, Ord, Read, Show, Num, Binary, Enum)
-
-
-\end{code}
-
-A bucket entry is an element of the bucket.  The bucket is an ordered set, and
-the entries are sorted by \href{#distance}{distance} from the base key.  Thus,
-the first (smallest) element of the set is the closest one to the base key in
-that set, the last (greatest) element is the furthest away.
-
-\begin{code}
-
-
-newtype KBucket = KBucket
-  { bucketNodes :: Map PublicKey KBucketEntry
-  }
-  deriving (Eq, Read, Show)
-
-
-emptyBucket :: KBucket
-emptyBucket = KBucket Map.empty
-
-
-bucketIsEmpty :: KBucket -> Bool
-bucketIsEmpty = Map.null . bucketNodes
-
-
-data KBucketEntry = KBucketEntry
-  { entryBaseKey :: PublicKey
-  , entryNode    :: NodeInfo
-  }
-  deriving (Eq, Read, Show)
-
-instance Ord KBucketEntry where
-  compare = comparing distance
-    where
-      distance entry =
-        Distance.xorDistance
-          (entryBaseKey entry)
-          (NodeInfo.publicKey $ entryNode entry)
-
-
-entryPublicKey :: KBucketEntry -> PublicKey
-entryPublicKey = NodeInfo.publicKey . entryNode
 
 
 \end{code}
@@ -162,21 +121,21 @@ update results in an empty bucket, that bucket is removed from the map.
 \begin{code}
 
 
-updateBucketForKey :: KBuckets -> PublicKey -> (KBucket -> KBucket) -> KBuckets
+updateBucketForKey :: KBuckets -> PublicKey -> (ClientList -> ClientList) -> KBuckets
 updateBucketForKey kBuckets key f =
   case bucketIndex (baseKey kBuckets) key of
     Nothing    -> kBuckets
     Just index -> updateBucketForIndex kBuckets index f
 
 
-updateBucketForIndex :: KBuckets -> KBucketIndex -> (KBucket -> KBucket) -> KBuckets
-updateBucketForIndex kBuckets@KBuckets { buckets } index f =
+updateBucketForIndex :: KBuckets -> KBucketIndex -> (ClientList -> ClientList) -> KBuckets
+updateBucketForIndex kBuckets@KBuckets { buckets, baseKey, bucketSize } index f =
   let
     -- Find the old bucket or create a new empty one.
-    updatedBucket = f $ Map.findWithDefault emptyBucket index buckets
+    updatedBucket = f $ Map.findWithDefault (ClientList.empty baseKey bucketSize) index buckets
     -- Replace old bucket with updated bucket or delete if empty.
     updatedBuckets =
-      if bucketIsEmpty updatedBucket
+      if ClientList.isEmpty updatedBucket
       then Map.delete index buckets
       else Map.insert index updatedBucket buckets
   in
@@ -185,64 +144,23 @@ updateBucketForIndex kBuckets@KBuckets { buckets } index f =
 
 \end{code}
 
-A bucket is \textit{full} when the bucket contains the maximum number of
-entries configured by the bucket size.
-
-A node is \textit{viable} for entry if the bucket is not \textit{full} or the
-node's public key has a lower distance from the base key than the current entry
-with the greatest distance.
-
-If a node is \textit{viable} and the bucket is \textit{full}, the entry with
-the greatest distance from the base key is removed to keep the bucket size
-below the maximum configured bucket size.
-
-Adding a node whose key already exists will result in an update of the Node
-Info in the bucket.  Removing a node for which no Node Info exists in the
-k-buckets has no effect.  Thus, removing a node twice is permitted and has the
-same effect as removing it once.
+Adding a node to, or removing a node from, a k-buckets consists of performing
+the corresponding operation on the Client List bucket whose index is that of
+the node's public key.
 
 \begin{code}
 
 
 addNode :: NodeInfo -> KBuckets -> KBuckets
 addNode nodeInfo kBuckets =
-  updateBucketForKey kBuckets (NodeInfo.publicKey nodeInfo) $ \bucket ->
-    let
-      -- The new entry.
-      entry = KBucketEntry (baseKey kBuckets) nodeInfo
-    in
-    -- Insert the entry into the bucket.
-    addNodeToBucket (bucketSize kBuckets) entry bucket
-
-
-addNodeToBucket :: Int -> KBucketEntry -> KBucket -> KBucket
-addNodeToBucket maxSize entry =
-  KBucket . truncateMap maxSize . Map.insert (entryPublicKey entry) entry . bucketNodes
-
-
-truncateMap :: (Ord k, Ord a) => Int -> Map k a -> Map k a
-truncateMap maxSize m
-  | Map.size m <= maxSize = m
-  | otherwise =
-      -- Remove the greatest element until the map is small enough again.
-      truncateMap maxSize $ deleteMaxValue m
-
-deleteMaxValue :: (Ord k, Ord a) => Map k a -> Map k a
-deleteMaxValue m | Map.null m = m
-deleteMaxValue m =
-    let (k,_) = maximumBy (comparing snd) $ Map.assocs m
-    in Map.delete k m
-
-
-removeNodeFromBucket :: PublicKey -> KBucket -> KBucket
-removeNodeFromBucket publicKey =
-  KBucket . Map.delete publicKey . bucketNodes
+  updateBucketForKey kBuckets publicKey $ ClientList.addNode nodeInfo
+  where
+    publicKey = NodeInfo.publicKey nodeInfo
 
 
 removeNode :: PublicKey -> KBuckets -> KBuckets
 removeNode publicKey kBuckets =
-  updateBucketForKey kBuckets publicKey $ \bucket ->
-    removeNodeFromBucket publicKey bucket
+  updateBucketForKey kBuckets publicKey $ ClientList.removeNode publicKey
 
 \end{code}
 
@@ -254,7 +172,9 @@ is the furthest away in terms of the distance metric.
 
 foldNodes :: (a -> NodeInfo -> a) -> a -> KBuckets -> a
 foldNodes f x =
-  foldl f x . concatMap (map entryNode . sort . Map.elems . bucketNodes) . reverse . Map.elems . buckets
+  foldl f x
+  . concatMap (Map.elems . ClientList.nodes)
+  . reverse . Map.elems . buckets
 
 
 {-------------------------------------------------------------------------------
@@ -266,7 +186,7 @@ foldNodes f x =
 
 getAllNodes :: KBuckets -> [NodeInfo]
 getAllNodes =
-  concatMap (map entryNode . Map.elems . bucketNodes) . Map.elems . buckets
+  concatMap (Map.elems . ClientList.nodes) . Map.elems . buckets
 
 
 genKBuckets :: PublicKey -> Gen KBuckets

@@ -57,6 +57,7 @@ library
       Network.Tox.Crypto.KeyPair
       Network.Tox.Crypto.Nonce
       Network.Tox.DHT
+      Network.Tox.DHT.ClientList
       Network.Tox.DHT.DhtPacket
       Network.Tox.DHT.DhtState
       Network.Tox.DHT.Distance
@@ -88,6 +89,7 @@ library
         Network.Tox.Crypto.KeySpec
         Network.Tox.Crypto.NonceSpec
         Network.Tox.CryptoSpec
+        Network.Tox.DHT.ClientListSpec
         Network.Tox.DHT.DhtPacketSpec
         Network.Tox.DHT.DhtStateSpec
         Network.Tox.DHT.DistanceSpec

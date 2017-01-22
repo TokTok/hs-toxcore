@@ -85,7 +85,7 @@ spec = do
         in
         afterAdd1 `shouldBe` afterAdd2
 
-    it "and adding a node info for it will not add it to the search entry's k-buckets" $
+    it "and adding a node info for it will not add it to the search entry's Client List" $
       property $ \keyPair nodeInfo ->
         let
           dhtState = DhtState.empty keyPair

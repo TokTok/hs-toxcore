@@ -13,6 +13,8 @@ import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.Crypto.KeyPair    (KeyPair)
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
+import           Network.Tox.DHT.ClientList    (ClientList)
+import qualified Network.Tox.DHT.ClientList    as ClientList
 import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
@@ -66,39 +68,41 @@ empty keyPair =
 
 \subsection{DHT Search Entry}
 
-Toxcore stores the 8 nodes (Must be the same or smaller than the nodes toxcore
-stores for each index in its close list to make sure all the closest peers
-found will know the node being searched) closest to each of the public keys
-in its DHT friends list (or list of DHT public keys that it actively tries to
-find and connect to).
+A DHT Search Entry contains a Client List with base key the searched node's
+Public Key.  Once the searched node is found, it is also stored in the Search
+Entry.
 
-Nodes can be in more than one list for example if the DHT public key of the
-peer is very close to the DHT public key of a friend being searched.
+The maximum size of the Client List is set to 8.
+(Must be the same or smaller than the bucket size of the close list to make
+sure all the closest peers found will know the node being searched
+(TODO(zugz): this argument is unclear.)).
 
-A DHT Search Entry contains a k-buckets instance, which serves the same purpose
-as the Close List, but the base key is the searched node's Public Key. Once the
-searched node is found, it is also stored in the Search Entry. Recall that
-k-buckets never contain a node info for the base key, so it must be stored
-outside the k-buckets instance.
+A DHT node state therefore contains one Client List for each bucket index in
+the Close List, and one Client List for each DHT Search Entry.
+These lists are not required to be disjoint - a node may be in multiple Client
+Lists simultaneously.
 
 \begin{code}
 
 data DhtSearchEntry = DhtSearchEntry
-  { searchNode     :: Maybe NodeInfo
-  , searchKBuckets :: KBuckets
+  { searchNode       :: Maybe NodeInfo
+  , searchClientList :: ClientList
   }
   deriving (Eq, Read, Show)
+
+searchEntryClientListSize :: Int
+searchEntryClientListSize = 8
 
 \end{code}
 
 A Search Entry is initialised with the searched-for Public Key. The contained
-k-buckets instance is initialised to be empty.
+Client List is initialised to be empty.
 
 \begin{code}
 
 emptySearchEntry :: PublicKey -> DhtSearchEntry
-emptySearchEntry =
-  DhtSearchEntry Nothing . KBuckets.empty
+emptySearchEntry publicKey =
+  DhtSearchEntry Nothing $ ClientList.empty publicKey searchEntryClientListSize
 
 \end{code}
 
@@ -138,19 +142,17 @@ containsSearchKey searchKey =
 \end{code}
 
 The iteration order over the DHT state is to first process the Close List
-k-buckets, then the Search List entry k-buckets. Each list itself follows the
-iteration order in the k-buckets specification.
+k-buckets, then the Search List entry Client Lists. Each of these follows the
+iteration order in the corresponding specification.
 
 \begin{code}
 
-foldBuckets :: (a -> KBuckets -> a) -> a -> DhtState -> a
-foldBuckets f x DhtState { dhtCloseList, dhtSearchList } =
-  Map.foldl (\x' -> f x' . searchKBuckets) (f x dhtCloseList) dhtSearchList
-
-
 foldNodes :: (a -> NodeInfo -> a) -> a -> DhtState -> a
-foldNodes =
-  foldBuckets . KBuckets.foldNodes
+foldNodes f x DhtState { dhtCloseList, dhtSearchList } =
+  Map.foldl
+    (\x' -> ClientList.foldNodes f x' . searchClientList)
+    (KBuckets.foldNodes f x dhtCloseList)
+    dhtSearchList
 
 \end{code}
 
@@ -171,16 +173,45 @@ size = foldNodes (flip $ const (1 +)) 0
 
 \end{code}
 
-The bucket count of the state is the number of k-buckets instances. An empty
-state contains one k-buckets instance. For each added search key, it contains
-one additional k-buckets instance. Thus, the number of search keys is one less
-than the bucket count.
+Adding a Node Info to the state is done by adding the node to the Close List
+and to each Search Entry in the state
+
+When adding a node info to the state, the search entry for the node's public
+key, if it exists, is updated to contain the new node info. All k-buckets and
+Client Lists that already contain the node info will also be updated. See the
+corresponding specifications for the update algorithms. However, a node info
+will not be added to a search entry when it is the node to which the search
+entry is associated (i.e. the node being search for).
 
 \begin{code}
 
-bucketCount :: DhtState -> Int
-bucketCount = foldBuckets (flip $ const (1 +)) 0
+addNode :: NodeInfo -> DhtState -> DhtState
+addNode nodeInfo =
+  updateSearchNode (NodeInfo.publicKey nodeInfo) (Just nodeInfo)
+  . mapBuckets (KBuckets.addNode nodeInfo)
+  . mapSearchClientLists addUnlessBase
+  where
+    addUnlessBase clientList
+      | NodeInfo.publicKey nodeInfo == ClientList.baseKey clientList =
+        clientList
+    addUnlessBase clientList = ClientList.addNode nodeInfo clientList
 
+mapBuckets :: (KBuckets -> KBuckets) -> DhtState -> DhtState
+mapBuckets f dhtState@DhtState { dhtCloseList } =
+  dhtState
+    { dhtCloseList  = f dhtCloseList
+    }
+
+mapSearchEntry :: (DhtSearchEntry -> DhtSearchEntry) -> DhtState -> DhtState
+mapSearchEntry f dhtState@DhtState { dhtSearchList } =
+  dhtState
+    { dhtSearchList  = Map.map f dhtSearchList
+    }
+
+mapSearchClientLists :: (ClientList -> ClientList) -> DhtState -> DhtState
+mapSearchClientLists f =
+    mapSearchEntry $ \entry@DhtSearchEntry{ searchClientList } ->
+      entry { searchClientList = f searchClientList }
 
 updateSearchNode :: PublicKey -> Maybe NodeInfo -> DhtState -> DhtState
 updateSearchNode publicKey nodeInfo dhtState@DhtState { dhtSearchList } =
@@ -189,38 +220,6 @@ updateSearchNode publicKey nodeInfo dhtState@DhtState { dhtSearchList } =
     }
   where
     update entry = entry { searchNode = nodeInfo }
-
-
-mapBuckets :: (KBuckets -> KBuckets) -> DhtState -> DhtState
-mapBuckets f dhtState@DhtState { dhtCloseList, dhtSearchList } =
-  dhtState
-    { dhtCloseList  = f dhtCloseList
-    , dhtSearchList = Map.map updateSearchBucket dhtSearchList
-    }
-  where
-    updateSearchBucket entry@DhtSearchEntry { searchKBuckets } =
-      entry { searchKBuckets = f searchKBuckets }
-
-\end{code}
-
-Adding a node info to the state is done by adding the node to each k-bucket in
-the state, i.e. the close list and all the k-buckets in the search entries.
-
-When adding a node info to the state, the search entry for the node's public
-key, if it exists, is updated to contain the new node info. All k-buckets that
-already contain the node info will also be updated. See the k-buckets
-specification for the update algorithm.
-
-Recall that a k-buckets instance will never contain the node info for its base
-key. Thus, when adding a node info for which a search entry exists, that node
-info will not be added to the search entry's k-buckets instance.
-
-\begin{code}
-
-addNode :: NodeInfo -> DhtState -> DhtState
-addNode nodeInfo =
-  updateSearchNode (NodeInfo.publicKey nodeInfo) (Just nodeInfo)
-  . mapBuckets (KBuckets.addNode nodeInfo)
 
 \end{code}
 
@@ -234,6 +233,7 @@ removeNode :: PublicKey -> DhtState -> DhtState
 removeNode publicKey =
   updateSearchNode publicKey Nothing
   . mapBuckets (KBuckets.removeNode publicKey)
+  . mapSearchClientLists (ClientList.removeNode publicKey)
 
 
 containsNode :: PublicKey -> DhtState -> Bool
