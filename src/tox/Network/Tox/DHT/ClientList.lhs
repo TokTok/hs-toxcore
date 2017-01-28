@@ -22,7 +22,7 @@ import qualified Network.Tox.DHT.ClientNode    as ClientNode
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (TimeDiff, Timestamp)
+import           Network.Tox.Time              (TimeDiff, TimeStamp)
 import qualified Network.Tox.Time              as Time
 
 
@@ -96,7 +96,7 @@ same effect as removing it once.
 
 \begin{code}
 
-addNode :: Timestamp -> NodeInfo -> ClientList -> ClientList
+addNode :: TimeStamp -> NodeInfo -> ClientList -> ClientList
 addNode time nodeInfo clientList@ClientList{ baseKey, maxSize } =
   (`updateClientNodes` clientList) $
     mapTake maxSize

@@ -7,7 +7,7 @@ import           Control.Applicative           ((<$>), (<*>))
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
 
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
-import           Network.Tox.Time              (Timestamp)
+import           Network.Tox.Time              (TimeStamp)
 
 
 {-------------------------------------------------------------------------------
@@ -18,12 +18,12 @@ import           Network.Tox.Time              (Timestamp)
 
 data ClientNode = ClientNode
   { nodeInfo  :: NodeInfo
-  , lastPing  :: Timestamp
+  , lastPing  :: TimeStamp
   , pingCount :: Int
   }
   deriving (Eq, Read, Show)
 
-newNode :: Timestamp -> NodeInfo -> ClientNode
+newNode :: TimeStamp -> NodeInfo -> ClientNode
 newNode time node = ClientNode node time 0
 
 {-------------------------------------------------------------------------------

@@ -8,15 +8,13 @@
 {-# LANGUAGE Trustworthy           #-}
 module Network.Tox.DHT.Operation where
 
-import           Control.Applicative           (Applicative, pure, (*>), (<$>),
-                                                (<*>))
-import           Control.Monad.Random          (MonadRandom, RandT, evalRandT,
-                                                getRandomR)
+import           Control.Applicative           ((<$>), (<*>))
+import           Control.Monad.Random          (RandT, evalRandT)
+import           Control.Monad.Random.Class    (MonadRandom, uniform)
 import           Control.Monad.Writer          (MonadWriter, Writer, execWriter,
                                                 runWriter, tell)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
-import           Data.Monoid                   (Monoid)
 import           Data.Traversable              (for, traverse)
 import           System.Random                 (StdGen, mkStdGen)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
@@ -32,7 +30,7 @@ import           Network.Tox.DHT.NodeList      (NodeList)
 import qualified Network.Tox.DHT.NodeList      as NodeList
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (TimeDiff, Timestamp)
+import           Network.Tox.Time              (TimeDiff, TimeStamp)
 import qualified Network.Tox.Time              as Time
 
 
@@ -65,17 +63,16 @@ data RequestInfo = RequestInfo
 randomRequestPeriod :: TimeDiff
 randomRequestPeriod = Time.seconds 20
 
-randomRequests :: forall m. (MonadRandom m, MonadWriter [RequestInfo] m, Applicative m) =>
-  Timestamp -> DhtState -> m DhtState
+randomRequests :: forall m. (MonadRandom m, MonadWriter [RequestInfo] m) =>
+  TimeStamp -> DhtState -> m DhtState
 randomRequests time dhtState =
   let
     closeList  = DhtState.dhtCloseList dhtState
     searchList = DhtState.dhtSearchList dhtState
-    uniform as = (as !!) <$> getRandomR (0, length as - 1)
-    doList :: NodeList l => l -> Timestamp -> m Timestamp
+    doList :: NodeList l => l -> TimeStamp -> m TimeStamp
     doList nodeList lastTime =
-      if time Time.- lastTime < randomRequestPeriod
-      then return lastTime
+      if time - lastTime < randomRequestPeriod
+      then pure lastTime
       else case NodeList.nodeListList nodeList of
         [] -> return time
         nodes -> do
@@ -132,8 +129,8 @@ pingPeriod = Time.seconds 60
 maxPings :: Int
 maxPings = 2
 
-pingNodes :: forall m. (MonadWriter [RequestInfo] m, Applicative m) =>
-  Timestamp -> DhtState -> m DhtState
+pingNodes :: forall m. MonadWriter [RequestInfo] m =>
+  TimeStamp -> DhtState -> m DhtState
 pingNodes time = DhtState.traverseClientLists pingNodes'
   where
     pingNodes' :: ClientList -> m ClientList
@@ -147,7 +144,7 @@ pingNodes time = DhtState.traverseClientLists pingNodes'
 
         pingNode :: ClientNode -> m (Maybe ClientNode)
         pingNode clientNode =
-          if time Time.- lastPing < pingPeriod
+          if time - lastPing < pingPeriod
           then pure $ Just clientNode
           else (tell [requestInfo] *>) . pure $
             if pingCount + 1 < maxPings

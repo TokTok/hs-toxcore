@@ -39,7 +39,7 @@ library
     , data-msgpack
     , integer-gmp
     , iproute
-    , MonadRandom
+    , MonadRandom               >= 0.5
     , mtl
     -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
     -- it explicitly here.

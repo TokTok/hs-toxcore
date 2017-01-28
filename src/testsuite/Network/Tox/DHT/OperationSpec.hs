@@ -16,7 +16,6 @@ import qualified Network.Tox.DHT.Operation     as Operation
 import           Network.Tox.EncodingSpec
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import qualified Network.Tox.Time              as Time
 
 spec :: Spec
 spec = do
@@ -38,7 +37,7 @@ spec = do
         let
           dhtState       = DhtState.empty time keyPair
           afterAdd       = foldr (DhtState.addNode time) dhtState nodeInfos
-          time'          = time Time.+ Operation.randomRequestPeriod
+          time'          = time + Operation.randomRequestPeriod
           randomRequests = Operation.execTestOperation seed $ Operation.randomRequests time' afterAdd
         in
         case randomRequests of
@@ -54,7 +53,7 @@ spec = do
           afterSearch       = DhtState.addSearchKey time publicKey dhtState
           afterAdd          = foldr (DhtState.addNode time) afterSearch nodeInfos
           nodeAddedToSearch = not $ all ((== publicKey) . NodeInfo.publicKey) nodeInfos
-          time'             = time Time.+ Operation.randomRequestPeriod
+          time'             = time + Operation.randomRequestPeriod
           randomRequests    = Operation.execTestOperation seed $ Operation.randomRequests time' afterAdd
 
           requestIsForSearch (Operation.RequestInfo nodeInfo publicKey') =
@@ -70,7 +69,7 @@ spec = do
         let
           viable   = DhtState.viable nodeInfo dhtState
           afterAdd = DhtState.addNode time nodeInfo dhtState
-          time'    = time Time.+ Operation.pingPeriod
+          time'    = time + Operation.pingPeriod
           pings    = Operation.execTestOperation seed $ Operation.pingNodes time' afterAdd
         in
         when viable $ map Operation.requestTo pings `shouldSatisfy` (nodeInfo `elem`)

@@ -1,5 +1,6 @@
-{-# LANGUAGE LambdaCase  #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE Trustworthy         #-}
 module Network.Tox.DHT.ClientListSpec where
 
 import           Test.Hspec
@@ -46,7 +47,7 @@ spec = do
       afterAdd0 `shouldBe` afterAdd1
 
   it "adding a non-viable node has no effect" $
-    property $ \clientList time nodeInfo ->
+    property $ \(clientList::ClientList) time nodeInfo ->
       let
         viable   = ClientList.viable nodeInfo clientList
         afterAdd = ClientList.addNode time nodeInfo clientList

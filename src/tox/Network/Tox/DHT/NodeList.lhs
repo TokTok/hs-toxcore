@@ -4,8 +4,7 @@ the DHT State.
 \begin{code}
 module Network.Tox.DHT.NodeList where
 
-import           Control.Applicative           (Applicative, Const (..),
-                                                getConst)
+import           Control.Applicative           (Const (..), getConst)
 import           Data.Monoid                   (Dual (..), Endo (..), Monoid,
                                                 appEndo, getDual)
 
@@ -16,10 +15,10 @@ import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (Timestamp)
+import           Network.Tox.Time              (TimeStamp)
 
 class NodeList l where
-  addNode :: Timestamp -> NodeInfo -> l -> l
+  addNode :: TimeStamp -> NodeInfo -> l -> l
 
   removeNode :: PublicKey -> l -> l
 

@@ -30,7 +30,7 @@ import qualified Network.Tox.DHT.ClientList    as ClientList
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (Timestamp)
+import           Network.Tox.Time              (TimeStamp)
 
 
 {-------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ for entry to the corresponding bucket.
 
 \begin{code}
 
-addNode :: Timestamp -> NodeInfo -> KBuckets -> KBuckets
+addNode :: TimeStamp -> NodeInfo -> KBuckets -> KBuckets
 addNode time nodeInfo kBuckets =
   updateBucketForKey kBuckets publicKey $ ClientList.addNode time nodeInfo
   where
@@ -164,6 +164,14 @@ addNode time nodeInfo kBuckets =
 removeNode :: PublicKey -> KBuckets -> KBuckets
 removeNode publicKey kBuckets =
   updateBucketForKey kBuckets publicKey $ ClientList.removeNode publicKey
+
+viable :: NodeInfo -> KBuckets -> Bool
+viable nodeInfo KBuckets{ baseKey, buckets } =
+  case bucketIndex baseKey $ NodeInfo.publicKey nodeInfo of
+    Nothing    -> False
+    Just index -> case Map.lookup index buckets of
+      Nothing     -> True
+      Just bucket -> ClientList.viable nodeInfo bucket
 
 viable :: NodeInfo -> KBuckets -> Bool
 viable nodeInfo KBuckets{ baseKey, buckets } =
