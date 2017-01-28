@@ -84,3 +84,5 @@ The Request ID provides some resistance against replay attacks.  If there were
 no Request ID, it would be easy for an attacker to replay old responses and
 thus provide nodes with out-of-date information.  The exact value of the
 Request ID will be specified later in the DHT section.
+
+FIXME: it isn't.

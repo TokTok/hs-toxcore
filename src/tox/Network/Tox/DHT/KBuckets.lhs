@@ -148,6 +148,9 @@ Adding a node to, or removing a node from, a k-buckets consists of performing
 the corresponding operation on the Client List bucket whose index is that of
 the node's public key.
 
+A node is considered \textit{viable} for entry to a k-buckets if it is viable
+for entry to the corresponding bucket.
+
 \begin{code}
 
 

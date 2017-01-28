@@ -51,67 +51,93 @@ them.
 The Nodes Service is used to query another DHT node for up to 4 nodes they know
 that are the closest to a requested node.
 
-\input{src/tox/Network/Tox/DHT/NodesRequest.lhs}
-\input{src/tox/Network/Tox/DHT/NodesResponse.lhs}
-
-\subsection{Packed node format}
-
 The DHT Nodes RPC service uses the Packed Node Format.
 
 Only the UDP Protocol (IP Type \texttt{2} and \texttt{10}) is used in the DHT
 module when sending nodes with the packed node format.  This is because the TCP
 Protocol is used to send TCP relay information and the DHT is UDP only.
 
-Toxcore pings every node in the close and search lists every 60 seconds to see
-if they are alive. It does not store itself in either list and does not send
-any requests to itself.
-It also sends get node requests to a random node (random makes it
-unpredictable, predictability or knowing which node a node will ping next could
-make some attacks that disrupt the network more easy as it adds a possible
-attack vector) in each of these lists of nodes every 20 seconds, with the
-search public key being its public key for the closest node and the public key
-being searched for being the ones in the DHT friends list.  Nodes are removed
-after 122 seconds of no response.  Nodes are added to the lists after a valid
-ping response or send node packet is received from them.  If the node is
-already present in the list it is updated if the IP address changed.  A node
-can only be added to a list if the list is not full or if the node's DHT public
-key is closer than the DHT public key of at least one of the nodes in the list
-to the public key being searched with that list.  When a node is added to a
-full list, it will replace the furthest node.
+\input{src/tox/Network/Tox/DHT/NodesRequest.lhs}
+\input{src/tox/Network/Tox/DHT/NodesResponse.lhs}
 
-If the 32 nodes number were increased, it would increase the amount of packets
-needed to check if each of them is still alive which would increase the
-bandwidth usage but reliability would go up.  If the number of nodes were
-decreased, reliability would go down along with bandwidth usage.  The reason
-for this relationship between reliability and number of nodes is that if we
-assume that not every node has its UDP ports open or is behind a cone NAT it
-means that each of these nodes must be able to store a certain number of nodes
-behind restrictive NATs in order for others to be able to find those nodes
-behind restrictive NATs.  For example if 7/8 nodes were behind restrictive
-NATs, using 8 nodes would not be enough because the chances of some of these
-nodes being impossible to find in the network would be too high.
+\subsection{Periodic sending of Nodes Requests}
+
+For each Nodes List in the DHT State, every 20 seconds a Nodes Request is sent
+to a random node on the list, searching for the target of the list.
+
+Random nodes are chosen since being able to predict which node a node will
+send a request to next could make some attacks that disrupt the network
+easier, as it adds a possible attack vector.
+
+Furthermore, for each Nodes List in the DHT State, each node on the list is
+sent a Nodes Request every 60 seconds, searching for the target of the list.
+
+(c-toxcore's implementation: a Last Pinged time is maintained for each
+node in each list. When a node is added to a list, if doing so evicts a node
+from the list then the Last Pinged time is set to that of the evicted node,
+and otherwise it is set to 0.)
+
+Nodes from which we consistently fail to receive Nodes Responses should be
+removed from the DHT State.
+
+(c-toxcore's implementation: nodes from which we have not received a Nodes
+Response for 122 seconds are considered Bad; they remain in the DHT State, but
+are preferentially overwritten when adding to the DHT State, and are ignored
+for all operations except the once-per-60s pinging described above. If we have
+not received a Nodes Response for 182 seconds, the node is not even pinged. So
+one ping is sent after the node becomes Bad. In the special case that every
+node in the Close List is Bad, they are all pinged once more.)
+
+\subsection{Handling Nodes Response packets}
+When a valid Nodes Response packet is received, it is first checked that a
+Nodes Request was sent within the last 60 seconds to the node from which the
+response was received; if not, the packet is ignored. Otherwise, firstly the
+node from which the response was sent it is added to the state; see the
+k-Buckets and Client List specs for details on this operation. Secondly, for
+each node listed in the response and for each Nodes List in the DHT State to
+which the node is viable for entry, a Nodes Request is sent to the node with
+the requested public key being the target of the Nodes List.
+
+An implementation may choose not to send every such Nodes Request.
+(c-toxcore only sends only so many per list (8 for the Close List, 4 for a
+Search Entry) per call to Do_DHT(), prioritising the closest to the target).
+
+\subsection{Handling Nodes Request packets}
+On receiving a Nodes Request packet, the 4 nodes in the DHT State which are
+closest to the public key in the packet are found, and sent back to the node
+which sent the request in a Nodes Response packet. If there are fewer than 4
+nodes in the state, just those nodes are sent.
+
+\subsection{Effects of chosen constants on performance}
+If the bucket size of the k-buckets were increased, it would increase the
+amount of packets needed to check if each node is still alive, which would
+increase the bandwidth usage, but reliability would go up.  If the number of
+nodes were decreased, reliability would go down along with bandwidth usage.
+The reason for this relationship between reliability and number of nodes is
+that if we assume that not every node has its UDP ports open or is behind a
+cone NAT it means that each of these nodes must be able to store a certain
+number of nodes behind restrictive NATs in order for others to be able to find
+those nodes behind restrictive NATs.  For example if 7/8 nodes were behind
+restrictive NATs, using 8 nodes would not be enough because the chances of
+some of these nodes being impossible to find in the network would be too high.
+
+TODO(zugz): this seems a rather wasteful solution to this problem.
 
 If the ping timeouts and delays between pings were higher it would decrease the
 bandwidth usage but increase the amount of disconnected nodes that are still
 being stored in the lists.  Decreasing these delays would do the opposite.
 
-If the number 8 of nodes closest to each public key were increased to 16 it
+If the maximum size 8 of the DHT Search Entry Client Lists were increased
 would increase the bandwidth usage, might increase hole punching efficiency on
 symmetric NATs (more ports to guess from, see Hole punching) and might increase
 the reliability.  Lowering this number would have the opposite effect.
-
-When receiving a send node packet, toxcore will check if each of the received
-nodes could be added to any one of the lists.  If the node can, toxcore will
-send a ping packet to it, if it cannot it will be ignored.
-
-When receiving a get node packet, toxcore will find the 4 nodes, in its nodes
-lists, closest to the public key in the packet and send them in the send node
-response.
 
 The timeouts and number of nodes in lists for toxcore were picked by feeling
 alone and are probably not the best values.  This also applies to the behavior
 which is simple and should be improved in order to make the network resist
 better to sybil attacks.
+
+TODO: consider giving min and max values for the constants.
 
 \section{DHT Request packets}
 
@@ -122,7 +148,7 @@ better to sybil attacks.
   \texttt{32}        & receiver's DHT public key \\
   \texttt{32}        & sender's DHT public key \\
   \texttt{24}        & nonce \\
-  \texttt{?}         & encrypted message \\
+  \texttt{?}         & encrypted payload \\
 \end{tabular}
 
 DHT Request packets are packets that can be sent across one DHT node to one
@@ -136,14 +162,14 @@ the packet.  If it is not they will check whether they know that DHT public key
 packet.  If it is they will resend the exact packet to that DHT node.
 
 The encrypted message is encrypted using the receiver's DHT Public key, the
-sender's DHT private key and the nonce (randomly generated 24 bytes).
+sender's DHT private key and a randomly generated 24 byte nonce.
 
-DHT request packets are used for DHT public key packets (see onion) and NAT
-ping packets.
+DHT request packets are used for DHT public key packets (see
+\href{#onion}{onion}) and NAT ping packets.
 
 \subsection{NAT ping packets}
 
-Sits inside the DHT request packet.
+A NAT ping packet is sent as the payload of a DHT request packet. 
 
 NAT ping packets are used to see if a friend we are not connected to directly
 is online and ready to do the hole punching.
@@ -168,11 +194,14 @@ is online and ready to do the hole punching.
   \texttt{8}         & \texttt{uint64_t} random number (the same that was received in request) \\
 \end{tabular}
 
-\section{Hole punching}
+TODO: handling these packets.
 
-For holepunching we assume that people using Tox are on one of 3 types of NAT:
+\section{NATs}
 
-Cone NATs: Assign one whole port to each UDP socket behind the NAT, any packet
+We assume that peers are either directly accessible or are behind one of 3
+types of NAT:
+
+Cone NATs: Assign one whole port to each UDP socket behind the NAT; any packet
 from any IP/port sent to that assigned port from the internet will be forwarded
 to the socket behind it.
 
@@ -184,6 +213,9 @@ Symmetric NATs: The worst kind of NAT, they assign a new port for each IP/port
 a packet is sent to.  They treat each new peer you send a UDP packet to as a
 \texttt{'connection'} and will only forward packets from the IP/port of that
 \texttt{'connection'}.
+
+
+\section{Hole punching}
 
 Holepunching on normal cone NATs is achieved simply through the way in which
 the DHT functions.
@@ -278,3 +310,7 @@ The response format is as follows:
   \texttt{4}         & Word32      & Bootstrap node version \\
   \texttt{256}       & Bytes       & Message of the day \\
 \end{tabular}
+
+\section{DHT Initialisation}
+TODO: describe behaviour at start up, including bootstrapping,
+bootstrap_times, fake friends, and any other subtleties.

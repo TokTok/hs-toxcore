@@ -2,6 +2,12 @@
 
 The Ping Service is used to periodically check if another node is still alive.
 
+TODO: this service is not actually used in the specification, nor is it
+implemented in c-toxcore! So it should be removed, incorporating elements of
+it into the NAT Ping section as appropriate. (NAT Pings are essentially as
+described here, except that the RPC Packet is encapsulated within a DHT
+Request packet rather than a DHT Packet.)
+
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}

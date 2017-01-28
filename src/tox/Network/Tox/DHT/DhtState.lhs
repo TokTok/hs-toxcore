@@ -156,15 +156,24 @@ foldNodes f x DhtState { dhtCloseList, dhtSearchList } =
 
 \end{code}
 
-The size of the DHT state is defined to be the number of node infos it
-contains. Node infos contained multiple times, e.g. as part of the close list
-and as part of various search entries, are counted as many times as they
-appear.
+A node info is considered to be contained in the DHT State if it is contained
+in the Close List or in at least one of the Search Entries.
 
-Search keys do not directly count towards the state size. The state size is
-relevant to later pruning algorithms that decide when to remove a node info and
-when to request a ping from stale nodes. Search keys, once added, are never
-automatically pruned.
+The size of the DHT state is defined to be the number of node infos it
+contains, counted with multiplicity: node infos contained multiple times, e.g.
+in the close list and in various search entries, are counted as many times as
+they appear.  Search keys do not directly count towards the state size.  So
+the size of the state is the sum of the sizes of the Close List and the Search
+Entries.
+
+The state size is relevant to later pruning algorithms that decide when to
+remove a node info and when to request a ping from stale nodes. Search keys,
+once added, are never automatically pruned.
+
+The Close List and the Search Entries are termed the \texttt{Node Lists} of
+the DHT State. The \texttt{target} of a Node List is the searched for public
+key in the case of a Search Entry, and the DHT Public Key in the case of the
+Close List.
 
 \begin{code}
 
@@ -173,8 +182,8 @@ size = foldNodes (flip $ const (1 +)) 0
 
 \end{code}
 
-Adding a Node Info to the state is done by adding the node to the Close List
-and to each Search Entry in the state
+Adding a Node Info to the state is done by adding the node to each Node List
+in the state.
 
 When adding a node info to the state, the search entry for the node's public
 key, if it exists, is updated to contain the new node info. All k-buckets and
