@@ -2,12 +2,18 @@
 
 \begin{code}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes     #-}
 module Network.Tox.DHT.DhtState where
 
-import           Control.Applicative           ((<$>), (<*>), (<|>))
+import           Control.Applicative           (Applicative, Const (..),
+                                                getConst, pure, (<$>), (<*>),
+                                                (<|>))
+import           Data.Functor.Identity         (Identity (..))
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import qualified Data.Maybe                    as Maybe
+import           Data.Monoid                   (All (..), Monoid, getAll)
+import           Data.Traversable              (traverse)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
@@ -17,8 +23,11 @@ import           Network.Tox.DHT.ClientList    (ClientList)
 import qualified Network.Tox.DHT.ClientList    as ClientList
 import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
+import           Network.Tox.DHT.NodeList      (NodeList)
+import qualified Network.Tox.DHT.NodeList      as NodeList
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
+import           Network.Tox.Time              (Timestamp)
 
 
 {-------------------------------------------------------------------------------
@@ -46,9 +55,10 @@ Every DHT node contains the following state:
 \begin{code}
 
 data DhtState = DhtState
-  { dhtKeyPair    :: KeyPair
-  , dhtCloseList  :: KBuckets
-  , dhtSearchList :: Map PublicKey DhtSearchEntry
+  { dhtKeyPair                      :: KeyPair
+  , dhtCloseListLastPeriodicRequest :: Timestamp
+  , dhtCloseList                    :: KBuckets
+  , dhtSearchList                   :: Map PublicKey DhtSearchEntry
   }
   deriving (Eq, Read, Show)
 
@@ -60,9 +70,9 @@ Lists are initialised to be empty.
 
 \begin{code}
 
-empty :: KeyPair -> DhtState
-empty keyPair =
-  DhtState keyPair (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty
+empty :: Timestamp -> KeyPair -> DhtState
+empty time keyPair =
+  DhtState keyPair time (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty
 
 \end{code}
 
@@ -85,8 +95,9 @@ Lists simultaneously.
 \begin{code}
 
 data DhtSearchEntry = DhtSearchEntry
-  { searchNode       :: Maybe NodeInfo
-  , searchClientList :: ClientList
+  { searchNode                :: Maybe NodeInfo
+  , searchLastPeriodicRequest :: Timestamp
+  , searchClientList          :: ClientList
   }
   deriving (Eq, Read, Show)
 
@@ -100,9 +111,9 @@ Client List is initialised to be empty.
 
 \begin{code}
 
-emptySearchEntry :: PublicKey -> DhtSearchEntry
-emptySearchEntry publicKey =
-  DhtSearchEntry Nothing $ ClientList.empty publicKey searchEntryClientListSize
+emptySearchEntry :: Timestamp -> PublicKey -> DhtSearchEntry
+emptySearchEntry time publicKey =
+  DhtSearchEntry Nothing time $ ClientList.empty publicKey searchEntryClientListSize
 
 \end{code}
 
@@ -114,12 +125,12 @@ operation has no effect.
 
 \begin{code}
 
-addSearchKey :: PublicKey -> DhtState -> DhtState
-addSearchKey searchKey dhtState@DhtState { dhtSearchList } =
+addSearchKey :: Timestamp -> PublicKey -> DhtState -> DhtState
+addSearchKey time searchKey dhtState@DhtState { dhtSearchList } =
   dhtState { dhtSearchList = updatedSearchList }
   where
     searchEntry =
-      Map.findWithDefault (emptySearchEntry searchKey) searchKey dhtSearchList
+      Map.findWithDefault (emptySearchEntry time searchKey) searchKey dhtSearchList
     updatedSearchList =
       Map.insert searchKey searchEntry dhtSearchList
 
@@ -141,18 +152,31 @@ containsSearchKey searchKey =
 
 \end{code}
 
+\input{NodeList.lhs}
+
 The iteration order over the DHT state is to first process the Close List
 k-buckets, then the Search List entry Client Lists. Each of these follows the
 iteration order in the corresponding specification.
 
 \begin{code}
 
-foldNodes :: (a -> NodeInfo -> a) -> a -> DhtState -> a
-foldNodes f x DhtState { dhtCloseList, dhtSearchList } =
-  Map.foldl
-    (\x' -> ClientList.foldNodes f x' . searchClientList)
-    (KBuckets.foldNodes f x dhtCloseList)
-    dhtSearchList
+traverseNodeLists :: Applicative f =>
+  (forall l. NodeList l => l -> f l) -> DhtState -> f DhtState
+traverseNodeLists f dhtState@DhtState{ dhtCloseList, dhtSearchList } =
+  (\close' search' ->
+      dhtState{ dhtCloseList = close', dhtSearchList = search' }) <$>
+    f dhtCloseList <*>
+    traverse traverseEntry dhtSearchList
+  where
+    traverseEntry entry =
+      (\x -> entry{ searchClientList = x }) <$> f (searchClientList entry)
+
+foldMapNodeLists :: Monoid m =>
+  (forall l. NodeList l => l -> m) -> DhtState -> m
+foldMapNodeLists f = getConst . traverseNodeLists (Const . f)
+
+mapNodeLists :: (forall l. NodeList l => l -> l) -> DhtState -> DhtState
+mapNodeLists f = runIdentity . traverseNodeLists (Identity . f)
 
 \end{code}
 
@@ -170,15 +194,10 @@ The state size is relevant to later pruning algorithms that decide when to
 remove a node info and when to request a ping from stale nodes. Search keys,
 once added, are never automatically pruned.
 
-The Close List and the Search Entries are termed the \texttt{Node Lists} of
-the DHT State. The \texttt{target} of a Node List is the searched for public
-key in the case of a Search Entry, and the DHT Public Key in the case of the
-Close List.
-
 \begin{code}
 
 size :: DhtState -> Int
-size = foldNodes (flip $ const (1 +)) 0
+size = NodeList.foldNodes (flip $ const (1 +)) 0
 
 \end{code}
 
@@ -194,27 +213,48 @@ entry is associated (i.e. the node being search for).
 
 \begin{code}
 
-addNode :: NodeInfo -> DhtState -> DhtState
-addNode nodeInfo =
+addNode :: Timestamp -> NodeInfo -> DhtState -> DhtState
+addNode time nodeInfo =
   updateSearchNode (NodeInfo.publicKey nodeInfo) (Just nodeInfo)
-  . mapBuckets (KBuckets.addNode nodeInfo)
-  . mapSearchClientLists addUnlessBase
+  . mapNodeLists addUnlessBase
   where
-    addUnlessBase clientList
-      | NodeInfo.publicKey nodeInfo == ClientList.baseKey clientList =
-        clientList
-    addUnlessBase clientList = ClientList.addNode nodeInfo clientList
+    addUnlessBase nodeList
+      | NodeInfo.publicKey nodeInfo == NodeList.baseKey nodeList = nodeList
+    addUnlessBase nodeList = NodeList.addNode time nodeInfo nodeList
+
+removeNode :: PublicKey -> DhtState -> DhtState
+removeNode publicKey =
+  updateSearchNode publicKey Nothing
+  . mapNodeLists (NodeList.removeNode publicKey)
+
+viable :: NodeInfo -> DhtState -> Bool
+viable nodeInfo = getAll . foldMapNodeLists (All . NodeList.viable nodeInfo)
+
+traverseClientLists ::
+  Applicative f => (ClientList -> f ClientList) -> DhtState -> f DhtState
+traverseClientLists f = traverseNodeLists $ NodeList.traverseClientLists f
+
+
+-- | although it is not referred to as a Node List in the spec, we make DhtState
+-- an instance of NodeList so we can use the traversal and folding functions.
+instance NodeList DhtState where
+  addNode = addNode
+  removeNode = removeNode
+  viable = viable
+  baseKey = KeyPair.publicKey . dhtKeyPair
+  traverseClientLists = traverseClientLists
+
 
 mapBuckets :: (KBuckets -> KBuckets) -> DhtState -> DhtState
 mapBuckets f dhtState@DhtState { dhtCloseList } =
   dhtState
-    { dhtCloseList  = f dhtCloseList
+    { dhtCloseList = f dhtCloseList
     }
 
 mapSearchEntry :: (DhtSearchEntry -> DhtSearchEntry) -> DhtState -> DhtState
 mapSearchEntry f dhtState@DhtState { dhtSearchList } =
   dhtState
-    { dhtSearchList  = Map.map f dhtSearchList
+    { dhtSearchList = Map.map f dhtSearchList
     }
 
 mapSearchClientLists :: (ClientList -> ClientList) -> DhtState -> DhtState
@@ -238,16 +278,9 @@ entry is unset. The search entry itself is not removed.
 
 \begin{code}
 
-removeNode :: PublicKey -> DhtState -> DhtState
-removeNode publicKey =
-  updateSearchNode publicKey Nothing
-  . mapBuckets (KBuckets.removeNode publicKey)
-  . mapSearchClientLists (ClientList.removeNode publicKey)
-
-
 containsNode :: PublicKey -> DhtState -> Bool
 containsNode publicKey =
-  foldNodes (\a x -> a || NodeInfo.publicKey x == publicKey) False
+  NodeList.foldNodes (\a x -> a || NodeInfo.publicKey x == publicKey) False
 
 
 {-------------------------------------------------------------------------------
@@ -259,19 +292,19 @@ containsNode publicKey =
 
 instance Arbitrary DhtState where
   arbitrary =
-    initialise <$> arbitrary <*> arbitrary <*> arbitrary
+    initialise <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
     where
-      initialise :: KeyPair -> [NodeInfo] -> [PublicKey] -> DhtState
-      initialise kp nis =
-        foldl (flip addSearchKey) (foldl (flip addNode) (empty kp) nis)
+      initialise :: Timestamp -> KeyPair -> [(Timestamp, NodeInfo)] -> [(Timestamp, PublicKey)] -> DhtState
+      initialise time kp nis =
+        foldl (flip $ uncurry addSearchKey) (foldl (flip $ uncurry NodeList.addNode) (empty time kp) nis)
 
   shrink dhtState =
     Maybe.maybeToList shrunkNode ++ Maybe.maybeToList shrunkSearchKey
     where
       -- Remove the first node we can find in the state.
       shrunkNode = do
-        firstPK <- NodeInfo.publicKey <$> foldNodes (\a x -> a <|> Just x) Nothing dhtState
-        return $ removeNode firstPK dhtState
+        firstPK <- NodeInfo.publicKey <$> NodeList.foldNodes (\a x -> a <|> Just x) Nothing dhtState
+        return $ NodeList.removeNode firstPK dhtState
 
       shrunkSearchKey = Nothing
 

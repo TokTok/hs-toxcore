@@ -5,8 +5,10 @@
 {-# LANGUAGE Safe           #-}
 module Network.Tox.DHT.ClientList where
 
-import           Control.Applicative           ((<$>), (<*>))
+import           Control.Applicative           (Const (..), getConst, (<$>),
+                                                (<*>))
 import           Control.Monad                 (join)
+import           Data.List                     (sort)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary,
@@ -15,9 +17,13 @@ import           Test.QuickCheck.Gen           (Gen)
 import qualified Test.QuickCheck.Gen           as Gen
 
 import           Network.Tox.Crypto.Key        (PublicKey)
+import           Network.Tox.DHT.ClientNode    (ClientNode)
+import qualified Network.Tox.DHT.ClientNode    as ClientNode
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
+import           Network.Tox.Time              (TimeDiff, Timestamp)
+import qualified Network.Tox.Time              as Time
 
 
 {-------------------------------------------------------------------------------
@@ -46,7 +52,10 @@ data ClientList = ClientList
   }
   deriving (Eq, Read, Show)
 
-type ClientNodes = Map Distance.Distance NodeInfo
+type ClientNodes = Map Distance.Distance ClientNode
+
+nodeInfos :: ClientList -> [NodeInfo]
+nodeInfos = map ClientNode.nodeInfo . Map.elems . nodes
 
 empty :: PublicKey -> Int -> ClientList
 empty publicKey size = ClientList
@@ -64,7 +73,7 @@ updateClientNodes f clientList@ClientList{ nodes } =
 
 lookup :: PublicKey -> ClientList -> Maybe NodeInfo
 lookup publicKey _cl@ClientList{ baseKey, nodes } =
-  Distance.xorDistance publicKey baseKey `Map.lookup` nodes
+  ClientNode.nodeInfo <$> Distance.xorDistance publicKey baseKey `Map.lookup` nodes
 
 \end{code}
 
@@ -87,23 +96,29 @@ same effect as removing it once.
 
 \begin{code}
 
-addNode :: NodeInfo -> ClientList -> ClientList
-addNode nodeInfo clientList@ClientList{ baseKey, maxSize } =
+addNode :: Timestamp -> NodeInfo -> ClientList -> ClientList
+addNode time nodeInfo clientList@ClientList{ baseKey, maxSize } =
   (`updateClientNodes` clientList) $
     mapTake maxSize
     . Map.insert
       (Distance.xorDistance (NodeInfo.publicKey nodeInfo) baseKey)
-      nodeInfo
+      (ClientNode.newNode time nodeInfo)
+  where
+    -- | 'mapTake' is 'Data.Map.take' in >=containers-0.5.8, but we define it
+    -- for compatibility with older versions.
+    mapTake :: Int -> Map k a -> Map k a
+    mapTake n = Map.fromDistinctAscList . take n . Map.toAscList
+
 
 removeNode :: PublicKey -> ClientList -> ClientList
 removeNode publicKey clientList =
-  (`updateClientNodes` clientList) $
-    Map.delete $ Distance.xorDistance publicKey $ baseKey clientList
+  (`updateClientNodes` clientList) .
+    Map.delete . Distance.xorDistance publicKey $ baseKey clientList
 
--- | 'mapTake' is 'Data.Map.take' in >=containers-0.5.8, but we define it for
--- compatibility with older versions.
-mapTake :: Int -> Map k a -> Map k a
-mapTake n = Map.fromDistinctAscList . take n . Map.toAscList
+viable :: NodeInfo -> ClientList -> Bool
+viable nodeInfo ClientList{ baseKey, maxSize, nodes } =
+  let key = Distance.xorDistance (NodeInfo.publicKey nodeInfo) baseKey
+  in (key `elem`) . take maxSize . sort $ key : Map.keys nodes
 
 \end{code}
 
@@ -114,7 +129,7 @@ is the furthest away in terms of the distance metric.
 \begin{code}
 
 foldNodes :: (a -> NodeInfo -> a) -> a -> ClientList -> a
-foldNodes f x = foldl f x . Map.elems . nodes
+foldNodes f x = foldl f x . nodeInfos
 
 {-------------------------------------------------------------------------------
  -
@@ -125,7 +140,7 @@ foldNodes f x = foldl f x . Map.elems . nodes
 
 genClientList :: PublicKey -> Int -> Gen ClientList
 genClientList publicKey size =
-  foldl (flip addNode) (empty publicKey size) <$> Gen.listOf arbitrary
+  foldl (flip $ uncurry addNode) (empty publicKey size) <$> Gen.listOf arbitrary
 
 
 instance Arbitrary ClientList where

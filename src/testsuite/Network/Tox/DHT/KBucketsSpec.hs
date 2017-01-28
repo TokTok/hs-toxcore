@@ -1,11 +1,12 @@
-{-# LANGUAGE LambdaCase  #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE Trustworthy         #-}
 module Network.Tox.DHT.KBucketsSpec where
 
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Control.Monad                 (when)
+import           Control.Monad                 (unless, when)
 import           Data.List                     (sort, sortBy)
 import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
@@ -16,6 +17,7 @@ import qualified Network.Tox.DHT.ClientList    as ClientList
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
+import qualified Network.Tox.DHT.NodeList      as NodeList
 import           Network.Tox.EncodingSpec
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
@@ -28,7 +30,7 @@ makeInputKey pos digit =
 
 getAllBuckets :: KBuckets -> [[NodeInfo]]
 getAllBuckets kBuckets =
-  map (Map.elems . ClientList.nodes) (Map.elems (KBuckets.buckets kBuckets))
+  map ClientList.nodeInfos (Map.elems (KBuckets.buckets kBuckets))
 
 
 spec :: Spec
@@ -36,39 +38,47 @@ spec = do
   readShowSpec (Proxy :: Proxy KBuckets)
 
   it "does not accept adding a NodeInfo with the baseKey as publicKey" $
-    property $ \kBuckets nodeInfo ->
-      KBuckets.addNode nodeInfo { NodeInfo.publicKey = KBuckets.baseKey kBuckets } kBuckets
+    property $ \kBuckets time nodeInfo ->
+      KBuckets.addNode time nodeInfo { NodeInfo.publicKey = KBuckets.baseKey kBuckets } kBuckets
         `shouldBe`
         kBuckets
 
   it "adding a node to an empty k-buckets always succeeds if baseKey <> nodeKey" $
-    property $ \baseKey nodeInfo ->
+    property $ \baseKey time nodeInfo ->
       let
         empty = KBuckets.empty baseKey
-        kBuckets = KBuckets.addNode nodeInfo empty
+        kBuckets = KBuckets.addNode time nodeInfo empty
       in
       if baseKey == NodeInfo.publicKey nodeInfo
       then kBuckets `shouldBe` empty
       else kBuckets `shouldNotBe` empty
 
   it "removing a node twice has no effect" $
-    property $ \baseKey nodeInfo ->
+    property $ \baseKey time nodeInfo ->
       let
         empty        = KBuckets.empty baseKey
-        afterAdd     = KBuckets.addNode nodeInfo empty
+        afterAdd     = KBuckets.addNode time nodeInfo empty
         afterRemove0 = KBuckets.removeNode (NodeInfo.publicKey nodeInfo) afterAdd
         afterRemove1 = KBuckets.removeNode (NodeInfo.publicKey nodeInfo) afterRemove0
       in
       afterRemove0 `shouldBe` afterRemove1
 
   it "adding a node twice has no effect" $
-    property $ \baseKey nodeInfo ->
+    property $ \baseKey time nodeInfo ->
       let
         empty        = KBuckets.empty baseKey
-        afterAdd0    = KBuckets.addNode nodeInfo empty
-        afterAdd1    = KBuckets.addNode nodeInfo afterAdd0
+        afterAdd0    = KBuckets.addNode time nodeInfo empty
+        afterAdd1    = KBuckets.addNode time nodeInfo afterAdd0
       in
       afterAdd0 `shouldBe` afterAdd1
+
+  it "adding a non-viable node has no effect" $
+    property $ \(kBuckets::KBuckets) time nodeInfo ->
+      let
+        viable   = KBuckets.viable nodeInfo kBuckets
+        afterAdd = KBuckets.addNode time nodeInfo kBuckets
+      in
+      unless viable $ afterAdd `shouldBe` kBuckets
 
   it "never contains a NodeInfo with the public key equal to the base key" $
     property $ \kBuckets ->
@@ -122,7 +132,7 @@ spec = do
     it "iterates over nodes in order of distance from the base key" $
       property $ \kBuckets ->
         let
-          nodes             = reverse $ KBuckets.foldNodes (flip (:)) [] kBuckets
+          nodes             = reverse $ NodeList.foldNodes (flip (:)) [] kBuckets
           nodeDistance node = Distance.xorDistance (KBuckets.baseKey kBuckets) (NodeInfo.publicKey node)
         in
           nodes `shouldBe` sortBy (comparing nodeDistance) nodes

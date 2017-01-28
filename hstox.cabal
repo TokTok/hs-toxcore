@@ -34,15 +34,19 @@ library
     , binary
     , binary-bits
     , bytestring
+    , clock                     >= 0.3
     , containers
     , data-msgpack
     , integer-gmp
     , iproute
+    , MonadRandom
+    , mtl
     -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
     -- it explicitly here.
     , network                   <= 2.6.2.1
     , network-msgpack-rpc       >= 0.0.3
     , saltine
+    , random
     , tagged
     , text
     , transformers
@@ -58,12 +62,15 @@ library
       Network.Tox.Crypto.Nonce
       Network.Tox.DHT
       Network.Tox.DHT.ClientList
+      Network.Tox.DHT.ClientNode
       Network.Tox.DHT.DhtPacket
       Network.Tox.DHT.DhtState
       Network.Tox.DHT.Distance
       Network.Tox.DHT.KBuckets
+      Network.Tox.DHT.NodeList
       Network.Tox.DHT.NodesRequest
       Network.Tox.DHT.NodesResponse
+      Network.Tox.DHT.Operation
       Network.Tox.DHT.PingPacket
       Network.Tox.DHT.RpcPacket
       Network.Tox.Encoding
@@ -77,6 +84,7 @@ library
       Network.Tox.Protocol.Packet
       Network.Tox.Protocol.PacketKind
       Network.Tox.Testing
+      Network.Tox.Time
   if !flag(library-only)
     hs-source-dirs:
         src/testsuite
@@ -96,6 +104,7 @@ library
         Network.Tox.DHT.KBucketsSpec
         Network.Tox.DHT.NodesRequestSpec
         Network.Tox.DHT.NodesResponseSpec
+        Network.Tox.DHT.OperationSpec
         Network.Tox.DHT.PingPacketSpec
         Network.Tox.DHT.RpcPacketSpec
         Network.Tox.DHTSpec

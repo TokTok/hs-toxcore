@@ -10,13 +10,15 @@ lifetime of a k-buckets instance.
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.KBuckets where
 
-import           Control.Applicative           ((<$>))
+import           Control.Applicative           (Applicative, (<$>))
 import           Data.Binary                   (Binary)
-import           Data.Foldable                 (maximumBy)
+import           Data.Foldable                 (maximumBy, toList)
 import           Data.List                     (sort)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
+import           Data.Traversable              (Traversable, mapAccumR,
+                                                traverse)
 import           Data.Word                     (Word8)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
 import           Test.QuickCheck.Gen           (Gen)
@@ -28,6 +30,7 @@ import qualified Network.Tox.DHT.ClientList    as ClientList
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
+import           Network.Tox.Time              (Timestamp)
 
 
 {-------------------------------------------------------------------------------
@@ -60,7 +63,6 @@ defaultBucketSize = 8
 
 empty :: PublicKey -> KBuckets
 empty = KBuckets defaultBucketSize Map.empty
-
 
 \end{code}
 
@@ -153,17 +155,23 @@ for entry to the corresponding bucket.
 
 \begin{code}
 
-
-addNode :: NodeInfo -> KBuckets -> KBuckets
-addNode nodeInfo kBuckets =
-  updateBucketForKey kBuckets publicKey $ ClientList.addNode nodeInfo
+addNode :: Timestamp -> NodeInfo -> KBuckets -> KBuckets
+addNode time nodeInfo kBuckets =
+  updateBucketForKey kBuckets publicKey $ ClientList.addNode time nodeInfo
   where
     publicKey = NodeInfo.publicKey nodeInfo
-
 
 removeNode :: PublicKey -> KBuckets -> KBuckets
 removeNode publicKey kBuckets =
   updateBucketForKey kBuckets publicKey $ ClientList.removeNode publicKey
+
+viable :: NodeInfo -> KBuckets -> Bool
+viable nodeInfo KBuckets{ baseKey, buckets } =
+  case bucketIndex baseKey $ NodeInfo.publicKey nodeInfo of
+    Nothing    -> False
+    Just index -> case Map.lookup index buckets of
+      Nothing     -> True
+      Just bucket -> ClientList.viable nodeInfo bucket
 
 \end{code}
 
@@ -173,12 +181,13 @@ is the furthest away in terms of the distance metric.
 
 \begin{code}
 
-foldNodes :: (a -> NodeInfo -> a) -> a -> KBuckets -> a
-foldNodes f x =
-  foldl f x
-  . concatMap (Map.elems . ClientList.nodes)
-  . reverse . Map.elems . buckets
-
+traverseClientLists ::
+    Applicative f => (ClientList -> f ClientList) -> KBuckets -> f KBuckets
+traverseClientLists f kBuckets@KBuckets{ buckets } =
+  (\x -> kBuckets{ buckets = x }) <$> traverse f (reverseT buckets)
+  where
+    reverseT :: (Traversable t) => t a -> t a
+    reverseT t = snd (mapAccumR (\ (x:xs) _ -> (xs, x)) (toList t) t)
 
 {-------------------------------------------------------------------------------
  -
@@ -189,12 +198,12 @@ foldNodes f x =
 
 getAllNodes :: KBuckets -> [NodeInfo]
 getAllNodes =
-  concatMap (Map.elems . ClientList.nodes) . Map.elems . buckets
+  concatMap ClientList.nodeInfos . Map.elems . buckets
 
 
 genKBuckets :: PublicKey -> Gen KBuckets
 genKBuckets publicKey =
-  foldl (flip addNode) (empty publicKey) <$> Gen.listOf arbitrary
+  foldl (flip $ uncurry addNode) (empty publicKey) <$> Gen.listOf arbitrary
 
 
 instance Arbitrary KBuckets where
