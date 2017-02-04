@@ -65,18 +65,32 @@ Every DHT node contains the following state:
 type PendingResponses = Stamped NodeInfo
 
 data DhtState = DhtState
-  { dhtKeyPair                      :: KeyPair
-  , dhtCloseListLastPeriodicRequest :: Timestamp
-  , dhtCloseList                    :: KBuckets
-  , dhtSearchList                   :: Map PublicKey DhtSearchEntry
+  { dhtKeyPair        :: KeyPair
+  , dhtCloseList      :: KBuckets
+  , dhtSearchList     :: Map PublicKey DhtSearchEntry
 
-  , pendingResponses                :: PendingResponses
+  , dhtCloseListStamp :: Timestamp
+  , pendingResponses  :: PendingResponses
   }
   deriving (Eq, Read, Show)
 
+dhtKeyPairL :: MonadState DhtState m => StateT KeyPair m a -> m a
+dhtKeyPairL = fromGetSet dhtKeyPair $ \x s -> s{ dhtKeyPair = x }
+
+dhtCloseListStampL ::
+  MonadState DhtState m => StateT Timestamp m a -> m a
+dhtCloseListStampL = fromGetSet dhtCloseListStamp $
+  \x s -> s{ dhtCloseListStamp = x }
+
+dhtCloseListL :: MonadState DhtState m => StateT KBuckets m a -> m a
+dhtCloseListL = fromGetSet dhtCloseList $ \x s -> s{ dhtCloseList = x }
+
+dhtSearchListL ::
+  MonadState DhtState m => StateT (Map PublicKey DhtSearchEntry) m a -> m a
+dhtSearchListL = fromGetSet dhtSearchList $ \x s -> s{ dhtSearchList = x }
+
 pendingResponsesL :: MonadState DhtState m => StateT PendingResponses m a -> m a
-pendingResponsesL = fromGetSet pendingResponses $
-  \x dhtState -> dhtState{ pendingResponses = x }
+pendingResponsesL = fromGetSet pendingResponses $ \x s -> s{ pendingResponses = x }
 
 \end{code}
 
@@ -88,7 +102,7 @@ Lists are initialised to be empty.
 
 empty :: Timestamp -> KeyPair -> DhtState
 empty time keyPair =
-  DhtState keyPair time (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty Stamped.empty
+  DhtState keyPair (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty time Stamped.empty
 
 \end{code}
 
@@ -111,11 +125,20 @@ Lists simultaneously.
 \begin{code}
 
 data DhtSearchEntry = DhtSearchEntry
-  { searchNode                :: Maybe NodeInfo
-  , searchLastPeriodicRequest :: Timestamp
-  , searchClientList          :: ClientList
+  { searchNode       :: Maybe NodeInfo
+  , searchStamp      :: Timestamp
+  , searchClientList :: ClientList
   }
   deriving (Eq, Read, Show)
+
+searchNodeL :: MonadState DhtSearchEntry m => StateT (Maybe NodeInfo) m a -> m a
+searchNodeL = fromGetSet searchNode $ \x s -> s{ searchNode = x }
+
+searchStampL :: MonadState DhtSearchEntry m => StateT Timestamp m a -> m a
+searchStampL = fromGetSet searchStamp $ \x s -> s{ searchStamp = x }
+
+searchClientListL :: MonadState DhtSearchEntry m => StateT ClientList m a -> m a
+searchClientListL = fromGetSet searchClientList $ \x s -> s{ searchClientList = x }
 
 searchEntryClientListSize :: Int
 searchEntryClientListSize = 8

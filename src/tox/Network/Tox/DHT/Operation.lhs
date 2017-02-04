@@ -9,17 +9,19 @@
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative           ((<$>), (<*>))
-import           Control.Monad                 (guard, when)
+import           Control.Monad                 (guard, when, unless)
 import           Control.Monad.Random          (RandT, evalRandT)
 import           Control.Monad.Random.Class    (MonadRandom, uniform)
-import           Control.Monad.State           (MonadState, get, modify)
-import           Control.Monad.Writer          (MonadWriter, Writer, execWriter,
+import           Control.Monad.State           (MonadState, execStateT, put, get, gets, modify)
+import           Control.Monad.Writer          (MonadWriter, Writer, execWriter, execWriterT,
                                                 runWriter, tell)
+import           Control.Monad.IO.Class        (MonadIO, liftIO)
+import           Control.Monad.Reader          (MonadReader, ask, runReaderT)
 import           Data.Foldable                 (for_)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Traversable              (for, traverse)
-import           System.Random                 (StdGen, mkStdGen)
+import           System.Random                 (StdGen, mkStdGen, getStdGen)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
@@ -31,6 +33,7 @@ import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
 import           Network.Tox.DHT.NodeList      (NodeList)
 import qualified Network.Tox.DHT.NodeList      as NodeList
+import           Network.Tox.DHT.NodesResponse (NodesResponse(..))
 import           Network.Tox.DHT.Stamped       (Stamped)
 import qualified Network.Tox.DHT.Stamped       as Stamped
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
@@ -58,6 +61,9 @@ easier, as it adds a possible attack vector.
 
 \begin{code}
 
+modifyM :: MonadState s m => (s -> m s) -> m ()
+modifyM = (put =<<) . (get >>=)
+
 -- | Information required to send a NodesRequest packet
 data RequestInfo = RequestInfo
   { requestTo     :: NodeInfo
@@ -68,34 +74,36 @@ data RequestInfo = RequestInfo
 randomRequestPeriod :: TimeDiff
 randomRequestPeriod = Time.seconds 20
 
-randomRequests :: forall m. (MonadRandom m, MonadWriter [RequestInfo] m) =>
-  Timestamp -> DhtState -> m DhtState
-randomRequests time dhtState =
-  let
-    closeList  = DhtState.dhtCloseList dhtState
-    searchList = DhtState.dhtSearchList dhtState
-    doList :: NodeList l => l -> TimeStamp -> m TimeStamp
-    doList nodeList lastTime =
-      if time - lastTime < randomRequestPeriod
-      then pure lastTime
-      else case NodeList.nodeListList nodeList of
-        [] -> return time
-        nodes -> do
-          node <- uniform nodes
-          tell [RequestInfo node $ NodeList.baseKey nodeList]
-          return time
-  in do
-    closeTime' <-
-      doList closeList $ DhtState.dhtCloseListLastPeriodicRequest dhtState
-    search' <- for searchList $ \entry ->
-      (\t -> entry{DhtState.searchLastPeriodicRequest = t}) <$>
-        doList
-          (DhtState.searchClientList entry)
-          (DhtState.searchLastPeriodicRequest entry)
-    pure $ dhtState
-      { DhtState.dhtCloseListLastPeriodicRequest = closeTime'
-      , DhtState.dhtSearchList = search'
-      }
+randomRequests ::
+  ( MonadRandom m
+  , MonadState DhtState m
+  , MonadWriter [RequestInfo] m
+  , MonadReader Timestamp m
+  ) => m ()
+randomRequests = do
+  closeList <- gets DhtState.dhtCloseList
+  DhtState.dhtCloseListStampL $ doList closeList
+  DhtState.dhtSearchListL .
+    modifyM . traverse . execStateT $ do
+      searchList <- gets DhtState.searchClientList
+      DhtState.searchStampL $ doList searchList
+  where
+    doList ::
+      ( NodeList l
+      , MonadRandom m
+      , MonadReader Timestamp m
+      , MonadWriter [RequestInfo] m
+      , MonadState Timestamp m) => l -> m ()
+    doList nodeList = do
+      time <- ask
+      lastTime <- get
+      when (time Time.- lastTime >= randomRequestPeriod) $
+        case NodeList.nodeListList nodeList of
+          [] -> put time
+          nodes -> do
+            node <- uniform nodes
+            tell [RequestInfo node $ NodeList.baseKey nodeList]
+            put time
 
 \end{code}
 
@@ -134,9 +142,12 @@ pingPeriod = Time.seconds 60
 maxPings :: Int
 maxPings = 2
 
-pingNodes :: forall m. MonadWriter [RequestInfo] m =>
-  Timestamp -> DhtState -> m DhtState
-pingNodes time = DhtState.traverseClientLists pingNodes'
+pingNodes :: forall m.
+  ( MonadState DhtState m
+  , MonadWriter [RequestInfo] m
+  , MonadReader Timestamp m
+  ) => m ()
+pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
   where
     pingNodes' :: ClientList -> m ClientList
     pingNodes' clientList =
@@ -148,8 +159,8 @@ pingNodes time = DhtState.traverseClientLists pingNodes'
         traverseMaybe f = (Map.mapMaybe id <$>) . traverse f
 
         pingNode :: ClientNode -> m (Maybe ClientNode)
-        pingNode clientNode =
-          if time - lastPing < pingPeriod
+        pingNode clientNode = ask >>= \time ->
+          if time Time.- lastPing < pingPeriod
           then pure $ Just clientNode
           else (tell [requestInfo] *>) . pure $
             if pingCount + 1 < maxPings
@@ -182,11 +193,14 @@ node with the requested public key being the base key of the Nodes List.
 requireResponseWithin :: TimeDiff
 requireResponseWithin = Time.seconds 60
 
-handleNodesResponse :: (MonadState DhtState m, MonadWriter [RequestInfo] m) =>
-  Timestamp -> NodeInfo -> [NodeInfo] -> m ()
-handleNodesResponse time responder nodes = do
+handleNodesResponse ::
+  ( MonadState DhtState m
+  , MonadWriter [RequestInfo] m
+  , MonadReader Timestamp m
+  ) => NodeInfo -> [NodeInfo] -> m ()
+handleNodesResponse responder nodes = ask >>= \time -> do
   isPending <- DhtState.pendingResponsesL $ do
-    modify $ Stamped.dropOlder (time - requireResponseWithin)
+    modify $ Stamped.dropOlder (time Time.+ negate requireResponseWithin)
     elem responder . Stamped.getList <$> get
   when isPending $ do
     modify $ DhtState.addNode time responder
@@ -213,10 +227,24 @@ state, no response is sent.
 responseMaxNodes :: Int
 responseMaxNodes = 4
 
-handleNodesRequest :: PublicKey -> dhtState -> Maybe NodesResponse
+handleNodesRequest :: PublicKey -> DhtState -> Maybe NodesResponse
 handleNodesRequest publicKey dhtState =
   let nodes = DhtState.takeClosestNodesTo responseMaxNodes publicKey dhtState
-  in if length nodes == 0 then Nothing else NodesResponse nodes
+  in if length nodes == 0 then Nothing else Just $ NodesResponse nodes
+
+initDHT :: IO ()
+initDHT = do
+  -- TODO: bootstrap
+  return ()
+
+doDHT :: (MonadIO m, MonadState DhtState m) => m ()
+doDHT =
+  (liftIO Time.getTime >>=) . runReaderT $
+    (liftIO getStdGen >>=) . evalRandT $
+      (execWriterT $ randomRequests >> pingNodes) >>= mapM_ sendRequest
+
+sendRequest :: MonadIO m => RequestInfo -> m ()
+sendRequest _ = return () -- TODO
 
 \end{code}
 
@@ -261,12 +289,12 @@ TODO: consider giving min and max values for the constants.
  ------------------------------------------------------------------------------}
 
 runTestOperation :: Monoid w => ArbStdGen -> RandT StdGen (Writer w) a -> (a,w)
-runTestOperation seed = runWriter . (`evalRandT` getStdGen seed)
+runTestOperation seed = runWriter . (`evalRandT` getArbStdGen seed)
 execTestOperation :: Monoid w => ArbStdGen -> RandT StdGen (Writer w) a -> w
-execTestOperation seed = execWriter . (`evalRandT` getStdGen seed)
+execTestOperation seed = execWriter . (`evalRandT` getArbStdGen seed)
 
 -- | wrap StdGen so the Arbitrary instance isn't an orphan
-newtype ArbStdGen = ArbStdGen { getStdGen :: StdGen }
+newtype ArbStdGen = ArbStdGen { getArbStdGen :: StdGen }
   deriving (Read, Show)
 
 instance Arbitrary ArbStdGen
