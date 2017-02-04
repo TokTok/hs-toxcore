@@ -6,7 +6,7 @@ import qualified Data.Foldable    as F
 import           Data.Map         (Map)
 import qualified Data.Map         as Map
 
-import           Network.Tox.Time (TimeStamp)
+import           Network.Tox.Time (Timestamp)
 
 -- Stub module, awaiting a proper event loop architecture
 
@@ -17,17 +17,17 @@ import           Network.Tox.Time (TimeStamp)
  ------------------------------------------------------------------------------}
 
 -- | a collection of objects associated with a timestamp.
-type Stamped a = Map TimeStamp [a]
+type Stamped a = Map Timestamp [a]
 
 empty :: Stamped a
 empty = Map.empty
 
 -- | add a timestamped object. There is no requirement that the stamp be later
 -- than that of previously added objects.
-add :: TimeStamp -> a -> Stamped a -> Stamped a
+add :: Timestamp -> a -> Stamped a -> Stamped a
 add time x = Map.insertWith (++) time [x]
 
-dropOlder :: TimeStamp -> Stamped a -> Stamped a
+dropOlder :: Timestamp -> Stamped a -> Stamped a
 dropOlder time = Map.mapMaybeWithKey $
   \t x -> if t < time then Nothing else Just x
 

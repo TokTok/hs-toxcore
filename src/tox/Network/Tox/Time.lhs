@@ -12,7 +12,7 @@ import Data.Monoid (Monoid, mappend, mempty)
  -
  ------------------------------------------------------------------------------}
 
-newtype TimeStamp = TimeStamp Clock.TimeSpec
+newtype Timestamp = Timestamp Clock.TimeSpec
   deriving (Eq, Ord, Show, Read)
 
 newtype TimeDiff = TimeDiff Clock.TimeSpec
@@ -30,14 +30,14 @@ instance Num TimeDiff where
 seconds :: Integer -> TimeDiff
 seconds s = TimeDiff $ Clock.TimeSpec (fromIntegral s) 0
 
-getTime :: IO TimeStamp
-getTime = TimeStamp <$> Clock.getTime Clock.Monotonic
+getTime :: IO Timestamp
+getTime = Timestamp <$> Clock.getTime Clock.Monotonic
 
-(-) :: TimeStamp -> TimeStamp -> TimeDiff
-TimeStamp t - TimeStamp t' = TimeDiff $ t Prelude.- t'
+(-) :: Timestamp -> Timestamp -> TimeDiff
+Timestamp t - Timestamp t' = TimeDiff $ t Prelude.- t'
 
-(+) :: TimeStamp -> TimeDiff -> TimeStamp
-TimeStamp t + TimeDiff t' = TimeStamp $ t Prelude.+ t'
+(+) :: Timestamp -> TimeDiff -> Timestamp
+Timestamp t + TimeDiff t' = Timestamp $ t Prelude.+ t'
 
 {-------------------------------------------------------------------------------
  -
@@ -45,8 +45,8 @@ TimeStamp t + TimeDiff t' = TimeStamp $ t Prelude.+ t'
  -
  ------------------------------------------------------------------------------}
 
-instance Arbitrary TimeStamp
-  where arbitrary = (TimeStamp <$>) $ Clock.TimeSpec <$> arbitrary <*> arbitrary
+instance Arbitrary Timestamp
+  where arbitrary = (Timestamp <$>) $ Clock.TimeSpec <$> arbitrary <*> arbitrary
 
 instance Arbitrary TimeDiff
   where arbitrary = (TimeDiff <$>) $ Clock.TimeSpec <$> arbitrary <*> arbitrary

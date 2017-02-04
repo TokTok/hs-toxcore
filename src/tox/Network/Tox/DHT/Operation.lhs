@@ -35,7 +35,7 @@ import           Network.Tox.DHT.Stamped       (Stamped)
 import qualified Network.Tox.DHT.Stamped       as Stamped
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (TimeDiff, TimeStamp)
+import           Network.Tox.Time              (TimeDiff, Timestamp)
 import qualified Network.Tox.Time              as Time
 
 
@@ -69,7 +69,7 @@ randomRequestPeriod :: TimeDiff
 randomRequestPeriod = Time.seconds 20
 
 randomRequests :: forall m. (MonadRandom m, MonadWriter [RequestInfo] m) =>
-  TimeStamp -> DhtState -> m DhtState
+  Timestamp -> DhtState -> m DhtState
 randomRequests time dhtState =
   let
     closeList  = DhtState.dhtCloseList dhtState
@@ -135,7 +135,7 @@ maxPings :: Int
 maxPings = 2
 
 pingNodes :: forall m. MonadWriter [RequestInfo] m =>
-  TimeStamp -> DhtState -> m DhtState
+  Timestamp -> DhtState -> m DhtState
 pingNodes time = DhtState.traverseClientLists pingNodes'
   where
     pingNodes' :: ClientList -> m ClientList
@@ -183,7 +183,7 @@ requireResponseWithin :: TimeDiff
 requireResponseWithin = Time.seconds 60
 
 handleNodesResponse :: (MonadState DhtState m, MonadWriter [RequestInfo] m) =>
-  TimeStamp -> NodeInfo -> [NodeInfo] -> m ()
+  Timestamp -> NodeInfo -> [NodeInfo] -> m ()
 handleNodesResponse time responder nodes = do
   isPending <- DhtState.pendingResponsesL $ do
     modify $ Stamped.dropOlder (time - requireResponseWithin)

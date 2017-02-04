@@ -16,10 +16,10 @@ import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (TimeStamp)
+import           Network.Tox.Time              (Timestamp)
 
 class NodeList l where
-  addNode :: TimeStamp -> NodeInfo -> l -> l
+  addNode :: Timestamp -> NodeInfo -> l -> l
 
   removeNode :: PublicKey -> l -> l
 

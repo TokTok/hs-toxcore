@@ -34,7 +34,7 @@ import           Network.Tox.DHT.Stamped       (Stamped)
 import qualified Network.Tox.DHT.Stamped       as Stamped
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (TimeStamp)
+import           Network.Tox.Time              (Timestamp)
 import qualified Network.Tox.Time              as Time
 
 
@@ -66,7 +66,7 @@ type PendingResponses = Stamped NodeInfo
 
 data DhtState = DhtState
   { dhtKeyPair                      :: KeyPair
-  , dhtCloseListLastPeriodicRequest :: TimeStamp
+  , dhtCloseListLastPeriodicRequest :: Timestamp
   , dhtCloseList                    :: KBuckets
   , dhtSearchList                   :: Map PublicKey DhtSearchEntry
 
@@ -86,7 +86,7 @@ Lists are initialised to be empty.
 
 \begin{code}
 
-empty :: TimeStamp -> KeyPair -> DhtState
+empty :: Timestamp -> KeyPair -> DhtState
 empty time keyPair =
   DhtState keyPair time (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty Stamped.empty
 
@@ -112,7 +112,7 @@ Lists simultaneously.
 
 data DhtSearchEntry = DhtSearchEntry
   { searchNode                :: Maybe NodeInfo
-  , searchLastPeriodicRequest :: TimeStamp
+  , searchLastPeriodicRequest :: Timestamp
   , searchClientList          :: ClientList
   }
   deriving (Eq, Read, Show)
@@ -127,7 +127,7 @@ Client List is initialised to be empty.
 
 \begin{code}
 
-emptySearchEntry :: TimeStamp -> PublicKey -> DhtSearchEntry
+emptySearchEntry :: Timestamp -> PublicKey -> DhtSearchEntry
 emptySearchEntry time publicKey =
   DhtSearchEntry Nothing time $ ClientList.empty publicKey searchEntryClientListSize
 
@@ -141,7 +141,7 @@ operation has no effect.
 
 \begin{code}
 
-addSearchKey :: TimeStamp -> PublicKey -> DhtState -> DhtState
+addSearchKey :: Timestamp -> PublicKey -> DhtState -> DhtState
 addSearchKey time searchKey dhtState@DhtState { dhtSearchList } =
   dhtState { dhtSearchList = updatedSearchList }
   where
@@ -229,7 +229,7 @@ entry is associated (i.e. the node being search for).
 
 \begin{code}
 
-addNode :: TimeStamp -> NodeInfo -> DhtState -> DhtState
+addNode :: Timestamp -> NodeInfo -> DhtState -> DhtState
 addNode time nodeInfo =
   updateSearchNode (NodeInfo.publicKey nodeInfo) (Just nodeInfo)
   . mapNodeLists addUnlessBase
@@ -316,7 +316,7 @@ instance Arbitrary DhtState where
   arbitrary =
     initialise <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
     where
-      initialise :: TimeStamp -> KeyPair -> [(TimeStamp, NodeInfo)] -> [(TimeStamp, PublicKey)] -> DhtState
+      initialise :: Timestamp -> KeyPair -> [(Timestamp, NodeInfo)] -> [(Timestamp, PublicKey)] -> DhtState
       initialise time kp nis =
         foldl (flip $ uncurry addSearchKey) (foldl (flip $ uncurry NodeList.addNode) (empty time kp) nis)
 

@@ -32,7 +32,7 @@ import           Network.Tox.DHT.Distance      (Distance)
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (TimeStamp)
+import           Network.Tox.Time              (Timestamp)
 
 
 {-------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ for entry to the corresponding bucket.
 
 \begin{code}
 
-addNode :: TimeStamp -> NodeInfo -> KBuckets -> KBuckets
+addNode :: Timestamp -> NodeInfo -> KBuckets -> KBuckets
 addNode time nodeInfo kBuckets =
   updateBucketForKey kBuckets publicKey $ ClientList.addNode time nodeInfo
   where
