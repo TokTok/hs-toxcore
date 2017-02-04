@@ -9,10 +9,13 @@
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative           ((<$>), (<*>))
+import           Control.Monad                 (guard, when)
 import           Control.Monad.Random          (RandT, evalRandT)
 import           Control.Monad.Random.Class    (MonadRandom, uniform)
+import           Control.Monad.State           (MonadState, get, modify)
 import           Control.Monad.Writer          (MonadWriter, Writer, execWriter,
                                                 runWriter, tell)
+import           Data.Foldable                 (for_)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Traversable              (for, traverse)
@@ -28,6 +31,8 @@ import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
 import           Network.Tox.DHT.NodeList      (NodeList)
 import qualified Network.Tox.DHT.NodeList      as NodeList
+import           Network.Tox.DHT.Stamped       (Stamped)
+import qualified Network.Tox.DHT.Stamped       as Stamped
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 import           Network.Tox.Time              (TimeDiff, TimeStamp)
@@ -164,12 +169,33 @@ pingNodes time = DhtState.traverseClientLists pingNodes'
 \subsection{Handling Nodes Response packets}
 When a valid Nodes Response packet is received, it is first checked that a
 Nodes Request was sent within the last 60 seconds to the node from which the
-response was received; if not, the packet is ignored. Otherwise, firstly the
-node from which the response was sent it is added to the state; see the
-k-Buckets and Client List specs for details on this operation. Secondly, for
-each node listed in the response and for each Nodes List in the DHT State to
-which the node is viable for entry, a Nodes Request is sent to the node with
-the requested public key being the base key of the Nodes List.
+response was received; if not, the packet is ignored.
+
+Otherwise, firstly the node from which the response was sent is added to the
+state; see the k-Buckets and Client List specs for details on this operation.
+Secondly, for each node listed in the response and for each Nodes List in the
+DHT State to which the node is viable for entry, a Nodes Request is sent to the
+node with the requested public key being the base key of the Nodes List.
+
+\begin{code}
+
+requireResponseWithin :: TimeDiff
+requireResponseWithin = Time.seconds 60
+
+handleNodesResponse :: (MonadState DhtState m, MonadWriter [RequestInfo] m) =>
+  TimeStamp -> NodeInfo -> [NodeInfo] -> m ()
+handleNodesResponse time responder nodes = do
+  isPending <- DhtState.pendingResponsesL $ do
+    modify $ Stamped.dropOlder (time - requireResponseWithin)
+    elem responder . Stamped.getList <$> get
+  when isPending $ do
+    modify $ DhtState.addNode time responder
+    for_ nodes $ \node ->
+      (>>= tell) $ (<$> get) $ DhtState.foldMapNodeLists $ \nodeList ->
+        guard (NodeList.viable node nodeList) >>
+          [ RequestInfo node $ NodeList.baseKey nodeList ]
+
+\end{code}
 
 An implementation may choose not to send every such Nodes Request.
 (c-toxcore only sends only so many per list (8 for the Close List, 4 for a

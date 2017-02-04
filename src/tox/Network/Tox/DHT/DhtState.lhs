@@ -1,13 +1,17 @@
 \section{DHT node state}
 
 \begin{code}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RankNTypes     #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE RankNTypes            #-}
 module Network.Tox.DHT.DhtState where
 
 import           Control.Applicative           (Const (..), getConst, pure,
                                                 (<$>), (<*>), (<|>))
+import           Control.Monad.State           (MonadState, StateT)
 import           Data.Functor.Identity         (Identity (..))
+import           Data.Lenses                   (fromGetSet)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import qualified Data.Maybe                    as Maybe
@@ -23,9 +27,12 @@ import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.DHT.NodeList      (NodeList)
 import qualified Network.Tox.DHT.NodeList      as NodeList
+import           Network.Tox.DHT.Stamped       (Stamped)
+import qualified Network.Tox.DHT.Stamped       as Stamped
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 import           Network.Tox.Time              (TimeStamp)
+import qualified Network.Tox.Time              as Time
 
 
 {-------------------------------------------------------------------------------
@@ -52,13 +59,21 @@ Every DHT node contains the following state:
 
 \begin{code}
 
+type PendingResponses = Stamped NodeInfo
+
 data DhtState = DhtState
   { dhtKeyPair                      :: KeyPair
   , dhtCloseListLastPeriodicRequest :: TimeStamp
   , dhtCloseList                    :: KBuckets
   , dhtSearchList                   :: Map PublicKey DhtSearchEntry
+
+  , pendingResponses                :: PendingResponses
   }
   deriving (Eq, Read, Show)
+
+pendingResponsesL :: MonadState DhtState m => StateT PendingResponses m a -> m a
+pendingResponsesL = fromGetSet pendingResponses $
+  \x dhtState -> dhtState{ pendingResponses = x }
 
 \end{code}
 
@@ -70,7 +85,7 @@ Lists are initialised to be empty.
 
 empty :: TimeStamp -> KeyPair -> DhtState
 empty time keyPair =
-  DhtState keyPair time (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty
+  DhtState keyPair time (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty Stamped.empty
 
 \end{code}
 
