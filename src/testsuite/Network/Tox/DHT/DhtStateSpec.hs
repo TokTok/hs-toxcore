@@ -4,12 +4,16 @@ module Network.Tox.DHT.DhtStateSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Control.Monad                 (unless)
+import           Control.Monad                 (unless, when)
+import           Data.List                     (nub, sort)
 import           Data.Proxy                    (Proxy (..))
+import qualified Data.Set                      as Set
 
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
 import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
+import qualified Network.Tox.DHT.Distance      as Distance
+import qualified Network.Tox.DHT.NodeList      as NodeList
 import           Network.Tox.EncodingSpec
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
@@ -96,3 +100,20 @@ spec = do
         DhtState.size (DhtState.addNode time nodeInfo afterAddSearchKey)
         `shouldBe`
         DhtState.size (DhtState.addNode time nodeInfo dhtState)
+
+  describe "takeClosestNodesTo" $ do
+    it "returns the requested number of nodes if there are enough nodes in the state" $
+      property $ \dhtState n publicKey -> n >= 0 ==>
+        let
+          taken = DhtState.takeClosestNodesTo n publicKey dhtState
+          nodes = NodeList.foldNodes (flip Set.insert) Set.empty dhtState
+        in
+        when (Set.size nodes >= n) $ length taken `shouldBe` n
+
+    it "returns distinct nodes sorted by distance from the given key" $
+      property $ \dhtState n publicKey -> n >= 0 ==>
+        let
+          taken = DhtState.takeClosestNodesTo n publicKey dhtState
+          dists = map (Distance.xorDistance publicKey . NodeInfo.publicKey) taken
+        in
+        dists `shouldBe` (nub . sort) dists
