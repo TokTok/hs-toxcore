@@ -118,10 +118,10 @@ stated otherwise.
 \begin{tabular}{l|l|l|l}
   Type name  & C type            & Length & Upper bound \\
   \hline
-  Word8      & \texttt{uint8_t}  & 1      & 255 (0xff) \\
-  Word16     & \texttt{uint16_t} & 2      & 65535 (0xffff) \\
-  Word32     & \texttt{uint32_t} & 4      & 4294967295 (0xffffffff) \\
-  Word64     & \texttt{uint64_t} & 8      & 18446744073709551615 (0xffffffffffffffff) \\
+  Word8      & \texttt{uint8\_t}  & 1      & 255 (0xff) \\
+  Word16     & \texttt{uint16\_t} & 2      & 65535 (0xffff) \\
+  Word32     & \texttt{uint32\_t} & 4      & 4294967295 (0xffffffff) \\
+  Word64     & \texttt{uint64\_t} & 8      & 18446744073709551615 (0xffffffffffffffff) \\
 \end{tabular}
 
 \section{Strings}
@@ -160,7 +160,7 @@ The LAN Discovery packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (33) \\
+  \texttt{1}         & \texttt{uint8\_t} (33) \\
   \texttt{32}        & DHT public key \\
 \end{tabular}
 
@@ -190,15 +190,15 @@ LAN discovery is how Tox handles and makes everything work well on LAN.
 \chapter{Messenger}
 
 Messenger is the module at the top of all the other modules.  It sits on top of
-\texttt{friend_connection} in the hierarchy of toxcore.
+\texttt{friend\_connection} in the hierarchy of toxcore.
 
 Messenger takes care of sending and receiving messages using the connection
-provided by \texttt{friend_connection}.  The module provides a way for friends
+provided by \texttt{friend\_connection}.  The module provides a way for friends
 to connect and makes it usable as an instant messenger.  For example, Messenger
 lets users set a nickname and status message which it then transmits to friends
 when they are online.  It also allows users to send messages to friends and
 builds an instant messenging system on top of the lower level
-\texttt{friend_connection} module.
+\texttt{friend\_connection} module.
 
 Messenger offers two methods to add a friend.  The first way is to add a friend
 with only their long term public key, this is used when a friend needs to be
@@ -206,13 +206,13 @@ added but for some reason a friend request should not be sent.  The friend
 should only be added.  This method is most commonly used to accept friend
 requests but could also be used in other ways.  If two friends add each other
 using this function they will connect to each other.  Adding a friend using
-this method just adds the friend to \texttt{friend_connection} and creates a
+this method just adds the friend to \texttt{friend\_connection} and creates a
 new friend entry in Messenger for the friend.
 
 The Tox ID is used to identify peers so that they can be added as friends in
 Tox.  In order to add a friend, a Tox user must have the friend's Tox ID. The
 Tox ID contains the long term public key of the peer (32 bytes) followed by the
-4 byte nospam (see: \texttt{friend_requests}) value and a 2 byte XOR checksum.
+4 byte nospam (see: \texttt{friend\_requests}) value and a 2 byte XOR checksum.
 The method of sending the Tox ID to others is up to the user and the client but
 the recommended way is to encode it in hexadecimal format and have the user
 manually send it to the friend using another program.
@@ -263,16 +263,16 @@ the friend.
 
 Should Messenger need to check whether any of the non lossy packets in the
 following list were received by the friend, for example to implement receipts
-for text messages, \texttt{net_crypto} can be used.  The \texttt{net_crypto}
+for text messages, \texttt{net\_crypto} can be used.  The \texttt{net\_crypto}
 packet number, used to send the packets, should be noted and then
-\texttt{net_crypto} checked later to see if the bottom of the send array is
+\texttt{net\_crypto} checked later to see if the bottom of the send array is
 after this packet number.  If it is, then the friend has received them.  Note
-that \texttt{net_crypto} packet numbers could overflow after a long time, so
-checks should happen within 2**32 \texttt{net_crypto} packets sent with the
+that \texttt{net\_crypto} packet numbers could overflow after a long time, so
+checks should happen within 2**32 \texttt{net\_crypto} packets sent with the
 same friend connection.
 
 Message receipts for action messages and normal text messages are implemented
-by adding the \texttt{net_crypto} packet number of each message, along with the
+by adding the \texttt{net\_crypto} packet number of each message, along with the
 receipt number, to the top of a linked list that each friend has as they are
 sent.  Every Messenger loop, the entries are read from the bottom and entries
 are removed and passed to the client until an entry that refers to a packet not
@@ -287,12 +287,12 @@ length: 1 byte
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x18) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x18) \\
 \end{tabular}
 
 Sent to a friend when a connection is established to tell them to mark us as
 online in their friends list.  This packet and the OFFLINE packet are necessary
-as \texttt{friend_connections} can be established with non-friends who are part
+as \texttt{friend\_connections} can be established with non-friends who are part
 of a groupchat.  The two packets are used to differentiate between these peers,
 connected to the user through groupchats, and actual friends who ought to be
 marked as online in the friendlist.
@@ -306,7 +306,7 @@ length: 1 byte
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x19) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x19) \\
 \end{tabular}
 
 Sent to a friend when deleting the friend.  Prevents a deleted friend from
@@ -321,7 +321,7 @@ length: 1 byte to 129 bytes.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x30) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x30) \\
   \texttt{[0, 128]}  & Nickname as a UTF8 byte string \\
 \end{tabular}
 
@@ -336,7 +336,7 @@ length: 1 byte to 1008 bytes.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x31) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x31) \\
   \texttt{[0, 1007]} & Status message as a UTF8 byte string \\
 \end{tabular}
 
@@ -351,8 +351,8 @@ length: 2 bytes
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x32) \\
-  \texttt{1}         & \texttt{uint8_t} status (0 = online, 1 = away, 2 = busy) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x32) \\
+  \texttt{1}         & \texttt{uint8\_t} status (0 = online, 1 = away, 2 = busy) \\
 \end{tabular}
 
 Used to send the user status of the peer to others.  This packet should be sent
@@ -366,8 +366,8 @@ length: 2 bytes
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x33) \\
-  \texttt{1}         & \texttt{uint8_t} typing status (0 = not typing, 1 = typing) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x33) \\
+  \texttt{1}         & \texttt{uint8\_t} typing status (0 = not typing, 1 = typing) \\
 \end{tabular}
 
 Used to tell a friend whether the user is currently typing or not.
@@ -377,7 +377,7 @@ Used to tell a friend whether the user is currently typing or not.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x40) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x40) \\
   \texttt{[0, 1372]} & Message as a UTF8 byte string \\
 \end{tabular}
 
@@ -388,7 +388,7 @@ Used to send a normal text message to the friend.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x41) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x41) \\
   \texttt{[0, 1372]} & Action message as a UTF8 byte string \\
 \end{tabular}
 
@@ -399,7 +399,7 @@ Used to send an action message (like an IRC action) to the friend.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x45) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x45) \\
   \texttt{?}         & data \\
 \end{tabular}
 
@@ -407,65 +407,65 @@ Reserved for Tox AV usage.
 
 \section{File Transfer Related Packets}
 
-\subsection{\texttt{FILE_SENDREQUEST}}
+\subsection{\texttt{FILE\_SENDREQUEST}}
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x50) \\
-  \texttt{1}         & \texttt{uint8_t} file number \\
-  \texttt{4}         & \texttt{uint32_t} file type \\
-  \texttt{8}         & \texttt{uint64_t} file size \\
+  \texttt{1}         & \texttt{uint8\_t} (0x50) \\
+  \texttt{1}         & \texttt{uint8\_t} file number \\
+  \texttt{4}         & \texttt{uint32\_t} file type \\
+  \texttt{8}         & \texttt{uint64\_t} file size \\
   \texttt{32}        & file id (32 bytes) \\
   \texttt{[0, 255]}  & filename as a UTF8 byte string \\
 \end{tabular}
 
 Note that file type and file size are sent in big endian/network byte format.
 
-\subsection{\texttt{FILE_CONTROL}}
+\subsection{\texttt{FILE\_CONTROL}}
 
-length: 4 bytes if \texttt{control_type} isn't seek.  8 bytes if
-\texttt{control_type} is seek.
+length: 4 bytes if \texttt{control\_type} isn't seek.  8 bytes if
+\texttt{control\_type} is seek.
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x51) \\
-  \texttt{1}         & \texttt{uint8_t} \texttt{send_receive} \\
-  \texttt{1}         & \texttt{uint8_t} file number \\
-  \texttt{1}         & \texttt{uint8_t} \texttt{control_type} \\
-  \texttt{8}         & \texttt{uint64_t} seek parameter \\
+  \texttt{1}         & \texttt{uint8\_t} (0x51) \\
+  \texttt{1}         & \texttt{uint8\_t} \texttt{send\_receive} \\
+  \texttt{1}         & \texttt{uint8\_t} file number \\
+  \texttt{1}         & \texttt{uint8\_t} \texttt{control\_type} \\
+  \texttt{8}         & \texttt{uint64\_t} seek parameter \\
 \end{tabular}
 
-\texttt{send_receive} is 0 if the control targets a file being sent (by the
+\texttt{send\_receive} is 0 if the control targets a file being sent (by the
 peer sending the file control), and 1 if it targets a file being received.
 
-\texttt{control_type} can be one of: 0 = accept, 1 = pause, 2 = kill, 3 = seek.
+\texttt{control\_type} can be one of: 0 = accept, 1 = pause, 2 = kill, 3 = seek.
 
-The seek parameter is only included when \texttt{control_type} is seek (3).
+The seek parameter is only included when \texttt{control\_type} is seek (3).
 
 Note that if it is included the seek parameter will be sent in big
 endian/network byte format.
 
-\subsection{\texttt{FILE_DATA}}
+\subsection{\texttt{FILE\_DATA}}
 
 length: 2 to 1373 bytes.
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x52) \\
-  \texttt{1}         & \texttt{uint8_t} file number \\
+  \texttt{1}         & \texttt{uint8\_t} (0x52) \\
+  \texttt{1}         & \texttt{uint8\_t} file number \\
   \texttt{[0, 1371]} & file data piece \\
 \end{tabular}
 
 Files are transferred in Tox using File transfers.
 
 To initiate a file transfer, the friend creates and sends a
-\texttt{FILE_SENDREQUEST} packet to the friend it wants to initiate a file
+\texttt{FILE\_SENDREQUEST} packet to the friend it wants to initiate a file
 transfer to.
 
-The first part of the \texttt{FILE_SENDREQUEST} packet is the file number.  The
+The first part of the \texttt{FILE\_SENDREQUEST} packet is the file number.  The
 file number is the number used to identify this file transfer.  As the file
 number is represented by a 1 byte number, the maximum amount of concurrent
 files Tox can send to a friend is 256.  256 file transfers per friend is enough
@@ -481,7 +481,7 @@ make sure to use a file number that isn't used for another outgoing file
 transfer to that same friend when creating a new outgoing file transfer.  File
 numbers are chosen by the file sender and stay unchanged for the entire
 duration of the file transfer.  The file number is used by both
-\texttt{FILE_CONTROL} and \texttt{FILE_DATA} packets to identify which file
+\texttt{FILE\_CONTROL} and \texttt{FILE\_DATA} packets to identify which file
 transfer these packets are for.
 
 The second part of the file transfer request is the file type.  This is simply
@@ -493,10 +493,10 @@ by the Tox client that creates the file transfers and send to the friend
 untouched.
 
 The file size indicates the total size of the file that will be transfered.  A
-file size of \texttt{UINT64_MAX} (maximum value in a \texttt{uint64_t}) means
+file size of \texttt{UINT64\_MAX} (maximum value in a \texttt{uint64\_t}) means
 that the size of the file is undetermined or unknown.  For example if someone
 wanted to use Tox file transfers to stream data they would set the file size to
-\texttt{UINT64_MAX}.  A file size of 0 is valid and behaves exactly like a
+\texttt{UINT64\_MAX}.  A file size of 0 is valid and behaves exactly like a
 normal file transfer.
 
 The file id is 32 bytes that can be used to uniquely identify the file
@@ -510,53 +510,53 @@ only used by things above it.
 The last part of the file transfer is the optional file name which is used to
 tell the receiver the name of the file.
 
-When a \texttt{FILE_SENDREQUEST} packet is received, the implementation
+When a \texttt{FILE\_SENDREQUEST} packet is received, the implementation
 validates and sends the info to the Tox client which decides whether they
 should accept the file transfer or not.
 
-To refuse or cancel a file transfer, they will send a \texttt{FILE_CONTROL}
-packet with \texttt{control_type} 2 (kill).
+To refuse or cancel a file transfer, they will send a \texttt{FILE\_CONTROL}
+packet with \texttt{control\_type} 2 (kill).
 
-\texttt{FILE_CONTROL} packets are used to control the file transfer.
-\texttt{FILE_CONTROL} packets are used to accept/unpause, pause, kill/cancel
-and seek file transfers.  The \texttt{control_type} parameter denotes what the
+\texttt{FILE\_CONTROL} packets are used to control the file transfer.
+\texttt{FILE\_CONTROL} packets are used to accept/unpause, pause, kill/cancel
+and seek file transfers.  The \texttt{control\_type} parameter denotes what the
 file control packet does.
 
-The \texttt{send_receive} and file number are used to identify a specific file
+The \texttt{send\_receive} and file number are used to identify a specific file
 transfer.  Since file numbers for outgoing and incoming files are not related
-to each other, the \texttt{send_receive} parameter is used to identify if the
+to each other, the \texttt{send\_receive} parameter is used to identify if the
 file number belongs to files being sent or files being received.  If
-\texttt{send_receive} is 0, the file number corresponds to a file being sent by
-the user sending the file control packet.  If \texttt{send_receive} is 1, it
+\texttt{send\_receive} is 0, the file number corresponds to a file being sent by
+the user sending the file control packet.  If \texttt{send\_receive} is 1, it
 corresponds to a file being received by the user sending the file control
 packet.
 
-\texttt{control_type} indicates the purpose of the \texttt{FILE_CONTROL}
-packet.  \texttt{control_type} of 0 means that the \texttt{FILE_CONTROL} packet
+\texttt{control\_type} indicates the purpose of the \texttt{FILE\_CONTROL}
+packet.  \texttt{control\_type} of 0 means that the \texttt{FILE\_CONTROL} packet
 is used to tell the friend that the file transfer is accepted or that we are
-unpausing a previously paused (by us) file transfer.  \texttt{control_type} of
+unpausing a previously paused (by us) file transfer.  \texttt{control\_type} of
 1 is used to tell the other to pause the file transfer.
 
 If one party pauses a file transfer, that party must be the one to unpause it.
 Should both sides pause a file transfer, both sides must unpause it before the
 file can be resumed.  For example, if the sender pauses the file transfer, the
 receiver must not be able to unpause it.  To unpause a file transfer,
-\texttt{control_type} 0 is used.  Files can only be paused when they are in
+\texttt{control\_type} 0 is used.  Files can only be paused when they are in
 progress and have been accepted.
 
-\texttt{control_type} 2 is used to kill, cancel or refuse a file transfer.
-When a \texttt{FILE_CONTROL} is received, the targeted file transfer is
+\texttt{control\_type} 2 is used to kill, cancel or refuse a file transfer.
+When a \texttt{FILE\_CONTROL} is received, the targeted file transfer is
 considered dead, will immediately be wiped and its file number can be reused.
-The peer sending the \texttt{FILE_CONTROL} must also wipe the targeted file
+The peer sending the \texttt{FILE\_CONTROL} must also wipe the targeted file
 transfer from their side.  This control type can be used by both sides of the
 transfer at any time.
 
-\texttt{control_type} 3, the seek control type is used to tell the sender of
+\texttt{control\_type} 3, the seek control type is used to tell the sender of
 the file to start sending from a different index in the file than 0.  It can
-only be used right after receiving a \texttt{FILE_SENDREQUEST} packet and
-before accepting the file by sending a \texttt{FILE_CONTROL} with
-\texttt{control_type} 0.  When this \texttt{control_type} is used, an extra 8
-byte number in big endian format is appended to the \texttt{FILE_CONTROL} that
+only be used right after receiving a \texttt{FILE\_SENDREQUEST} packet and
+before accepting the file by sending a \texttt{FILE\_CONTROL} with
+\texttt{control\_type} 0.  When this \texttt{control\_type} is used, an extra 8
+byte number in big endian format is appended to the \texttt{FILE\_CONTROL} that
 is not present with other control types.  This number indicates the index in
 bytes from the beginning of the file at which the file sender should start
 sending the file.  The goal of this control type is to ensure that files can be
@@ -567,39 +567,39 @@ is bigger or equal to the size of the file, the seek packet is invalid and the
 one receiving it will discard it.
 
 To accept a file Tox will therefore send a seek packet, if it is needed, and
-then send a \texttt{FILE_CONTROL} packet with \texttt{control_type} 0 (accept)
+then send a \texttt{FILE\_CONTROL} packet with \texttt{control\_type} 0 (accept)
 to tell the file sender that the file was accepted.
 
 Once the file transfer is accepted, the file sender will start sending file
 data in sequential chunks from the beginning of the file (or the position from
-the \texttt{FILE_CONTROL} seek packet if one was received).
+the \texttt{FILE\_CONTROL} seek packet if one was received).
 
-File data is sent using \texttt{FILE_DATA} packets.  The file number
+File data is sent using \texttt{FILE\_DATA} packets.  The file number
 corresponds to the file transfer that the file chunks belong to.  The receiver
 assumes that the file transfer is over as soon as a chunk with the file data
 size not equal to the maximum size (1371 bytes) is received.  This is how the
 sender tells the receiver that the file transfer is complete in file transfers
-where the size of the file is unknown (set to \texttt{UINT64_MAX}).  The
+where the size of the file is unknown (set to \texttt{UINT64\_MAX}).  The
 receiver also assumes that if the amount of received data equals to the file
-size received in the \texttt{FILE_SENDREQUEST}, the file sending is finished
+size received in the \texttt{FILE\_SENDREQUEST}, the file sending is finished
 and has been successfully received.  Immediately after this occurs, the
 receiver frees up the file number so that a new incoming file transfer can use
 that file number.  The implementation should discard any extra data received
 which is larger than the file size received at the beginning.
 
-In 0 filesize file transfers, the sender will send one \texttt{FILE_DATA}
+In 0 filesize file transfers, the sender will send one \texttt{FILE\_DATA}
 packet with a file data size of 0.
 
 The sender will know if the receiver has received the file successfully by
-checking if the friend has received the last \texttt{FILE_DATA} packet sent
-(containing the last chunk of the file).  \texttt{Net_crypto} can be used to
+checking if the friend has received the last \texttt{FILE\_DATA} packet sent
+(containing the last chunk of the file).  \texttt{net\_crypto} can be used to
 check whether packets sent through it have been received by storing the packet
-number of the sent packet and verifying later in \texttt{net_crypto} to see
-whether it was received or not.  As soon as \texttt{net_crypto} says the other
+number of the sent packet and verifying later in \texttt{net\_crypto} to see
+whether it was received or not.  As soon as \texttt{net\_crypto} says the other
 received the packet, the file transfer is considered successful, wiped and the
 file number can be reused to send new files.
 
-\texttt{FILE_DATA} packets should be sent as fast as the \texttt{net_crypto}
+\texttt{FILE\_DATA} packets should be sent as fast as the \texttt{net\_crypto}
 connection can handle it respecting its congestion control.
 
 If the friend goes offline, all file transfers are cleared in toxcore.  This
@@ -613,11 +613,11 @@ loses the connection to the friend because of a bad internet connection.
 \begin{tabular}{l|l}
   Packet ID & Packet Name \\
   \hline
-  0x60      & \texttt{INVITE_GROUPCHAT} \\
-  0x61      & \texttt{ONLINE_PACKET} \\
-  0x62      & \texttt{DIRECT_GROUPCHAT} \\
-  0x63      & \texttt{MESSAGE_GROUPCHAT} \\
-  0xC7      & \texttt{LOSSY_GROUPCHAT} \\
+  0x60      & \texttt{INVITE\_GROUPCHAT} \\
+  0x61      & \texttt{ONLINE\_PACKET} \\
+  0x62      & \texttt{DIRECT\_GROUPCHAT} \\
+  0x63      & \texttt{MESSAGE\_GROUPCHAT} \\
+  0xC7      & \texttt{LOSSY\_GROUPCHAT} \\
 \end{tabular}
 
 Messenger also takes care of saving the friends list and other friend
@@ -692,7 +692,7 @@ received and wait for the rest of the packet to arrive before handling it.
 \texttt{TCP client} can be used to open up a route to friends who are connected
 to the TCP server.  This is done by sending a routing request to the TCP server
 with the DHT public key of the friend.  This tells the server to register a
-\texttt{connection_id} to the DHT public key sent in the packet.  The server
+\texttt{connection\_id} to the DHT public key sent in the packet.  The server
 will then respond with a routing response packet.  If the connection was
 accepted, the \texttt{TCP client} will store the \texttt{connection id} for
 this connection.  The \texttt{TCP client} will make sure that routing response
@@ -722,20 +722,20 @@ OOB recv and data packets must be handled and passed to the module using it.
 
 \chapter{TCP connections}
 
-\texttt{TCP_connections} takes care of handling multiple TCP client instances
+\texttt{TCP\_connections} takes care of handling multiple TCP client instances
 to establish a reliable connection via TCP relays to a friend.  Connecting to a
 friend with only one relay would not be very reliable, so
-\texttt{TCP_connections} provides the level of abstraction needed to manage
+\texttt{TCP\_connections} provides the level of abstraction needed to manage
 multiple relays.  For example, it ensures that if a relay goes down, the
 connection to the peer will not be impacted.  This is done by connecting to the
 other peer with more than one relay.
 
-\texttt{TCP_connections} is above \href{#tcp-client}{\texttt{TCP client}} and
-below \texttt{net_crypto}.
+\texttt{TCP\_connections} is above \href{#tcp-client}{\texttt{TCP client}} and
+below \texttt{net\_crypto}.
 
-A TCP connection in \texttt{TCP_connections} is defined as a connection to a
+A TCP connection in \texttt{TCP\_connections} is defined as a connection to a
 peer though one or more TCP relays.  To connect to another peer with
-\texttt{TCP_connections}, a connection in \texttt{TCP_connections} to the peer
+\texttt{TCP\_connections}, a connection in \texttt{TCP\_connections} to the peer
 with DHT public key X will be created.  Some TCP relays which we know the peer
 is connected to will then be associated with that peer.  If the peer isn't
 connected directly yet, these relays will be the ones that the peer has sent to
@@ -743,7 +743,7 @@ us via the onion module.  The peer will also send some relays it is directly
 connected to once a connection is established, however, this is done by another
 module.
 
-\texttt{TCP_connections} has a list of all relays it is connected to.  It tries
+\texttt{TCP\_connections} has a list of all relays it is connected to.  It tries
 to keep the number of relays it is connected to as small as possible in order
 to minimize load on relays and lower bandwidth usage for the client.  The
 desired number of TCP relay connections per peer is set to 3 in toxcore with
@@ -757,7 +757,7 @@ maximum comes into play.  There is no reason why this number is 6 but in
 toxcore it has to be at least double than the desired number (3) because the
 code assumes this.
 
-If necessary, \texttt{TCP_connections} will connect to TCP relays to use them
+If necessary, \texttt{TCP\_connections} will connect to TCP relays to use them
 to send onion packets.  This is only done if there is no UDP connection to the
 network.  When there is a UDP connection, packets are sent with UDP only
 because sending them with TCP relays can be less reliable.  It is also
@@ -774,7 +774,7 @@ is sent to them, there should be no more peers connecting to us via TCP relays.
 This may be a way to further reduce load on TCP relays, however, more research
 is needed before it is implemented.
 
-\texttt{TCP_connections} picks one relay and uses only it for sending data to
+\texttt{TCP\_connections} picks one relay and uses only it for sending data to
 the other peer.  The reason for not picking a random connected relay for each
 packet is that it severely deteriorates the quality of the link between two
 peers and makes performance of lossy video and audio transmissions really poor.
@@ -785,13 +785,13 @@ necessarily be dropped if this occurs.  Relays are only dropped if they time
 out or if they become useless (if the relay is one too many or is no longer
 being used to relay data to any peers).
 
-\texttt{TCP_connections} in toxcore also contains a mechanism to make
+\texttt{TCP\_connections} in toxcore also contains a mechanism to make
 connections go to sleep.  TCP connections to other peers may be put to sleep if
 the connection to the peer establishes itself with UDP after the connection is
-established with TCP.  UDP is the method preferred by \texttt{net_crypto} to
+established with TCP.  UDP is the method preferred by \texttt{net\_crypto} to
 communicate with other peers.  In order to keep track of the relays which were
 used to connect with the other peer in case the UDP connection fails, they are
-saved by \texttt{TCP_connections} when the connection is put to sleep.  Any
+saved by \texttt{TCP\_connections} when the connection is put to sleep.  Any
 relays which were only used by this redundant connection are saved then
 disconnected from.  If the connection is awakened, the relays are reconnected
 to and the connection is reestablished.  Putting a connection to sleep is the
@@ -806,10 +806,10 @@ implement such a system and adding one requires more research and likely also
 requires extending the protocol.
 
 When TCP connections connects to a relay it will create a new
-\href{#tcp-client}{\texttt{TCP_client}} instance for that relay.  At any time
-if the \texttt{TCP_client} instance reports that it has disconnected, the TCP
+\href{#tcp-client}{\texttt{TCP\_client}} instance for that relay.  At any time
+if the \texttt{TCP\_client} instance reports that it has disconnected, the TCP
 relay will be dropped.  Once the TCP relay reports that it is connected,
-\texttt{TCP_connections} will find all the connections that are associated to
+\texttt{TCP\_connections} will find all the connections that are associated to
 the relay and announce to the relay that it wants to connect to each of them
 with routing requests.  If the relay reports that the peer for a connection is
 online, the connection number and relay will be used to send data in that
@@ -819,8 +819,8 @@ to send data instead of data packets.  TCP OOB packets are used in this case
 since the relay most likely has the peer connected but it has not sent a
 routing request to connect to us.
 
-\texttt{TCP_connections} is used as the bridge between individual
-\texttt{TCP_client} instances and \texttt{net_crypto}, or the bridge between
+\texttt{TCP\_connections} is used as the bridge between individual
+\texttt{TCP\_client} instances and \texttt{net\_crypto}, or the bridge between
 individual connections and something that requires an interface that looks like
 one connection.
 
@@ -828,7 +828,7 @@ one connection.
 
 The TCP server in tox has the goal of acting like a TCP relay between clients
 who cannot connect directly to each other or who for some reason are limited to
-using the TCP protocol to connect to each other.  \texttt{TCP_server} is
+using the TCP protocol to connect to each other.  \texttt{TCP\_server} is
 typically run only on actual server machines but any Tox client could host one
 as the api to run one is exposed through the tox.h api.
 
@@ -943,7 +943,7 @@ must be randomly generated to prevent nonce reuse.  For example if the nonce
 used was 0 for both sides since both sides use the same keys to encrypt packets
 they send to each other, two packets would be encrypted with the same nonce.
 These packets could then be possibly replayed back to the sender which would
-cause issues.  A similar mechanism is used in \texttt{net_crypto}.
+cause issues.  A similar mechanism is used in \texttt{net\_crypto}.
 
 After this the client will know the connection temporary public key and base
 nonce of the server and the server will know the connection base nonce and
@@ -980,7 +980,7 @@ Encrypted data packets look like this to outsiders:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{2}         & \texttt{uint16_t} length of data \\
+  \texttt{2}         & \texttt{uint16\_t} length of data \\
   variable           & encrypted data \\
 \end{tabular}
 
@@ -1053,7 +1053,7 @@ How it accomplishes each of those points:
         connection (no effect).
       \item Attacker captures a server response and sends it to the client next time
         they try to connect to the server: Client will never confirm the
-        connection. (See: \texttt{TCP_client})
+        connection. (See: \texttt{TCP\_client})
       \item Attacker tries to impersonate a server: They won't be able to decrypt the
         handshake and won't be able to respond.
       \item Attacker tries to impersonate a client: Server won't be able to decrypt
@@ -1098,7 +1098,7 @@ encrypted data packets.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x00) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x00) \\
   \texttt{32}        & Public key \\
 \end{tabular}
 
@@ -1107,20 +1107,20 @@ encrypted data packets.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x01) \\
-  \texttt{1}         & \texttt{uint8_t} rpid \\
+  \texttt{1}         & \texttt{uint8\_t} (0x01) \\
+  \texttt{1}         & \texttt{uint8\_t} rpid \\
   \texttt{32}        & Public key \\
 \end{tabular}
 
-rpid is invalid \texttt{connection_id} (0) if refused, \texttt{connection_id} if accepted.
+rpid is invalid \texttt{connection\_id} (0) if refused, \texttt{connection\_id} if accepted.
 
 \subsection{Connect notification (0x02)}
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x02) \\
-  \texttt{1}         & \texttt{uint8_t} \texttt{connection_id} of connection that got connected \\
+  \texttt{1}         & \texttt{uint8\_t} (0x02) \\
+  \texttt{1}         & \texttt{uint8\_t} \texttt{connection\_id} of connection that got connected \\
 \end{tabular}
 
 \subsection{Disconnect notification (0x03)}
@@ -1128,8 +1128,8 @@ rpid is invalid \texttt{connection_id} (0) if refused, \texttt{connection_id} if
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x03) \\
-  \texttt{1}         & \texttt{uint8_t} \texttt{connection_id} of connection that got disconnected \\
+  \texttt{1}         & \texttt{uint8\_t} (0x03) \\
+  \texttt{1}         & \texttt{uint8\_t} \texttt{connection\_id} of connection that got disconnected \\
 \end{tabular}
 
 \subsection{Ping packet (0x04)}
@@ -1137,8 +1137,8 @@ rpid is invalid \texttt{connection_id} (0) if refused, \texttt{connection_id} if
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x04) \\
-  \texttt{8}         & \texttt{uint64_t} \texttt{ping_id} (0 is invalid) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x04) \\
+  \texttt{8}         & \texttt{uint64\_t} \texttt{ping\_id} (0 is invalid) \\
 \end{tabular}
 
 \subsection{Ping response (pong) (0x05)}
@@ -1146,8 +1146,8 @@ rpid is invalid \texttt{connection_id} (0) if refused, \texttt{connection_id} if
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x05) \\
-  \texttt{8}         & \texttt{uint64_t} \texttt{ping_id} (0 is invalid) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x05) \\
+  \texttt{8}         & \texttt{uint64\_t} \texttt{ping\_id} (0 is invalid) \\
 \end{tabular}
 
 \subsection{OOB send (0x06)}
@@ -1155,7 +1155,7 @@ rpid is invalid \texttt{connection_id} (0) if refused, \texttt{connection_id} if
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x06) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x06) \\
   \texttt{32}        & Destination public key \\
   variable           & Data \\
 \end{tabular}
@@ -1165,7 +1165,7 @@ rpid is invalid \texttt{connection_id} (0) if refused, \texttt{connection_id} if
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x07) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x07) \\
   \texttt{32}        & Sender public key \\
   variable           & Data \\
 \end{tabular}
@@ -1183,18 +1183,18 @@ Same format as onion packet but packet id is 0x09 instead of 0x8e.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} packet id \\
-  \texttt{1}         & \texttt{uint8_t} connection id \\
+  \texttt{1}         & \texttt{uint8\_t} packet id \\
+  \texttt{1}         & \texttt{uint8\_t} connection id \\
   variable           & data \\
 \end{tabular}
 
 The TCP server is set up in a way to minimize waste while relaying the many
 packets that might go between two tox peers hence clients must create
 connections to other clients on the relay.  The connection number is a
-\texttt{uint8_t} and must be equal or greater to 16 in order to be valid.
-Because a \texttt{uint8_t} has a maximum value of 256 it means that the maximum
+\texttt{uint8\_t} and must be equal or greater to 16 in order to be valid.
+Because a \texttt{uint8\_t} has a maximum value of 256 it means that the maximum
 number of different connections to other clients that each connection can have
-is 240.  The reason valid \texttt{connection_ids} are bigger than 16 is because
+is 240.  The reason valid \texttt{connection\_ids} are bigger than 16 is because
 they are the first byte of data packets.  Currently only number 0 to 9 are
 taken however we keep a few extras in case we need to extend the protocol
 without breaking it completely.
@@ -1206,8 +1206,8 @@ with a Routing response.
 
 Routing response (Sent by server to client): The response to the routing
 request, tell the client if the routing request succeeded (valid
-\texttt{connection_id}) and if it did, tell them the id of the connection
-(\texttt{connection_id}).  The public key sent in the routing request is also
+\texttt{connection\_id}) and if it did, tell them the id of the connection
+(\texttt{connection\_id}).  The public key sent in the routing request is also
 sent in the response so that the client can send many requests at the same time
 to the server without having code to track which response belongs to which
 public key.
@@ -1218,19 +1218,19 @@ fails the public key in the response will be the public key in the failed
 request.
 
 Connect notification (Sent by server to client): Tell the client that
-\texttt{connection_id} is now connected meaning the other is online and data
-can be sent using this \texttt{connection_id}.
+\texttt{connection\_id} is now connected meaning the other is online and data
+can be sent using this \texttt{connection\_id}.
 
 Disconnect notification (Sent by client to server): Sent when client wants the
-server to forget about the connection related to the \texttt{connection_id} in
+server to forget about the connection related to the \texttt{connection\_id} in
 the notification.  Server must remove this connection and must be able to reuse
-the \texttt{connection_id} for another connection.  If the connection was
+the \texttt{connection\_id} for another connection.  If the connection was
 connected the server must send a disconnect notification to the other client.
 The other client must think that this client has simply disconnected from the
 TCP server.
 
 Disconnect notification (Sent by server to client): Sent by the server to the
-client to tell them that the connection with \texttt{connection_id} that was
+client to tell them that the connection with \texttt{connection\_id} that was
 connected is now disconnected.  It is sent either when the other client of the
 connection disconnect or when they tell the server to kill the connection (see
 above).
@@ -1240,28 +1240,28 @@ respond): ping packets are used to know if the other side of the connection is
 still live.  TCP when established doesn't have any sane timeouts (1 week isn't
 sane) so we are obliged to have our own way to check if the other side is still
 live.  Ping ids can be anything except 0, this is because of how toxcore sets
-the variable storing the \texttt{ping_id} that was sent to 0 when it receives a
+the variable storing the \texttt{ping\_id} that was sent to 0 when it receives a
 pong response which means 0 is invalid.
 
 The server should send ping packets every X seconds (toxcore
-\texttt{TCP_server} sends them every 30 seconds and times out the peer if it
+\texttt{TCP\_server} sends them every 30 seconds and times out the peer if it
 doesn't get a response in 10).  The server should respond immediately to ping
 packets with pong packets.
 
 The server should respond to ping packets with pong packets with the same
-\texttt{ping_id} as was in the ping packet.  The server should check that each
-pong packet contains the same \texttt{ping_id} as was in the ping, if not the
+\texttt{ping\_id} as was in the ping packet.  The server should check that each
+pong packet contains the same \texttt{ping\_id} as was in the ping, if not the
 pong packet must be ignored.
 
 OOB send (Sent by client to server): If a peer with private key equal to the
 key they announced themselves with is connected, the data in the OOB send
 packet will be sent to that peer as an OOB recv packet.  If no such peer is
-connected, the packet is discarded.  The toxcore \texttt{TCP_server}
+connected, the packet is discarded.  The toxcore \texttt{TCP\_server}
 implementation has a hard maximum OOB data length of 1024.  1024 was picked
-because it is big enough for the \texttt{net_crypto} packets related to the
+because it is big enough for the \texttt{net\_crypto} packets related to the
 handshake and is large enough that any changes to the protocol would not
 require breaking TCP server.  It is however not large enough for the biggest
-\texttt{net_crypto} packets sent with an established \texttt{net_crypto}
+\texttt{net\_crypto} packets sent with an established \texttt{net\_crypto}
 connection to prevent sending those via OOB packets.
 
 OOB recv (Sent by server to client): OOB recv are sent with the announced
@@ -1271,7 +1271,7 @@ OOB packets can be used just like normal data packets however the extra size
 makes sending data only through them less efficient than data packets.
 
 Data: Data packets can only be sent and received if the corresponding
-\texttt{connection_id} is connection (a Connect notification has been received
+\texttt{connection\_id} is connection (a Connect notification has been received
 from it) if the server receives a Data packet for a non connected or existent
 connection it will discard it.
 
@@ -1280,67 +1280,67 @@ the client and some only by the server? It's less confusing.
 
 \chapter{Friend connection}
 
-\texttt{friend_connection} is the module that sits on top of the DHT, onion and
-\texttt{net_crypto} modules and takes care of linking the 3 together.
+\texttt{friend\_connection} is the module that sits on top of the DHT, onion and
+\texttt{net\_crypto} modules and takes care of linking the 3 together.
 
-Friends in \texttt{friend_connection} are represented by their real public key.
-When a friend is added in \texttt{friend_connection}, an onion search entry is
+Friends in \texttt{friend\_connection} are represented by their real public key.
+When a friend is added in \texttt{friend\_connection}, an onion search entry is
 created for that friend.  This means that the onion module will start looking
 for this friend and send that friend their DHT public key, and the TCP relays
 it is connected to, in case a connection is only possible with TCP.
 
 Once the onion returns the DHT public key of the peer, the DHT public key is
-saved, added to the DHT friends list and a new \texttt{net_crypto} connection
+saved, added to the DHT friends list and a new \texttt{net\_crypto} connection
 is created.  Any TCP relays returned by the onion for this friend are passed to
-the \texttt{net_crypto} connection.
+the \texttt{net\_crypto} connection.
 
 If the DHT establishes a direct UDP connection with the friend,
-\texttt{friend_connection} will pass the IP/port of the friend to
-\texttt{net_crypto} and also save it to be used to reconnect to the friend if
+\texttt{friend\_connection} will pass the IP/port of the friend to
+\texttt{net\_crypto} and also save it to be used to reconnect to the friend if
 they disconnect.
 
-If \texttt{net_crypto} finds that the friend has a different DHT public key,
-which can happen if the friend restarted their client, \texttt{net_crypto} will
+If \texttt{net\_crypto} finds that the friend has a different DHT public key,
+which can happen if the friend restarted their client, \texttt{net\_crypto} will
 pass the new DHT public key to the onion module and will remove the DHT entry
 for the old DHT public key and replace it with the new one.  The current
-\texttt{net_crypto} connection will also be killed and a new one with the
+\texttt{net\_crypto} connection will also be killed and a new one with the
 correct DHT public key will be created.
 
-When the \texttt{net_crypto} connection for a friend goes online,
-\texttt{friend_connection} will tell the onion module that the friend is online
+When the \texttt{net\_crypto} connection for a friend goes online,
+\texttt{friend\_connection} will tell the onion module that the friend is online
 so that it can stop spending resources looking for the friend.  When the friend
-connection goes offline, \texttt{friend_connection} will tell the onion module
+connection goes offline, \texttt{friend\_connection} will tell the onion module
 so that it can start looking for the friend again.
 
-There are 2 types of data packets sent to friends with the \texttt{net_crypto}
-connection handled at the level of \texttt{friend_connection}, Alive packets
+There are 2 types of data packets sent to friends with the \texttt{net\_crypto}
+connection handled at the level of \texttt{friend\_connection}, Alive packets
 and TCP relay packets.  Alive packets are packets with the packet id or first
 byte of data (only byte in this packet) being 16.  They are used in order to
-check if the other friend is still online.  \texttt{net_crypto} does not have
+check if the other friend is still online.  \texttt{net\_crypto} does not have
 any timeout when the connection is established so timeouts are caught using
 this packet.  In toxcore, this packet is sent every 8 seconds.  If none of
 these packets are received for 32 seconds, the connection is timed out and
 killed.  These numbers seem to cause the least issues and 32 seconds is not too
 long so that, if a friend times out, toxcore won't falsely see them online for
 too long.  Usually when a friend goes offline they have time to send a
-disconnect packet in the \texttt{net_crypto} connection which makes them appear
+disconnect packet in the \texttt{net\_crypto} connection which makes them appear
 offline almost instantly.
 
 The timeout for when to stop retrying to connect to a friend by creating new
-\texttt{net_crypto} connections when the old one times out in toxcore is the
+\texttt{net\_crypto} connections when the old one times out in toxcore is the
 same as the timeout for DHT peers (122 seconds).  However, it is calculated
 from the last time a DHT public key was received for the friend or time the
-friend's \texttt{net_crypto} connection went offline after being online.  The
-highest time is used to calculate when the timeout is.  \texttt{net_crypto}
+friend's \texttt{net\_crypto} connection went offline after being online.  The
+highest time is used to calculate when the timeout is.  \texttt{net\_crypto}
 connections will be recreated (if the connection fails) until this timeout.
 
-\texttt{friend_connection} sends a list of 3 relays (the same number as the
-target number of TCP relay connections in \texttt{TCP_connections}) to each
+\texttt{friend\_connection} sends a list of 3 relays (the same number as the
+target number of TCP relay connections in \texttt{TCP\_connections}) to each
 connected friend every 5 minutes in toxcore.  Immediately before sending the
-relays, they are associated to the current \texttt{net_crypto->TCP_connections}
+relays, they are associated to the current \texttt{net\_crypto->TCP\_connections}
 connection.  This facilitates connecting the two friends together using the
 relays as the friend who receives the packet will associate the sent relays to
-the \texttt{net_crypto} connection they received it from.  When both sides do
+the \texttt{net\_crypto} connection they received it from.  When both sides do
 this they will be able to connect to each other using the relays.  The packet
 id or first byte of the packet of share relay packets is 0x11.  This is then
 followed by some TCP relays stored in packed node format.
@@ -1348,7 +1348,7 @@ followed by some TCP relays stored in packed node format.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x11) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x11) \\
   variable           & TCP relays in packed node format (see DHT) \\
 \end{tabular}
 
@@ -1358,9 +1358,9 @@ the best way to attempt to connect to the TCP relay.  If the peer that sent the
 relay is using a local IP, then the sent local IP should be used to connect to
 the relay.
 
-For all other data packets, are passed by \texttt{friend_connection} up to the
+For all other data packets, are passed by \texttt{friend\_connection} up to the
 upper Messenger module.  It also separates lossy and lossless packets from
-\texttt{net_crypto}.
+\texttt{net\_crypto}.
 
 Friend connection takes care of establishing the connection to the friend and
 gives the upper messenger layer a simple interface to receive and send
@@ -1411,7 +1411,7 @@ Friend request packet when sent as an onion data packet:
 [uint8_t (32)][Friend request]
 \end{verbatim}
 
-Friend request packet when sent as a \texttt{net_crypto} data packet (If we are
+Friend request packet when sent as a \texttt{net\_crypto} data packet (If we are
 directly connected to the peer because of a group chat but are not friends with
 them):
 
@@ -1420,17 +1420,17 @@ them):
 \end{verbatim}
 
 When a friend is added to toxcore with their Tox ID and a message, the friend
-is added in \texttt{friend_connection} and then toxcore tries to send friend
+is added in \texttt{friend\_connection} and then toxcore tries to send friend
 requests.
 
 When sending a friend request, toxcore will check if the peer which a friend
-request is being sent to is already connected to using a \texttt{net_crypto}
+request is being sent to is already connected to using a \texttt{net\_crypto}
 connection which can happen if both are in the same group chat.  If this is the
-case the friend request will be sent as a \texttt{net_crypto} packet using that
+case the friend request will be sent as a \texttt{net\_crypto} packet using that
 connection.  If not, it will be sent as an onion data packet.
 
 Onion data packets contain the real public key of the sender and if a
-\texttt{net_crypto} connection is established it means the peer knows our real
+\texttt{net\_crypto} connection is established it means the peer knows our real
 public key.  This is why the friend request does not need to contain the real
 public key of the peer.
 
@@ -1464,7 +1464,7 @@ should also be discarded.
 \chapter{Group}
 
 Group chats in Tox work by temporarily adding some peers (up to 4) present in
-the group chat as temporary \texttt{friend_connection} friends, that are
+the group chat as temporary \texttt{friend\_connection} friends, that are
 deleted when the group chat is exited.
 
 Each peer in the group chat is identified by their real long term public key
@@ -1473,7 +1473,7 @@ in order to speed up the connection by making it unnecessary for the peers to
 find each others DHT public keys with the onion which would happen if they
 would have added themselves as normal friends.
 
-The upside of using \texttt{friend_connection} is that group chats do not have
+The upside of using \texttt{friend\_connection} is that group chats do not have
 to deal with things like hole punching, peers only on TCP or other low level
 networking things.  The downside however is that every single peer knows each
 others real long term public key and DHT public key which means these group
@@ -1551,9 +1551,9 @@ Invite packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x60) \\
-  \texttt{1}         & \texttt{uint8_t} (0x00) \\
-  \texttt{2}         & \texttt{uint16_t} group number \\
+  \texttt{1}         & \texttt{uint8\_t} (0x60) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x00) \\
+  \texttt{2}         & \texttt{uint16\_t} group number \\
   \texttt{33}        & Group chat identifier \\
 \end{tabular}
 
@@ -1565,10 +1565,10 @@ Response packet
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x60) \\
-  \texttt{1}         & \texttt{uint8_t} (0x01) \\
-  \texttt{2}         & \texttt{uint16_t} group number (local) \\
-  \texttt{2}         & \texttt{uint16_t} group number to join \\
+  \texttt{1}         & \texttt{uint8\_t} (0x60) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x01) \\
+  \texttt{2}         & \texttt{uint16\_t} group number (local) \\
+  \texttt{2}         & \texttt{uint16\_t} group number to join \\
   \texttt{33}        & Group chat identifier \\
 \end{tabular}
 
@@ -1629,8 +1629,8 @@ Peer online packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x61) \\
-  \texttt{2}         & \texttt{uint16_t} group number (local) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x61) \\
+  \texttt{2}         & \texttt{uint16\_t} group number (local) \\
   \texttt{33}        & Group chat identifier \\
 \end{tabular}
 
@@ -1639,9 +1639,9 @@ Peer leave packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x62) \\
-  \texttt{2}         & \texttt{uint16_t} group number (local) \\
-  \texttt{1}         & \texttt{uint8_t} (0x01) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x62) \\
+  \texttt{2}         & \texttt{uint16\_t} group number (local) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x01) \\
 \end{tabular}
 
 For a groupchat connection to work, both peers in the groupchat must be
@@ -1682,9 +1682,9 @@ Peer query packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x62) \\
-  \texttt{2}         & \texttt{uint16_t} group number \\
-  \texttt{1}         & \texttt{uint8_t} (0x08) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x62) \\
+  \texttt{2}         & \texttt{uint16\_t} group number \\
+  \texttt{1}         & \texttt{uint8\_t} (0x08) \\
 \end{tabular}
 
 Peer response packet:
@@ -1692,9 +1692,9 @@ Peer response packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x62) \\
-  \texttt{2}         & \texttt{uint16_t} group number \\
-  \texttt{1}         & \texttt{uint8_t} (0x09) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x62) \\
+  \texttt{2}         & \texttt{uint16\_t} group number \\
+  \texttt{1}         & \texttt{uint8\_t} (0x09) \\
   variable           & Repeated times number of peers: Peer info \\
 \end{tabular}
 
@@ -1703,10 +1703,10 @@ The Peer info structure is as follows:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{2}         & \texttt{uint16_t} peer number \\
+  \texttt{2}         & \texttt{uint16\_t} peer number \\
   \texttt{32}        & Long term public key \\
   \texttt{32}        & DHT public key \\
-  \texttt{1}         & \texttt{uint8_t} Name length \\
+  \texttt{1}         & \texttt{uint8\_t} Name length \\
   \texttt{[0, 255]}  & Name \\
 \end{tabular}
 
@@ -1715,9 +1715,9 @@ Title response packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x62) \\
-  \texttt{2}         & \texttt{uint16_t} group number \\
-  \texttt{1}         & \texttt{uint8_t} (0x0a) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x62) \\
+  \texttt{2}         & \texttt{uint16\_t} group number \\
+  \texttt{1}         & \texttt{uint8\_t} (0x0a) \\
   variable           & Title \\
 \end{tabular}
 
@@ -1726,11 +1726,11 @@ Message packets:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x63) \\
-  \texttt{2}         & \texttt{uint16_t} group number \\
-  \texttt{2}         & \texttt{uint16_t} peer number \\
-  \texttt{4}         & \texttt{uint32_t} message number \\
-  \texttt{1}         & \texttt{uint8_t} with a value representing id of message \\
+  \texttt{1}         & \texttt{uint8\_t} (0x63) \\
+  \texttt{2}         & \texttt{uint16\_t} group number \\
+  \texttt{2}         & \texttt{uint16\_t} peer number \\
+  \texttt{4}         & \texttt{uint32\_t} message number \\
+  \texttt{1}         & \texttt{uint8\_t} with a value representing id of message \\
   variable           & Data \\
 \end{tabular}
 
@@ -1739,11 +1739,11 @@ Lossy Message packets:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0xc7) \\
-  \texttt{2}         & \texttt{uint16_t} group number \\
-  \texttt{2}         & \texttt{uint16_t} peer number \\
-  \texttt{4}         & \texttt{uint16_t} message number \\
-  \texttt{1}         & \texttt{uint8_t} with a value representing id of message \\
+  \texttt{1}         & \texttt{uint8\_t} (0xc7) \\
+  \texttt{2}         & \texttt{uint16\_t} group number \\
+  \texttt{2}         & \texttt{uint16\_t} peer number \\
+  \texttt{4}         & \texttt{uint16\_t} message number \\
+  \texttt{1}         & \texttt{uint8\_t} with a value representing id of message \\
   variable           & Data \\
 \end{tabular}
 
@@ -1793,24 +1793,24 @@ group number.
 
 Sent approximately every 60 seconds by every peer.  Contains no data.
 
-\subsection{\texttt{new_peer} (0x10)}
+\subsection{\texttt{new\_peer} (0x10)}
 
 Tell everyone about a new peer in the chat.
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{2}         & \texttt{uint16_t} Peer number \\
+  \texttt{2}         & \texttt{uint16\_t} Peer number \\
   \texttt{32}        & Long term public key \\
   \texttt{32}        & DHT public key \\
 \end{tabular}
 
-\subsection{\texttt{kill_peer} (0x11)}
+\subsection{\texttt{kill\_peer} (0x11)}
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{2}         & \texttt{uint16_t} Peer number \\
+  \texttt{2}         & \texttt{uint16\_t} Peer number \\
 \end{tabular}
 
 \subsection{Name change (0x30)}
@@ -1913,7 +1913,7 @@ without the peers needing to disconnect and reconnect.  For example two Tox
 friends might first connect over TCP and a few seconds later switch to UDP when
 a direct UDP connection becomes possible.  The opening up of the UDP route or
 'hole punching' is done by the DHT module and the opening up of a relayed TCP
-connection is done by the \texttt{TCP_connection} module.  The Tox transport
+connection is done by the \texttt{TCP\_connection} module.  The Tox transport
 protocol has the job of connecting two peers (tox friends) safely once a route
 or communications link between both is found.  Direct UDP is preferred over TCP
 because it is direct and isn't limited by possibly congested TCP relays.  Also,
@@ -1921,8 +1921,8 @@ a peer can only connect to another using the Tox transport protocol if they
 know the real public key and DHT public key of the peer they want to connect
 to.  However, both the DHT and TCP connection modules require this information
 in order to find and open the route to the peer which means we assume this
-information is known by toxcore and has been passed to \texttt{net_crypto} when
-the \texttt{net_crypto} connection was created.
+information is known by toxcore and has been passed to \texttt{net\_crypto} when
+the \texttt{net\_crypto} connection was created.
 
 Because this protocol has to work over UDP it must account for possible packet
 loss, packets arriving in the wrong order and has to implement some kind of
@@ -2124,7 +2124,7 @@ is no longer valid and a new connection will be created immediately with the
 Sometimes toxcore might receive the DHT public key of the peer first with a
 handshake packet so it is important that this case is handled and that the
 implementation passes the DHT public key to the other modules (DHT,
-\texttt{TCP_connection}) because this does happen.
+\texttt{TCP\_connection}) because this does happen.
 
 Handshake packets must be created only once during the connection but must be
 sent in intervals until we are sure the other received them.  This happens when
@@ -2202,8 +2202,8 @@ Encrypted packets:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x1b) \\
-  \texttt{2}         & \texttt{uint16_t} The last 2 bytes of the nonce used to encrypt this \\
+  \texttt{1}         & \texttt{uint8\_t} (0x1b) \\
+  \texttt{2}         & \texttt{uint16\_t} The last 2 bytes of the nonce used to encrypt this \\
   variable           & Payload \\
 \end{tabular}
 
@@ -2227,7 +2227,7 @@ other peer sent in the handshake packet with the total number of encrypted
 packets sent in the connection added to it ('base nonce' + 0 for the first
 encrypted data packet sent, 'base nonce' + 1 for the second, etc.  Note that
 the nonce is treated as a big endian number for mathematical operations like
-additions).  The 2 byte (\texttt{uint16_t}) number at the beginning of the
+additions).  The 2 byte (\texttt{uint16\_t}) number at the beginning of the
 encrypted packet is the last 2 bytes of this 24 byte nonce.
 
 To decrypt a received encrypted packet, the nonce the packet was encrypted with
@@ -2244,14 +2244,14 @@ Toxcore uses the following method to calculate the nonce for each packet:
   \item \texttt{diff} = (2 byte number on the packet) - (last 2 bytes of the current saved
      base nonce) NOTE: treat the 3 variables as 16 bit unsigned ints, the result
      is expected to sometimes roll over.
-  \item copy \texttt{saved_base_nonce} to \texttt{temp_nonce}.
-  \item \texttt{temp_nonce = temp_nonce + diff}.  \texttt{temp_nonce} is the correct nonce that
+  \item copy \texttt{saved\_base\_nonce} to \texttt{temp\_nonce}.
+  \item \texttt{temp\_nonce = temp\_nonce + diff}.  \texttt{temp\_nonce} is the correct nonce that
      can be used to decrypt the packet.
-  \item \texttt{DATA_NUM_THRESHOLD} = (1/3 of the maximum number that can be stored in an
+  \item \texttt{DATA\_NUM\_THRESHOLD} = (1/3 of the maximum number that can be stored in an
      unsigned 2 bit integer)
-  \item if decryption succeeds and \texttt{diff > (DATA_NUM_THRESHOLD * 2)} then:
+  \item if decryption succeeds and \texttt{diff > (DATA\_NUM\_THRESHOLD * 2)} then:
     \begin{itemize}
-      \item \texttt{saved_base_nonce = saved_base_nonce + DATA_NUM_THRESHOLD}
+      \item \texttt{saved\_base\_nonce = saved\_base\_nonce + DATA\_NUM\_THRESHOLD}
     \end{itemize}
 \end{enumerate}
 
@@ -2425,16 +2425,16 @@ REQUEST_PACKETS_COMPARE_CONSTANT = 50.0 double request_packet_interval =
 + 1.0)));
 \end{verbatim}
 
-\texttt{num_packets_array(&conn->recv_array)} returns the difference between
+\texttt{num\_packets\_array(&conn->recv\_array)} returns the difference between
 the highest packet number received and the last one handled.  In the toxcore
 code it refers to the total size of the current array (with the holes which are
 the placeholders for not yet received packets that are known to be missing).
 
-\texttt{conn->packet_recv_rate} is the number of data packets successfully
+\texttt{conn->packet\_recv\_rate} is the number of data packets successfully
 received per second.
 
 This formula was created with the logic that the higher the 'delay' in packets
-(\texttt{num_packets_array(&conn->recv_array)}) vs the speed of packets
+(\texttt{num\_packets\_array(&conn->recv\_array)}) vs the speed of packets
 received, the more request packets should be sent.
 
 Requested packets are resent every time they can be resent as in they will obey
@@ -2495,31 +2495,31 @@ socket.  It also contains many socket, networking related and some other
 functions like a monotonic time function used by other toxcore modules.
 
 Things of note in this module are the maximum UDP packet size define
-(\texttt{MAX_UDP_PACKET_SIZE}) which sets the maximum UDP packet size toxcore
-can send and receive.  The list of all UDP packet ids: \texttt{NET_PACKET_*}.
+(\texttt{MAX\_UDP\_PACKET\_SIZE}) which sets the maximum UDP packet size toxcore
+can send and receive.  The list of all UDP packet ids: \texttt{NET\_PACKET\_*}.
 UDP packet ids are the value of the first byte of each UDP packet and is how
 each packet gets sorted to the right module that can handle it.
-\texttt{networking_registerhandler()} is used by higher level modules in order
+\texttt{networking\_registerhandler()} is used by higher level modules in order
 to tell the network object which packets to send to which module via a
 callback.
 
 It also contains datastructures used for ip addresses in toxcore.  IP4 and IP6
 are the datastructures for ipv4 and ipv6 addresses, IP is the datastructure for
-storing either (the family can be set to \texttt{AF_INET} (ipv4) or
-\texttt{AF_INET6} (ipv6).  It can be set to another value like
-\texttt{TCP_ONION_FAMILY}, \texttt{TCP_INET}, \texttt{TCP_INET6} or
-\texttt{TCP_FAMILY} which are invalid values in the network modules but valid
+storing either (the family can be set to \texttt{AF\_INET} (ipv4) or
+\texttt{AF\_INET6} (ipv6).  It can be set to another value like
+\texttt{TCP\_ONION\_FAMILY}, \texttt{TCP\_INET}, \texttt{TCP\_INET6} or
+\texttt{TCP\_FAMILY} which are invalid values in the network modules but valid
 values in some other module and denote a special type of ip) and
-\texttt{IP_Port} stores an IP datastructure with a port.
+\texttt{IP\_Port} stores an IP datastructure with a port.
 
 Since the network module interacts directly with the underlying operating
 system with its socket functions it has code to make it work on windows, linux,
 etc... unlike most modules that sit at a higher level.
 
 The network module currently uses the polling method to read from the UDP
-socket.  The \texttt{networking_poll()} function is called to read all the
+socket.  The \texttt{networking\_poll()} function is called to read all the
 packets from the socket and pass them to the callbacks set using the
-\texttt{networking_registerhandler()} function.  The reason it uses polling is
+\texttt{networking\_registerhandler()} function.  The reason it uses polling is
 simply because it was easier to write it that way, another method would be
 better here.
 
@@ -2585,15 +2585,15 @@ Initial (TCP) data sent as the data of an onion packet through the TCP client
 module:
 
 \begin{itemize}
-  \item \texttt{IP_Port} of node B
+  \item \texttt{IP\_Port} of node B
   \item A random public key PK1
   \item Encrypted with the secret key SK1 and the public key of Node B and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} of node C
+      \item \texttt{IP\_Port} of node C
       \item A random public key PK2
       \item Encrypted with the secret key SK2 and the public key of Node C and the nonce:
         \begin{itemize}
-          \item \texttt{IP_Port} of node D
+          \item \texttt{IP\_Port} of node D
           \item Data to send to Node D
         \end{itemize}
     \end{itemize}
@@ -2602,22 +2602,22 @@ module:
 Initial (UDP) (sent from us to node A):
 
 \begin{itemize}
-  \item \texttt{uint8_t} (0x80) packet id
+  \item \texttt{uint8\_t} (0x80) packet id
   \item Nonce
   \item Our temporary DHT public key
   \item Encrypted with our temporary DHT secret key and the public key of Node A and
     the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} of node B
+      \item \texttt{IP\_Port} of node B
       \item A random public key PK1
       \item Encrypted with the secret key SK1 and the public key of Node B and the nonce:
         \begin{itemize}
-          \item \texttt{IP_Port} of node C
+          \item \texttt{IP\_Port} of node C
           \item A random public key PK2
           \item Encrypted with the secret key SK2 and the public key of Node C and the
             nonce:
             \begin{itemize}
-              \item \texttt{IP_Port} of node D
+              \item \texttt{IP\_Port} of node D
               \item Data to send to Node D
             \end{itemize}
         \end{itemize}
@@ -2627,45 +2627,45 @@ Initial (UDP) (sent from us to node A):
 (sent from node A to node B):
 
 \begin{itemize}
-  \item \texttt{uint8_t} (0x81) packet id
+  \item \texttt{uint8\_t} (0x81) packet id
   \item Nonce
   \item A random public key PK1
   \item Encrypted with the secret key SK1 and the public key of Node B and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} of node C
+      \item \texttt{IP\_Port} of node C
       \item A random public key PK2
       \item Encrypted with the secret key SK2 and the public key of Node C and the nonce:
         \begin{itemize}
-          \item \texttt{IP_Port} of node D
+          \item \texttt{IP\_Port} of node D
           \item Data to send to Node D
         \end{itemize}
     \end{itemize}
   \item Nonce
   \item Encrypted with temporary symmetric key of Node A and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} (of us)
+      \item \texttt{IP\_Port} (of us)
     \end{itemize}
 \end{itemize}
 
 (sent from node B to node C):
 
 \begin{itemize}
-  \item \texttt{uint8_t} (0x82) packet id
+  \item \texttt{uint8\_t} (0x82) packet id
   \item Nonce
   \item A random public key PK1
   \item Encrypted with the secret key SK1 and the public key of Node C and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} of node D
+      \item \texttt{IP\_Port} of node D
       \item Data to send to Node D
     \end{itemize}
   \item Nonce
   \item Encrypted with temporary symmetric key of Node B and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} (of Node A)
+      \item \texttt{IP\_Port} (of Node A)
       \item Nonce
       \item Encrypted with temporary symmetric key of Node A and the nonce:
         \begin{itemize}
-          \item \texttt{IP_Port} (of us)
+          \item \texttt{IP\_Port} (of us)
         \end{itemize}
     \end{itemize}
 \end{itemize}
@@ -2677,15 +2677,15 @@ Initial (UDP) (sent from us to node A):
   \item Nonce
   \item Encrypted with temporary symmetric key of Node C and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} (of Node B)
+      \item \texttt{IP\_Port} (of Node B)
       \item Nonce
       \item Encrypted with temporary symmetric key of Node B and the nonce:
         \begin{itemize}
-          \item \texttt{IP_Port} (of Node A)
+          \item \texttt{IP\_Port} (of Node A)
           \item Nonce
           \item Encrypted with temporary symmetric key of Node A and the nonce:
             \begin{itemize}
-              \item \texttt{IP_Port} (of us)
+              \item \texttt{IP\_Port} (of us)
             \end{itemize}
         \end{itemize}
     \end{itemize}
@@ -2696,19 +2696,19 @@ Onion packet (response):
 initial (sent from node D to node C):
 
 \begin{itemize}
-  \item \texttt{uint8_t} (0x8c) packet id
+  \item \texttt{uint8\_t} (0x8c) packet id
   \item Nonce
   \item Encrypted with the temporary symmetric key of Node C and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} (of Node B)
+      \item \texttt{IP\_Port} (of Node B)
       \item Nonce
       \item Encrypted with the temporary symmetric key of Node B and the nonce:
         \begin{itemize}
-          \item \texttt{IP_Port} (of Node A)
+          \item \texttt{IP\_Port} (of Node A)
           \item Nonce
           \item Encrypted with the temporary symmetric key of Node A and the nonce:
             \begin{itemize}
-              \item \texttt{IP_Port} (of us)
+              \item \texttt{IP\_Port} (of us)
             \end{itemize}
         \end{itemize}
     \end{itemize}
@@ -2718,15 +2718,15 @@ initial (sent from node D to node C):
 (sent from node C to node B):
 
 \begin{itemize}
-  \item \texttt{uint8_t} (0x8d) packet id
+  \item \texttt{uint8\_t} (0x8d) packet id
   \item Nonce
   \item Encrypted with the temporary symmetric key of Node B and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} (of Node A)
+      \item \texttt{IP\_Port} (of Node A)
       \item Nonce
       \item Encrypted with the temporary symmetric key of Node A and the nonce:
         \begin{itemize}
-          \item \texttt{IP_Port} (of us)
+          \item \texttt{IP\_Port} (of us)
         \end{itemize}
     \end{itemize}
   \item Data to send back
@@ -2735,11 +2735,11 @@ initial (sent from node D to node C):
 (sent from node B to node A):
 
 \begin{itemize}
-  \item \texttt{uint8_t} (0x8e) packet id
+  \item \texttt{uint8\_t} (0x8e) packet id
   \item Nonce
   \item Encrypted with the temporary symmetric key of Node A and the nonce:
     \begin{itemize}
-      \item \texttt{IP_Port} (of us)
+      \item \texttt{IP\_Port} (of us)
     \end{itemize}
   \item Data to send back
 \end{itemize}
@@ -2792,27 +2792,27 @@ should be randomly generated.  If it isn't randomly generated and has a
 relation to nonces used for other paths it could be possible to tie different
 onion paths together.
 
-The \texttt{IP_Port} is an ip and port in packed format:
+The \texttt{IP\_Port} is an ip and port in packed format:
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{TOX_AF_INET} (2) for IPv4 or \texttt{TOX_AF_INET6} (10) for IPv6 \\
+  \texttt{1}         & \texttt{TOX\_AF\_INET} (2) for IPv4 or \texttt{TOX\_AF\_INET6} (10) for IPv6 \\
   \texttt{4 | 16}    & IP address (4 bytes if IPv4, 16 if IPv6) \\
   \texttt{12 | 0}    & Zeroes \\
-  \texttt{2}         & \texttt{uint16_t} Port \\
+  \texttt{2}         & \texttt{uint16\_t} Port \\
 \end{tabular}
 
 If IPv4 the format is padded with 12 bytes of zeroes so that both IPv4 and IPv6
 have the same stored size.
 
-The \texttt{IP_Port} will always end up being of size 19 bytes.  This is to
+The \texttt{IP\_Port} will always end up being of size 19 bytes.  This is to
 make it hard to know if an ipv4 or ipv6 ip is in the packet just by looking at
 the size.  The 12 bytes of zeros when ipv4 must be set to 0 and not left
 uninitialized as some info may be leaked this way if it stays uninitialized.
 All numbers here are in big endian format.
 
-The \texttt{IP_Port} in the sendback data can be in any format as long as the
+The \texttt{IP\_Port} in the sendback data can be in any format as long as the
 length is 19 bytes because only the one who writes it can decrypt it and read
 it, however, using the previous format is recommended because of code reuse.
 The nonce in the sendback data must be a 24 byte nonce.
@@ -2844,7 +2844,7 @@ announce request packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x83) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x83) \\
   \texttt{24}        & Nonce \\
   \texttt{32}        & A public key (real or temporary) \\
   \texttt{?}         & Payload \\
@@ -2876,7 +2876,7 @@ data to route request packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x85) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x85) \\
   \texttt{32}        & Public key of destination node \\
   \texttt{24}        & Nonce \\
   \texttt{32}        & Temporary just generated public key \\
@@ -2903,7 +2903,7 @@ data packet and the real public key of the receiver:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} id \\
+  \texttt{1}         & \texttt{uint8\_t} id \\
   variable           & Data (optional) \\
 \end{tabular}
 
@@ -2914,7 +2914,7 @@ announce response packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x84) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x84) \\
   \texttt{8}         & Data to send back in response \\
   \texttt{24}        & Nonce \\
   variable           & Payload \\
@@ -2926,16 +2926,16 @@ the request and the nonce:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} \texttt{is_stored} \\
+  \texttt{1}         & \texttt{uint8\_t} \texttt{is\_stored} \\
   \texttt{32}        & Ping ID or Public Key \\
   variable           & Maximum of 4 nodes in packed node format (see DHT) \\
 \end{tabular}
 
-The packet contains a ping ID if \texttt{is_stored} is 0 or 2, or the public
-key that must be used to send data packets if \texttt{is_stored} is 1.
+The packet contains a ping ID if \texttt{is\_stored} is 0 or 2, or the public
+key that must be used to send data packets if \texttt{is\_stored} is 1.
 
-If the \texttt{is_stored} is not 0, it means the information to reach the
-public key we are searching for is stored on this node.  \texttt{is_stored} is
+If the \texttt{is\_stored} is not 0, it means the information to reach the
+public key we are searching for is stored on this node.  \texttt{is\_stored} is
 2 as a response to a peer trying to announce himself to tell the peer that he
 is currently announced successfully.
 
@@ -2944,7 +2944,7 @@ data to route response packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x86) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x86) \\
   \texttt{24}        & Nonce \\
   \texttt{32}        & Temporary just generated public key \\
   variable           & Payload \\
@@ -2980,11 +2980,11 @@ packet and encrypt it with our long term private key.  This is so the peer we
 are announcing ourselves to can be sure that we actually own that public key.
 If we are looking for peers we use a temporary public key used only for packets
 looking for that peer in order to leak as little information as possible.  The
-\texttt{ping_id} is a 32 byte number which is sent to us in the announce
+\texttt{ping\_id} is a 32 byte number which is sent to us in the announce
 response and we must send back to the peer in another announce request.  This
 is done in order to prevent people from easily announcing themselves many times
 as they have to prove they can respond to packets from the peer before the peer
-will let them announce themselves.  This \texttt{ping_id} is set to 0 when none
+will let them announce themselves.  This \texttt{ping\_id} is set to 0 when none
 is known.
 
 The public key we are searching for is set to our long term public key when
@@ -3003,7 +3003,7 @@ packet response.  Its goal is to be used to learn which announce request packet
 the response is responding to, and hence its location in the unencrypted part
 of the response.  This is needed in toxcore to find and check info about the
 packet in order to decrypt it and handle it correctly.  Toxcore uses it as an
-index to its special \texttt{ping_array}.
+index to its special \texttt{ping\_array}.
 
 Why don't we use different packets instead of having one announce packet
 request and one response that does everything? It makes it a lot more difficult
@@ -3015,17 +3015,17 @@ The unencrypted part of an announce response packet contains the sendback data,
 which was sent in the request this packet is responding to and a 24 byte random
 nonce used to encrypt the encrypted part.
 
-The \texttt{is_stored} number is set to either 0, 1 or 2.  0 means that the
+The \texttt{is\_stored} number is set to either 0, 1 or 2.  0 means that the
 public key that was being searched in the request isn't stored or known by this
 peer.  1 means that it is and 2 means that we are announced successfully at
 that node.  Both 1 and 2 are needed so that when clients are restarted it is
 possible to reannounce without waiting for the timeout of the previous
 announce.  This would not otherwise be possible as a client would receive
-response 1 without a \texttt{ping_id} which is needed in order to reannounce
+response 1 without a \texttt{ping\_id} which is needed in order to reannounce
 successfully.
 
-When the \texttt{is_stored} number is 0 or 2, the next 32 bytes is a
-\texttt{ping_id}.  When \texttt{is_stored} is 1 it corresponds to a public key
+When the \texttt{is\_stored} number is 0 or 2, the next 32 bytes is a
+\texttt{ping\_id}.  When \texttt{is\_stored} is 1 it corresponds to a public key
 (the send back data public key set by the friend in their announce request)
 that must be used to encrypt and send data to the friend.
 
@@ -3057,13 +3057,13 @@ and sent to the appropriate destination.
 To handle onion announce packets, toxcore first receives an announce packet and
 decrypts it.
 
-Toxcore generates \texttt{ping_id}s by taking a 32 byte sha hash of the current
+Toxcore generates \texttt{ping\_id}s by taking a 32 byte sha hash of the current
 time, some secret bytes generated when the instance is created, the current
 time divided by a 20 second timeout, the public key of the requester and the
 source ip/port that the packet was received from.  Since the ip/port that the
-packet was received from is in the \texttt{ping_id}, the announce packets being
+packet was received from is in the \texttt{ping\_id}, the announce packets being
 sent with a ping id must be sent using the same path as the packet that we
-received the \texttt{ping_id} from or announcing will fail.
+received the \texttt{ping\_id} from or announcing will fail.
 
 The reason for this 20 second timeout in toxcore is that it gives a reasonable
 time (20 to 40 seconds) for a peer to announce himself while taking in count
@@ -3074,8 +3074,8 @@ time (divided by 20) and the second with the current time + 20 (divided by 20).
 The two ping ids are then compared to the ping ids in the received packets.
 The reason for doing this is that storing every ping id received might be
 expensive and leave us vulnerable to a DoS attack, this method makes sure that
-the other cannot generate \texttt{ping_id}s and must ask for them.  The reason
-for the 2 \texttt{ping_id}s is that we want to make sure that the timeout is at
+the other cannot generate \texttt{ping\_id}s and must ask for them.  The reason
+for the 2 \texttt{ping\_id}s is that we want to make sure that the timeout is at
 least 20 seconds and cannot be 0.
 
 If one of the two ping ids is equal to the public key used to encrypt the
@@ -3096,14 +3096,14 @@ Toxcore will then copy the 4 DHT nodes closest to the public key being searched
 to a new packet (the response).
 
 Toxcore will look if the public key being searched is in the datastructure.  If
-it isn't it will copy the first generated \texttt{ping_id} (the one generated
-with the current time) to the response, set the \texttt{is_stored} number to 0
+it isn't it will copy the first generated \texttt{ping\_id} (the one generated
+with the current time) to the response, set the \texttt{is\_stored} number to 0
 and send the packet back.
 
 If the public key is in the datastructure, it will check whether the public key
 that was used to encrypt the announce packet is equal to the announced public
 key, if it isn't then it means that the peer is searching for a peer and that
-we know it.  This means the \texttt{is_stored} is set to 1 and the sending back
+we know it.  This means the \texttt{is\_stored} is set to 1 and the sending back
 data public key in the announce entry is copied to the packet.
 
 If it (key used to encrypt the announce packet) is equal (to the announced
@@ -3112,9 +3112,9 @@ packet) meaning the peer is announcing itself and an entry for it exists, the
 sending back data public key is checked to see if it equals the one it the
 packet.  If it is not equal it means that it is outdated, probably because the
 announcing peer's toxcore instance was restarted and so their
-\texttt{is_stored} is set to 0, if it is equal it means the peer is announced
-correctly so the \texttt{is_stored} is set to 2.  The first generated
-\texttt{ping_id} is then copied to the packet.
+\texttt{is\_stored} is set to 0, if it is equal it means the peer is announced
+correctly so the \texttt{is\_stored} is set to 2.  The first generated
+\texttt{ping\_id} is then copied to the packet.
 
 Once the packet is contructed a random 24 byte nonce is generated, the packet
 is encrypted (the shared key used to decrypt the request can be saved and used
@@ -3180,7 +3180,7 @@ The reason for the number of peers being 8 is that a lower number might make
 searching for and announcing too unreliable and a higher number too
 bandwidth/resource intensive.
 
-Toxcore uses \texttt{ping_array} (see \texttt{ping_array}) for the 8 byte
+Toxcore uses \texttt{ping\_array} (see \texttt{ping\_array}) for the 8 byte
 sendback data in announce packets to store information that it will need to
 handle the response (key to decrypt it, why was it sent? (to announce ourselves
 or to search? For what key? and some other info)).  For security purposes it
@@ -3191,10 +3191,10 @@ For peers we are announcing ourselves to, if we are not announced to them
 toxcore tries every 3 seconds to announce ourselves to them until they return
 that we have announced ourselves to, then toxcore sends an announce request
 packet every 15 seconds to see if we are still announced and re announce
-ourselves at the same time.  The timeout of 15 seconds means a \texttt{ping_id}
+ourselves at the same time.  The timeout of 15 seconds means a \texttt{ping\_id}
 received in the last packet will not have had time to expire (20 second minimum
 timeout) before it is resent 15 seconds later.  Toxcore sends every announce
-packet with the \texttt{ping_id} previously received from that peer with the
+packet with the \texttt{ping\_id} previously received from that peer with the
 same path (if possible).
 
 For friends this is slightly different.  It is important to start searching for
@@ -3240,14 +3240,14 @@ DHT public key packet:
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x9c) \\
-  \texttt{8}         & \texttt{uint64_t} \texttt{no_replay} \\
+  \texttt{1}         & \texttt{uint8\_t} (0x9c) \\
+  \texttt{8}         & \texttt{uint64\_t} \texttt{no\_replay} \\
   \texttt{32}        & Our DHT public key \\
   \texttt{[39, 204]} & Maximum of 4 nodes in packed format \\
 \end{tabular}
 
-The packet will only be accepted if the \texttt{no_replay} number is greater
-than the \texttt{no_replay} number in the last packet received.
+The packet will only be accepted if the \texttt{no\_replay} number is greater
+than the \texttt{no\_replay} number in the last packet received.
 
 The nodes sent in this packet have TCP so that the friend can connect to us.
 
@@ -3256,7 +3256,7 @@ the long term public key we say we own when sending them our DHT public key.
 Friend requests are also sent using onion data packets but their exact format
 is explained in Messenger.
 
-The \texttt{no_replay} number is protection if someone tries to replay an older
+The \texttt{no\_replay} number is protection if someone tries to replay an older
 packet and should be set to an always increasing number.  It is 8 bytes so you
 should set a high resolution monotonic time as the value.
 
@@ -3277,7 +3277,7 @@ packet):
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x9c) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x9c) \\
   \texttt{32}        & Long term public key of sender \\
   \texttt{24}        & Nonce \\
   variable           & Encrypted payload \\
@@ -3299,7 +3299,7 @@ packets from the DHT module to this module.
 
 If we receive a DHT public key packet, we will first check if the DHT packet is
 from a friend, if it is not from a friend, it will be discarded.  The
-\texttt{no_replay} will then be checked to see if it is good and no packet with
+\texttt{no\_replay} will then be checked to see if it is good and no packet with
 a lower one was received during the session.  The DHT key, the TCP nodes in the
 packed nodes and the DHT nodes in the packed nodes will be passed to their
 relevant modules.  The fact that we have the DHT public key of a friend means
@@ -3363,7 +3363,7 @@ byte sequence with the integer encoded in Little Endian unless stated otherwise.
   Length        & Contents \\
   \hline
   \texttt{4}    & Zeroes \\
-  \texttt{4}    & \texttt{uint32_t} (0x15ED1B1F) \\
+  \texttt{4}    & \texttt{uint32\_t} (0x15ED1B1F) \\
   \texttt{?}    & List of sections \\
 \end{tabular}
 
@@ -3377,9 +3377,9 @@ denoted with '?'.
 \begin{tabular}{l|l}
   Length        & Contents \\
   \hline
-  \texttt{4}    & \texttt{uint32_t} Length of this section \\
-  \texttt{2}    & \texttt{uint16_t} Section type \\
-  \texttt{2}    & \texttt{uint16_t} (0x01CE) \\
+  \texttt{4}    & \texttt{uint32\_t} Length of this section \\
+  \texttt{2}    & \texttt{uint16\_t} Section type \\
+  \texttt{2}    & \texttt{uint16\_t} (0x01CE) \\
   \texttt{?}    & Section \\
 \end{tabular}
 
@@ -3407,7 +3407,7 @@ from a state file. Only NospamKeys is required.
 \begin{tabular}{l|l}
   Length        & Contents \\
   \hline
-  \texttt{4}    & \texttt{uint32_t} Nospam \\
+  \texttt{4}    & \texttt{uint32\_t} Nospam \\
   \texttt{32}   & Long term public key \\
   \texttt{32}   & Long term secret key \\
 \end{tabular}
@@ -3419,7 +3419,7 @@ This section contains a list of DHT-related sections.
 \begin{tabular}{l|l}
   Length        & Contents \\
   \hline
-  \texttt{4}    & \texttt{uint32_t} (0x159000D) \\
+  \texttt{4}    & \texttt{uint32\_t} (0x159000D) \\
   \texttt{?}    & List of DHT sections \\
 \end{tabular}
 
@@ -3430,9 +3430,9 @@ Every DHT section has the following structure:
 \begin{tabular}{l|l}
   Length        & Contents \\
   \hline
-  \texttt{4}    & \texttt{uint32_t} Length of this section \\
-  \texttt{2}    & \texttt{uint16_t} DHT section type \\
-  \texttt{2}    & \texttt{uint16_t} (0x11CE) \\
+  \texttt{4}    & \texttt{uint32\_t} Length of this section \\
+  \texttt{2}    & \texttt{uint16\_t} DHT section type \\
+  \texttt{2}    & \texttt{uint16\_t} (0x11CE) \\
   \texttt{?}    & DHT section \\
 \end{tabular}
 
@@ -3477,20 +3477,20 @@ denoted with "(BE)".
 \begin{tabular}{l|l}
   Length        & Contents \\
   \hline
-  \texttt{1}    & \texttt{uint8_t} Status \\
+  \texttt{1}    & \texttt{uint8\_t} Status \\
   \texttt{32}   & Long term public key \\
   \texttt{1024} & Friend request message as a byte string \\
   \texttt{1}    & PADDING \\
-  \texttt{2}    & \texttt{uint16_t} Size of the friend request message (BE) \\
+  \texttt{2}    & \texttt{uint16\_t} Size of the friend request message (BE) \\
   \texttt{128}  & Name as a byte string \\
-  \texttt{2}    & \texttt{uint16_t} Size of the name (BE) \\
+  \texttt{2}    & \texttt{uint16\_t} Size of the name (BE) \\
   \texttt{1007} & Status message as a byte string \\
   \texttt{1}    & PADDING \\
-  \texttt{2}    & \texttt{uint16_t} Size of the status message (BE) \\
-  \texttt{1}    & \texttt{uint8_t} User status (see also: \texttt{USERSTATUS}) \\
+  \texttt{2}    & \texttt{uint16\_t} Size of the status message (BE) \\
+  \texttt{1}    & \texttt{uint8\_t} User status (see also: \texttt{USERSTATUS}) \\
   \texttt{3}    & PADDING \\
-  \texttt{4}    & \texttt{uint32_t} Nospam (only used for sending a friend request) \\
-  \texttt{8}    & \texttt{uint64_t} Last seen time \\
+  \texttt{4}    & \texttt{uint32\_t} Nospam (only used for sending a friend request) \\
+  \texttt{8}    & \texttt{uint64\_t} Last seen time \\
 \end{tabular}
 
 Status can be one of:
@@ -3526,7 +3526,7 @@ Status can be one of:
 \begin{tabular}{l|l}
   Length        & Contents \\
   \hline
-  \texttt{1}    & \texttt{uint8_t} User status (see also: \texttt{USERSTATUS}) \\
+  \texttt{1}    & \texttt{uint8\_t} User status (see also: \texttt{USERSTATUS}) \\
 \end{tabular}
 
 \subsection{Tcp Relays (0x0A)}
