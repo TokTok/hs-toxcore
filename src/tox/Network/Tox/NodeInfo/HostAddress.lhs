@@ -44,7 +44,7 @@ import           Text.Read                 (readPrec)
 data HostAddress
   = IPv4 Socket.HostAddress
   | IPv6 Socket.HostAddress6
-  deriving (Eq, Generic, Typeable)
+  deriving (Eq, Ord, Generic, Typeable)
 
 instance Binary HostAddress
 instance MessagePack HostAddress

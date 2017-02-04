@@ -38,7 +38,7 @@ import qualified Test.QuickCheck.Gen       as Gen
 data TransportProtocol
   = UDP
   | TCP
-  deriving (Eq, Show, Read, Generic, Typeable)
+  deriving (Eq, Ord, Show, Read, Generic, Typeable)
 
 instance Binary TransportProtocol
 instance MessagePack TransportProtocol

@@ -71,7 +71,7 @@ data NodeInfo = NodeInfo
   , address   :: SocketAddress
   , publicKey :: PublicKey
   }
-  deriving (Eq, Show, Read, Generic, Typeable)
+  deriving (Eq, Ord, Show, Read, Generic, Typeable)
 
 instance MessagePack NodeInfo
 

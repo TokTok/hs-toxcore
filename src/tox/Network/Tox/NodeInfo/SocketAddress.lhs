@@ -36,7 +36,7 @@ import           Test.QuickCheck.Arbitrary              (Arbitrary, arbitrary)
 
 
 data SocketAddress = SocketAddress HostAddress PortNumber
-  deriving (Eq, Show, Read, Generic, Typeable)
+  deriving (Eq, Ord, Show, Read, Generic, Typeable)
 
 instance Binary SocketAddress
 instance MessagePack SocketAddress
