@@ -73,6 +73,10 @@ xorDistance :: PublicKey -> PublicKey -> Distance
 xorDistance a b =
   Distance $ Key.keyToInteger a `xor` Key.keyToInteger b
 
+-- | rebaseDistance a b (xorDistance a c) == xorDistance b c
+rebaseDistance :: PublicKey -> PublicKey -> Distance -> Distance
+rebaseDistance a b (Distance d) =
+  Distance $ d `xor` Key.keyToInteger a `xor` Key.keyToInteger b
 
 {-------------------------------------------------------------------------------
  -

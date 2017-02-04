@@ -11,6 +11,7 @@ import           Data.Monoid                   (Dual (..), Endo (..), Monoid,
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientList    (ClientList)
 import qualified Network.Tox.DHT.ClientList    as ClientList
+import           Network.Tox.DHT.Distance      (Distance)
 import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
@@ -28,6 +29,10 @@ class NodeList l where
 
   traverseClientLists ::
     Applicative f => (ClientList -> f ClientList) -> l -> f l
+
+  -- | 'closeNodes pub' returns the (pub',node) pairs of the Node List in
+  -- increasing order of distance of pub' from pub.
+  closeNodes :: PublicKey -> l -> [ (Distance, NodeInfo) ]
 
   -- | copied from Data.Traversable.foldMapDefault
   foldMapClientLists :: Monoid m => (ClientList -> m) -> l -> m
@@ -51,6 +56,7 @@ instance NodeList ClientList where
   viable = ClientList.viable
   baseKey = ClientList.baseKey
   traverseClientLists = id
+  closeNodes = ClientList.closeNodes
 
 instance NodeList KBuckets where
   addNode = KBuckets.addNode
@@ -58,4 +64,5 @@ instance NodeList KBuckets where
   viable = KBuckets.viable
   baseKey = KBuckets.baseKey
   traverseClientLists = KBuckets.traverseClientLists
+  closeNodes = KBuckets.closeNodes
 \end{code}

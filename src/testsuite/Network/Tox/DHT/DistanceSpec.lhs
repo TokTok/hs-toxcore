@@ -162,4 +162,8 @@ addition may not necessarily be close in terms of XOR.
       in
       log2 (xorDistance k k) `shouldBe` Nothing
 
+  describe "rebaseDistance" $
+    it "should satisfy: rebaseDistance a b (xorDistance a c) == xorDistance b c" $
+      property $ \a b c ->
+        rebaseDistance a b (xorDistance a c) `shouldBe` xorDistance b c
 \end{code}

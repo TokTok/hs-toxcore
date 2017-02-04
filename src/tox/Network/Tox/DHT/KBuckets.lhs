@@ -13,9 +13,10 @@ module Network.Tox.DHT.KBuckets where
 import           Control.Applicative           (Applicative, (<$>))
 import           Data.Binary                   (Binary)
 import           Data.Foldable                 (maximumBy, toList)
-import           Data.List                     (sort)
+import           Data.List                     (sortBy)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
+import           Data.Maybe                    (maybeToList)
 import           Data.Ord                      (comparing)
 import           Data.Traversable              (Traversable, mapAccumR,
                                                 traverse)
@@ -27,6 +28,7 @@ import qualified Test.QuickCheck.Gen           as Gen
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientList    (ClientList)
 import qualified Network.Tox.DHT.ClientList    as ClientList
+import           Network.Tox.DHT.Distance      (Distance)
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
@@ -196,6 +198,22 @@ traverseClientLists f kBuckets@KBuckets{ buckets } =
   where
     reverseT :: (Traversable t) => t a -> t a
     reverseT t = snd (mapAccumR (\ (x:xs) _ -> (xs, x)) (toList t) t)
+
+closeNodes :: PublicKey -> KBuckets -> [ (Distance, NodeInfo) ]
+closeNodes publicKey KBuckets{ baseKey, buckets } =
+  let
+    (further, at, nearer) = case bucketIndex baseKey publicKey of
+      Nothing    -> (buckets, Nothing, Map.empty)
+      Just index -> Map.splitLookup index buckets
+    clientClose = ClientList.closeNodes publicKey
+    bucketsClose = sortBy (comparing fst) . concatMap clientClose
+  in
+    concat
+      [ maybe [] clientClose at
+      , bucketsClose $ Map.elems nearer
+      , bucketsClose $ Map.elems further
+      ]
+
 
 {-------------------------------------------------------------------------------
  -

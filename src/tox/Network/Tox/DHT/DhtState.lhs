@@ -12,10 +12,12 @@ import           Control.Applicative           (Const (..), getConst, pure,
 import           Control.Monad.State           (MonadState, StateT)
 import           Data.Functor.Identity         (Identity (..))
 import           Data.Lenses                   (fromGetSet)
+import           Data.List                     (nub, sortOn)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import qualified Data.Maybe                    as Maybe
 import           Data.Monoid                   (All (..), getAll)
+import           Data.Ord                      (comparing)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
@@ -23,6 +25,7 @@ import           Network.Tox.Crypto.KeyPair    (KeyPair)
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
 import           Network.Tox.DHT.ClientList    (ClientList)
 import qualified Network.Tox.DHT.ClientList    as ClientList
+import           Network.Tox.DHT.Distance      (Distance)
 import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.DHT.NodeList      (NodeList)
@@ -247,6 +250,9 @@ traverseClientLists ::
   Applicative f => (ClientList -> f ClientList) -> DhtState -> f DhtState
 traverseClientLists f = traverseNodeLists $ NodeList.traverseClientLists f
 
+closeNodes :: PublicKey -> DhtState -> [ (Distance, NodeInfo) ]
+closeNodes publicKey =
+  nub . sortOn fst . foldMapNodeLists (NodeList.closeNodes publicKey)
 
 -- | although it is not referred to as a Node List in the spec, we make DhtState
 -- an instance of NodeList so we can use the traversal and folding functions.
@@ -256,7 +262,10 @@ instance NodeList DhtState where
   viable = viable
   baseKey = KeyPair.publicKey . dhtKeyPair
   traverseClientLists = traverseClientLists
+  closeNodes = closeNodes
 
+takeClosestNodesTo :: Int -> PublicKey -> DhtState -> [ NodeInfo ]
+takeClosestNodesTo n publicKey = map snd . take n . closeNodes publicKey
 
 mapBuckets :: (KBuckets -> KBuckets) -> DhtState -> DhtState
 mapBuckets f dhtState@DhtState { dhtCloseList } =

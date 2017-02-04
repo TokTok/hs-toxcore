@@ -19,6 +19,7 @@ import qualified Test.QuickCheck.Gen           as Gen
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientNode    (ClientNode)
 import qualified Network.Tox.DHT.ClientNode    as ClientNode
+import           Network.Tox.DHT.Distance      (Distance)
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
@@ -52,7 +53,7 @@ data ClientList = ClientList
   }
   deriving (Eq, Read, Show)
 
-type ClientNodes = Map Distance.Distance ClientNode
+type ClientNodes = Map Distance ClientNode
 
 nodeInfos :: ClientList -> [NodeInfo]
 nodeInfos = map ClientNode.nodeInfo . Map.elems . nodes
@@ -130,6 +131,11 @@ is the furthest away in terms of the distance metric.
 
 foldNodes :: (a -> NodeInfo -> a) -> a -> ClientList -> a
 foldNodes f x = foldl f x . nodeInfos
+
+closeNodes :: PublicKey -> ClientList -> [ (Distance, NodeInfo) ]
+closeNodes publicKey ClientList{ baseKey, nodes } =
+  Map.toAscList . fmap ClientNode.nodeInfo $
+    Map.mapKeys (Distance.rebaseDistance baseKey publicKey) nodes
 
 {-------------------------------------------------------------------------------
  -
