@@ -205,7 +205,20 @@ Search Entry) per call to Do_DHT(), prioritising the closest to the base key).
 On receiving a Nodes Request packet, the 4 nodes in the DHT State which are
 closest to the public key in the packet are found, and sent back to the node
 which sent the request in a Nodes Response packet. If there are fewer than 4
-nodes in the state, just those nodes are sent.
+nodes in the state, just those nodes are sent. If there are no nodes in the
+state, no response is sent.
+
+\begin{code}
+
+responseMaxNodes :: Int
+responseMaxNodes = 4
+
+handleNodesRequest :: PublicKey -> dhtState -> Maybe NodesResponse
+handleNodesRequest publicKey dhtState =
+  let nodes = DhtState.takeClosestNodesTo responseMaxNodes publicKey dhtState
+  in if length nodes == 0 then Nothing else NodesResponse nodes
+
+\end{code}
 
 \subsection{Effects of chosen constants on performance}
 If the bucket size of the k-buckets were increased, it would increase the

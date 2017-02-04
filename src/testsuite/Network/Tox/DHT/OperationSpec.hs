@@ -76,3 +76,6 @@ spec = do
 
   it "removes nodes from which we consistently fail to receive Node Responses"
     pending -- need something more precise to test
+
+  describe "handleNodesResponse" $ pending
+  describe "handleNodesRequest" $ pending
