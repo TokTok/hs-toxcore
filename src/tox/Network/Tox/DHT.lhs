@@ -23,6 +23,7 @@ Once the DHT public key of a friend is known, the DHT is used to find them and
 connect directly to them via UDP.
 
 \input{src/tox/Network/Tox/DHT/Distance.lhs}
+\input{src/tox/Network/Tox/DHT/ClientList.lhs}
 \input{src/tox/Network/Tox/DHT/KBuckets.lhs}
 \input{src/tox/Network/Tox/DHT/DhtState.lhs}
 
