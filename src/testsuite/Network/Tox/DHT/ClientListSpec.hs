@@ -1,5 +1,5 @@
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE Trustworthy         #-}
+{-# LANGUAGE LambdaCase  #-}
+{-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.ClientListSpec where
 
 import           Test.Hspec

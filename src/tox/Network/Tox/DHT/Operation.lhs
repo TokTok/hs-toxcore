@@ -9,19 +9,20 @@
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative           ((<$>), (<*>))
-import           Control.Monad                 (guard, when, unless)
+import           Control.Monad                 (guard, unless, when)
+import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Control.Monad.Random          (RandT, evalRandT)
 import           Control.Monad.Random.Class    (MonadRandom, uniform)
-import           Control.Monad.State           (MonadState, execStateT, put, get, gets, modify)
-import           Control.Monad.Writer          (MonadWriter, Writer, execWriter, execWriterT,
-                                                runWriter, tell)
-import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Control.Monad.Reader          (MonadReader, ask, runReaderT)
+import           Control.Monad.State           (MonadState, execStateT, get,
+                                                gets, modify, put)
+import           Control.Monad.Writer          (MonadWriter, Writer, execWriter,
+                                                execWriterT, runWriter, tell)
 import           Data.Foldable                 (for_)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Traversable              (for, traverse)
-import           System.Random                 (StdGen, mkStdGen, getStdGen)
+import           System.Random                 (StdGen, getStdGen, mkStdGen)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
@@ -33,9 +34,12 @@ import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
 import           Network.Tox.DHT.NodeList      (NodeList)
 import qualified Network.Tox.DHT.NodeList      as NodeList
-import           Network.Tox.DHT.NodesResponse (NodesResponse(..))
+import           Network.Tox.DHT.NodesResponse (NodesResponse (..))
 import           Network.Tox.DHT.Stamped       (Stamped)
 import qualified Network.Tox.DHT.Stamped       as Stamped
+import           Network.Tox.Network.Networked (Networked, RequestInfo (..))
+import qualified Network.Tox.Network.Networked as Networked
+import qualified Network.Tox.Network.Networked
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 import           Network.Tox.Time              (TimeDiff, Timestamp)
@@ -63,13 +67,6 @@ easier, as it adds a possible attack vector.
 
 modifyM :: MonadState s m => (s -> m s) -> m ()
 modifyM = (put =<<) . (get >>=)
-
--- | Information required to send a NodesRequest packet
-data RequestInfo = RequestInfo
-  { requestTo     :: NodeInfo
-  , requestSearch :: PublicKey
-  }
-  deriving (Eq, Read, Show)
 
 randomRequestPeriod :: TimeDiff
 randomRequestPeriod = Time.seconds 20
@@ -230,21 +227,21 @@ responseMaxNodes = 4
 handleNodesRequest :: PublicKey -> DhtState -> Maybe NodesResponse
 handleNodesRequest publicKey dhtState =
   let nodes = DhtState.takeClosestNodesTo responseMaxNodes publicKey dhtState
-  in if length nodes == 0 then Nothing else Just $ NodesResponse nodes
+  in if null nodes then Nothing else Just $ NodesResponse nodes
 
 initDHT :: IO ()
-initDHT = do
+initDHT = return ()
   -- TODO: bootstrap
-  return ()
+  --  set up handlers
 
-doDHT :: (MonadIO m, MonadState DhtState m) => m ()
+doDHT ::
+  ( MonadRandom m
+  , MonadReader Timestamp m
+  , MonadState DhtState m
+  , Networked m
+  ) => m ()
 doDHT =
-  (liftIO Time.getTime >>=) . runReaderT $
-    (liftIO getStdGen >>=) . evalRandT $
-      (execWriterT $ randomRequests >> pingNodes) >>= mapM_ sendRequest
-
-sendRequest :: MonadIO m => RequestInfo -> m ()
-sendRequest _ = return () -- TODO
+  execWriterT (randomRequests >> pingNodes) >>= mapM_ Networked.sendRequest
 
 \end{code}
 
@@ -291,7 +288,7 @@ TODO: consider giving min and max values for the constants.
 runTestOperation :: Monoid w => ArbStdGen -> RandT StdGen (Writer w) a -> (a,w)
 runTestOperation seed = runWriter . (`evalRandT` getArbStdGen seed)
 execTestOperation :: Monoid w => ArbStdGen -> RandT StdGen (Writer w) a -> w
-execTestOperation seed = execWriter . (`evalRandT` getArbStdGen seed)
+execTestOperation = (snd .) . runTestOperation
 
 -- | wrap StdGen so the Arbitrary instance isn't an orphan
 newtype ArbStdGen = ArbStdGen { getArbStdGen :: StdGen }

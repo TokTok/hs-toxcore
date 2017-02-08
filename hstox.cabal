@@ -76,6 +76,7 @@ library
       Network.Tox.DHT.RpcPacket
       Network.Tox.DHT.Stamped
       Network.Tox.Encoding
+      Network.Tox.Network.Networked
       Network.Tox.NodeInfo
       Network.Tox.NodeInfo.HostAddress
       Network.Tox.NodeInfo.NodeInfo
