@@ -61,63 +61,7 @@ Protocol is used to send TCP relay information and the DHT is UDP only.
 \input{src/tox/Network/Tox/DHT/NodesRequest.lhs}
 \input{src/tox/Network/Tox/DHT/NodesResponse.lhs}
 
-
-\section{DHT Request packets}
-
-\begin{tabular}{l|l}
-  Length             & Contents \\
-  \hline
-  \texttt{1}         & \texttt{uint8_t} (0x20) \\
-  \texttt{32}        & receiver's DHT public key \\
-  \texttt{32}        & sender's DHT public key \\
-  \texttt{24}        & nonce \\
-  \texttt{?}         & encrypted payload \\
-\end{tabular}
-
-DHT Request packets are packets that can be sent across one DHT node to one
-that they know.  They are used to send encrypted data to friends that we are
-not necessarily connected to directly in the DHT.
-
-A DHT node that receives a DHT request packet will check whether the receiver's
-public key is their DHT public key and, if it is, they will decrypt and handle
-the packet.  If it is not they will check whether they know that DHT public key
-(if it's in their list of close nodes).  If it isn't, they will drop the
-packet.  If it is they will resend the exact packet to that DHT node.
-
-The encrypted message is encrypted using the receiver's DHT Public key, the
-sender's DHT private key and a randomly generated 24 byte nonce.
-
-DHT request packets are used for DHT public key packets (see
-\href{#onion}{onion}) and NAT ping packets.
-
-\subsection{NAT ping packets}
-
-A NAT ping packet is sent as the payload of a DHT request packet. 
-
-NAT ping packets are used to see if a friend we are not connected to directly
-is online and ready to do the hole punching.
-
-\subsubsection{NAT ping request}
-
-\begin{tabular}{l|l}
-  Length             & Contents \\
-  \hline
-  \texttt{1}         & \texttt{uint8_t} (0xfe) \\
-  \texttt{1}         & \texttt{uint8_t} (0x00) \\
-  \texttt{8}         & \texttt{uint64_t} random number \\
-\end{tabular}
-
-\subsubsection{NAT ping response}
-
-\begin{tabular}{l|l}
-  Length             & Contents \\
-  \hline
-  \texttt{1}         & \texttt{uint8_t} (0xfe) \\
-  \texttt{1}         & \texttt{uint8_t} (0x01) \\
-  \texttt{8}         & \texttt{uint64_t} random number (the same that was received in request) \\
-\end{tabular}
-
-TODO: handling these packets.
+\input{src/tox/Network/Tox/DHT/Operation.lhs}
 
 \section{NATs}
 
@@ -233,7 +177,3 @@ The response format is as follows:
   \texttt{4}         & Word32      & Bootstrap node version \\
   \texttt{256}       & Bytes       & Message of the day \\
 \end{tabular}
-
-\section{DHT Initialisation}
-TODO: describe behaviour at start up, including bootstrapping,
-bootstrap_times, fake friends, and any other subtleties.

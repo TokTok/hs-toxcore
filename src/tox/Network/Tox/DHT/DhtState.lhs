@@ -30,6 +30,7 @@ import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.DHT.NodeList      (NodeList)
 import qualified Network.Tox.DHT.NodeList      as NodeList
+import qualified Network.Tox.DHT.RpcPacket     as RpcPacket
 import           Network.Tox.DHT.Stamped       (Stamped)
 import qualified Network.Tox.DHT.Stamped       as Stamped
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
@@ -62,7 +63,7 @@ Every DHT node contains the following state:
 
 \begin{code}
 
-type PendingResponses = Stamped NodeInfo
+type PendingResponses = Stamped (NodeInfo, RpcPacket.RequestID)
 
 data DhtState = DhtState
   { dhtKeyPair        :: KeyPair

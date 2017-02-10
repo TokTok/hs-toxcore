@@ -5,8 +5,10 @@ the DHT State.
 module Network.Tox.DHT.NodeList where
 
 import           Control.Applicative           (Const (..), getConst)
+import           Control.Maybe                 (guard)
+import           Data.Maybe                    (listToMaybe)
 import           Data.Monoid                   (Dual (..), Endo (..), Monoid,
-                                                appEndo, getDual)
+                                                appEndo, getDual, mempty)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientList    (ClientList)
@@ -49,6 +51,11 @@ class NodeList l where
   foldNodes :: (a -> NodeInfo -> a) -> a -> l -> a
   foldNodes = foldlClientLists . ClientList.foldNodes
 
+  lookupPublicKey :: PublicKey -> l -> Maybe NodeInfo
+  lookupPublicKey publicKey list = do
+    (dist,node) <- listToMaybe $ closeNodes publicKey list
+    guard (dist == mempty)
+    Just node
 
 instance NodeList ClientList where
   addNode = ClientList.addNode
