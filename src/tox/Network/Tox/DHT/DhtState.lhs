@@ -5,20 +5,23 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.DhtState where
 
-import           Control.Applicative           (Const (..), getConst, pure,
-                                                (<$>), (<*>), (<|>))
+import           Control.Applicative           (Applicative, Const (..),
+                                                getConst, pure, (<$>), (<*>),
+                                                (<|>))
 import           Control.Monad.State           (MonadState, StateT)
 import           Data.Functor.Identity         (Identity (..))
 import           Data.Lenses                   (fromGetSet)
-import           Data.List                     (nub, sortOn)
+import           Data.List                     (nub, sortBy)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import qualified Data.Maybe                    as Maybe
-import           Data.Monoid                   (All (..), getAll)
-import           Data.Ord                      (comparing)
+import           Data.Monoid                   (All (..), getAll, Monoid)
+import           Data.Traversable              (traverse)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
+import Data.Ord (comparing)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.Crypto.KeyPair    (KeyPair)
@@ -283,7 +286,7 @@ traverseClientLists f = traverseNodeLists $ NodeList.traverseClientLists f
 
 closeNodes :: PublicKey -> DhtState -> [ (Distance, NodeInfo) ]
 closeNodes publicKey =
-  nub . sortOn fst . foldMapNodeLists (NodeList.closeNodes publicKey)
+  nub . sortBy (comparing fst) . foldMapNodeLists (NodeList.closeNodes publicKey)
 
 -- | although it is not referred to as a Node List in the spec, we make DhtState
 -- an instance of NodeList so we can use the traversal and folding functions.

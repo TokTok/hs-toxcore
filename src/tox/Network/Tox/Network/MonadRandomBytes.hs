@@ -3,6 +3,7 @@
 
 module Network.Tox.Network.MonadRandomBytes where
 
+import           Control.Applicative           (Applicative, (<$>), (<*>))
 import           Control.Monad.Random              (RandT, getRandoms)
 import           Control.Monad.Reader              (ReaderT)
 import           Control.Monad.RWS                 (MonadReader, MonadState,
@@ -14,14 +15,15 @@ import           Control.Monad.Writer              (WriterT)
 import qualified Crypto.Saltine.Class              as Sodium (decode)
 import qualified Crypto.Saltine.Internal.ByteSizes as Sodium (boxNonce)
 import           Data.Binary                       (get)
-import           Data.Binary.Get                   (Get, getWord64be, runGet)
-import           Data.Bits                         (FiniteBits, finiteBitSize)
+import           Data.Binary.Get                   (Get, getWord64be, getWord32be, getWord16be, getWord8, runGet)
 import qualified Data.Bits                         as Bits
 import           Data.ByteString                   (ByteString, pack, unpack)
 import           Data.ByteString.Lazy              (fromStrict)
 import           Data.Maybe                        (fromJust)
 import           Data.Proxy                        (Proxy (..))
-import           Data.Word                         (Word64, Word8)
+import           Data.Word                         (Word64, Word32, Word16, Word8)
+import Data.Monoid (Monoid)
+import Data.Functor (Functor)
 import           System.Entropy                    (getEntropy)
 import           System.Random                     (RandomGen)
 
@@ -31,13 +33,13 @@ import qualified Network.Tox.Crypto.Key            as Key
 import           Network.Tox.Crypto.KeyPair        (KeyPair)
 import qualified Network.Tox.Crypto.KeyPair        as KeyPair
 
-class Monad m => MonadRandomBytes m where
+class (Monad m, Applicative m, Functor m) => MonadRandomBytes m where
   randomBytes :: Int -> m ByteString
 
   newKeyPair :: m KeyPair
   newKeyPair = KeyPair.fromSecretKey <$> randomKey
 
-instance (Monad m, RandomGen s) => MonadRandomBytes (RandT s m) where
+instance (Monad m, Applicative m, Functor m, RandomGen s) => MonadRandomBytes (RandT s m) where
   randomBytes n = pack . take n <$> getRandoms
 
 -- | cryptographically secure random bytes from system source

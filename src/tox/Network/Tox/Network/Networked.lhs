@@ -9,6 +9,8 @@
 --   (ii) allow a simulated network in place of actual network IO.
 module Network.Tox.Network.Networked where
 
+import Control.Applicative (Applicative, (<*>), (<$>))
+import Data.Monoid (Monoid)
 import           Control.Monad                        (guard, replicateM, void)
 import           Control.Monad.IO.Class               (liftIO)
 import           Control.Monad.Random                 (RandT)
@@ -45,7 +47,7 @@ newtype NetworkLogged m a = NetworkLogged (WriterT [NetworkEvent] m a)
 
 runNetworkLogged :: Monad m => NetworkLogged m a -> m (a, [NetworkEvent])
 runNetworkLogged (NetworkLogged m) = runWriterT m
-evalNetworkLogged :: Monad m => NetworkLogged m a -> m a
+evalNetworkLogged :: (Monad m, Functor m) => NetworkLogged m a -> m a
 evalNetworkLogged = (fst <$>) . runNetworkLogged
 execNetworkLogged :: Monad m => NetworkLogged m a -> m [NetworkEvent]
 execNetworkLogged (NetworkLogged m) = execWriterT m

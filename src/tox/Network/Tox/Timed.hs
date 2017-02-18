@@ -6,6 +6,7 @@
 
 module Network.Tox.Timed where
 
+import Control.Applicative (Applicative)
 import           Control.Monad                        (Monad)
 import           Control.Monad.Random                 (RandT, mapRandT)
 import           Control.Monad.Reader                 (ReaderT, ask, local,
