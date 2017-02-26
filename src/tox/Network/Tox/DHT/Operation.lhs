@@ -50,6 +50,7 @@ import           Network.Tox.Protocol.Packet     (Packet (..))
 import           Network.Tox.Protocol.PacketKind (PacketKind)
 import qualified Network.Tox.Protocol.PacketKind as PacketKind
 import           Network.Tox.Time                (TimeDiff, Timestamp)
+import           Network.Tox.Timed               (Timed, askTime)
 import qualified Network.Tox.Time                as Time
 
 
@@ -89,11 +90,11 @@ sendDhtPacket to kind payload = do
 sendRequest ::
   ( MonadState DhtState m
   , Networked m
-  , MonadReader Timestamp m
+  , Timed m
   ) => RequestInfo -> m ()
 sendRequest (RequestInfo to key) = do
-  requestID <- RpcPacket.RequestID <$> Networked.randomBytes
-  time <- ask
+  requestID <- RpcPacket.RequestId <$> Networked.random
+  time <- askTime
   DhtState.pendingResponsesL . modify $ Stamped.add time (to, requestID)
   sendDhtPacket to PacketKind.NodesRequest $
     RpcPacket (NodesRequest key) requestID
@@ -117,7 +118,7 @@ randomRequests ::
   ( MonadRandom m
   , MonadState DhtState m
   , MonadWriter [RequestInfo] m
-  , MonadReader Timestamp m
+  , Timed m
   ) => m ()
 randomRequests = do
   closeList <- gets DhtState.dhtCloseList
@@ -130,11 +131,11 @@ randomRequests = do
     doList ::
       ( NodeList l
       , MonadRandom m
-      , MonadReader Timestamp m
+      , Timed m
       , MonadWriter [RequestInfo] m
       , MonadState Timestamp m) => l -> m ()
     doList nodeList = do
-      time <- ask
+      time <- askTime
       lastTime <- get
       when (time Time.- lastTime >= randomRequestPeriod) $
         case NodeList.nodeListList nodeList of
@@ -187,7 +188,7 @@ maxPings = 2
 pingNodes :: forall m.
   ( MonadState DhtState m
   , MonadWriter [RequestInfo] m
-  , MonadReader Timestamp m
+  , Timed m
   ) => m ()
 pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
   where
@@ -201,7 +202,7 @@ pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
         traverseMaybe f = (Map.mapMaybe id <$>) . traverse f
 
         pingNode :: ClientNode -> m (Maybe ClientNode)
-        pingNode clientNode = ask >>= \time ->
+        pingNode clientNode = askTime >>= \time ->
           if time Time.- lastPing < pingPeriod
           then pure $ Just clientNode
           else (tell [requestInfo] *>) . pure $
@@ -219,7 +220,7 @@ pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
 
 doDHT ::
   ( MonadRandom m
-  , MonadReader Timestamp m
+  , Timed m
   , MonadState DhtState m
   , Networked m
   ) => m ()
@@ -248,11 +249,11 @@ requireResponseWithin = Time.seconds 60
 
 handleNodesResponse ::
   ( MonadState DhtState m
-  , MonadReader Timestamp m
+  , Timed m
   , Networked m
   ) => NodeInfo -> RpcPacket NodesResponse -> m ()
 handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) =
-  ask >>= \time -> do
+  askTime >>= \time -> do
     isPending <- DhtState.pendingResponsesL $ do
       modify $ Stamped.dropOlder (time Time.+ negate requireResponseWithin)
       elem (from, requestID) . Stamped.getList <$> get

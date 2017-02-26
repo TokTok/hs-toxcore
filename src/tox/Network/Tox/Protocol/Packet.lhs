@@ -44,7 +44,6 @@ data Packet payload = Packet
 instance Binary payload => Binary (Packet payload)
 instance MessagePack payload => MessagePack (Packet payload)
 
-
 {-------------------------------------------------------------------------------
  -
  - :: Tests.

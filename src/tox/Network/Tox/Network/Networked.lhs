@@ -18,6 +18,8 @@ import           Data.ByteString                   (ByteString, pack)
 import           Network.Tox.Crypto.Key            (Nonce, PublicKey)
 import qualified Network.Tox.Crypto.Nonce          as Nonce
 import           Network.Tox.NodeInfo.NodeInfo     (NodeInfo)
+import           Network.Tox.Protocol.Packet     (Packet (..))
+import           Network.Tox.DHT.DhtState      (DhtState)
 
 class Monad m => Networked m where
   sendPacket :: NodeInfo -> Packet -> m ()
