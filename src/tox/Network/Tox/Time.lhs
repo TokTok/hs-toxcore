@@ -30,6 +30,9 @@ instance Num TimeDiff where
 seconds :: Integer -> TimeDiff
 seconds s = TimeDiff $ Clock.TimeSpec (fromIntegral s) 0
 
+milliseconds :: Integer -> TimeDiff
+milliseconds = TimeDiff . Clock.TimeSpec 0 . (*10^(6::Integer)) . fromIntegral
+
 getTime :: IO Timestamp
 getTime = Timestamp <$> Clock.getTime Clock.Monotonic
 

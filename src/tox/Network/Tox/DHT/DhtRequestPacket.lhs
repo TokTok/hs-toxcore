@@ -25,6 +25,8 @@ import           Data.Binary                (Binary, get, put)
 import           Data.MessagePack           (MessagePack)
 import           Data.Typeable              (Typeable)
 import           GHC.Generics               (Generic)
+
+import           Network.Tox.Crypto.Box     (PlainText (..))
 import           Network.Tox.Crypto.Key     (Nonce, PublicKey)
 import           Network.Tox.Crypto.KeyPair (KeyPair (..))
 import           Network.Tox.DHT.DhtPacket  (DhtPacket)

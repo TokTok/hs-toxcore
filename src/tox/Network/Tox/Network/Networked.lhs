@@ -1,5 +1,6 @@
 \begin{code}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE Trustworthy       #-}
 
 -- | abstraction layer for network functionality.
 -- The intention is to
@@ -7,19 +8,29 @@
 --   (ii) allow a simulated network in place of actual network IO.
 module Network.Tox.Network.Networked where
 
-import           Control.Monad.Random              (RandT, getRandoms)
-import           Control.Monad.Reader              (ReaderT)
-import           Control.Monad.State               (StateT)
+import           Control.Monad                     (guard, replicateM, void)
+import           Control.Monad.IO.Class            (liftIO)
+import           Control.Monad.Random              (RandT, getRandom)
+import           Control.Monad.Reader              (ReaderT, ask, runReaderT)
+import           Control.Monad.State               (State, StateT, execStateT,
+                                                    gets, modify)
 import           Control.Monad.Trans.Class         (lift)
+import           Control.Monad.Trans.Maybe         (MaybeT (..), runMaybeT)
 import           Control.Monad.Writer              (WriterT, tell)
+import qualified Crypto.Saltine.Class              as Sodium (decode)
 import qualified Crypto.Saltine.Internal.ByteSizes as Sodium (boxNonce)
+import           Data.Binary                       (Binary)
 import           Data.ByteString                   (ByteString, pack)
+import           Data.Map                          (Map)
+import qualified Data.Map                          as Map
+import           Data.Maybe                        (fromJust)
+import           System.Random                     (Random, StdGen, randomIO)
 
-import           Network.Tox.Crypto.Key            (Nonce, PublicKey)
+import           Network.Tox.Crypto.Key            (Key (..), Nonce, PublicKey)
 import qualified Network.Tox.Crypto.Nonce          as Nonce
+import           Network.Tox.DHT.DhtState          (DhtState)
 import           Network.Tox.NodeInfo.NodeInfo     (NodeInfo)
-import           Network.Tox.Protocol.Packet     (Packet (..))
-import           Network.Tox.DHT.DhtState      (DhtState)
+import           Network.Tox.Protocol.Packet       (Packet (..))
 
 class Monad m => Networked m where
   sendPacket :: NodeInfo -> Packet -> m ()
