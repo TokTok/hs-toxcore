@@ -73,13 +73,16 @@ easier, as it adds a possible attack vector.
 
 \begin{code}
 
+class (Networked m, Timed m, MonadState DhtState m) => DhtNodeMonad m where
+  {}
+
 data RequestInfo = RequestInfo
   { requestTo     :: NodeInfo
   , requestSearch :: PublicKey
   }
   deriving (Eq, Read, Show)
 
-sendDhtPacket :: (MonadState DhtState m, Networked m, Binary payload) =>
+sendDhtPacket :: (DhtNodeMonad m, Binary payload) =>
   NodeInfo -> PacketKind -> payload -> m ()
 sendDhtPacket to kind payload = do
   keyPair <- gets DhtState.dhtKeyPair
@@ -87,11 +90,7 @@ sendDhtPacket to kind payload = do
   Networked.sendPacket to . Packet kind $
     DhtPacket.encode keyPair (NodeInfo.publicKey to) nonce
 
-sendRequest ::
-  ( MonadState DhtState m
-  , Networked m
-  , Timed m
-  ) => RequestInfo -> m ()
+sendRequest :: DhtNodeMonad m => RequestInfo -> m ()
 sendRequest (RequestInfo to key) = do
   requestID <- RpcPacket.RequestId <$> Networked.random
   time <- askTime
@@ -101,9 +100,7 @@ sendRequest (RequestInfo to key) = do
 
 sendResponse :: Networked m => NodeInfo -> [NodeInfo] -> m ()
 sendResponse ::
-  ( MonadState DhtState m
-  , Networked m
-  ) => NodeInfo -> RequestID -> [NodeInfo] -> m ()
+  DhtNodeMonad m => NodeInfo -> RpcPacket.RequestId -> [NodeInfo] -> m ()
 sendResponse to requestID nodes =
   sendDhtPacket to PacketKind.NodesResponse $
     RpcPacket (NodesResponse nodes) requestID
@@ -114,12 +111,7 @@ modifyM = (put =<<) . (get >>=)
 randomRequestPeriod :: TimeDiff
 randomRequestPeriod = Time.seconds 20
 
-randomRequests ::
-  ( MonadRandom m
-  , MonadState DhtState m
-  , MonadWriter [RequestInfo] m
-  , Timed m
-  ) => m ()
+randomRequests :: DhtNodeMonad m => WriterT [RequestInfo] m ()
 randomRequests = do
   closeList <- gets DhtState.dhtCloseList
   DhtState.dhtCloseListStampL $ doList closeList
@@ -130,10 +122,10 @@ randomRequests = do
   where
     doList ::
       ( NodeList l
-      , MonadRandom m
       , Timed m
       , MonadWriter [RequestInfo] m
-      , MonadState Timestamp m) => l -> m ()
+      , MonadState Timestamp m
+      ) => l -> m ()
     doList nodeList = do
       time <- askTime
       lastTime <- get
@@ -144,6 +136,9 @@ randomRequests = do
             node <- uniform nodes
             tell [RequestInfo node $ NodeList.baseKey nodeList]
             put time
+      where
+        -- TODO
+        uniform = return . head
 
 \end{code}
 
@@ -185,14 +180,10 @@ pingPeriod = Time.seconds 60
 maxPings :: Int
 maxPings = 2
 
-pingNodes :: forall m.
-  ( MonadState DhtState m
-  , MonadWriter [RequestInfo] m
-  , Timed m
-  ) => m ()
+pingNodes :: forall m. DhtNodeMonad m => WriterT [RequestInfo] m ()
 pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
   where
-    pingNodes' :: ClientList -> m ClientList
+    pingNodes' :: ClientList -> WriterT [RequestInfo] m ClientList
     pingNodes' clientList =
       (\x -> clientList{ ClientList.nodes = x }) <$>
         traverseMaybe pingNode (ClientList.nodes clientList)
@@ -201,7 +192,7 @@ pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
           (a -> f (Maybe b)) -> Map k a -> f (Map k b)
         traverseMaybe f = (Map.mapMaybe id <$>) . traverse f
 
-        pingNode :: ClientNode -> m (Maybe ClientNode)
+        pingNode :: ClientNode -> WriterT [RequestInfo] m (Maybe ClientNode)
         pingNode clientNode = askTime >>= \time ->
           if time Time.- lastPing < pingPeriod
           then pure $ Just clientNode
@@ -218,12 +209,7 @@ pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
             pingCount = ClientNode.pingCount clientNode
             requestInfo = RequestInfo nodeInfo $ NodeList.baseKey clientList
 
-doDHT ::
-  ( MonadRandom m
-  , Timed m
-  , MonadState DhtState m
-  , Networked m
-  ) => m ()
+doDHT :: DhtNodeMonad m => m ()
 doDHT =
   execWriterT (randomRequests >> pingNodes) >>= mapM_ sendRequest
 
@@ -248,10 +234,7 @@ requireResponseWithin :: TimeDiff
 requireResponseWithin = Time.seconds 60
 
 handleNodesResponse ::
-  ( MonadState DhtState m
-  , Timed m
-  , Networked m
-  ) => NodeInfo -> RpcPacket NodesResponse -> m ()
+  DhtNodeMonad m => NodeInfo -> RpcPacket NodesResponse -> m ()
 handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) =
   askTime >>= \time -> do
     isPending <- DhtState.pendingResponsesL $ do
@@ -282,10 +265,8 @@ state, no response is sent.
 responseMaxNodes :: Int
 responseMaxNodes = 4
 
-handleNodesResponse ::
-  ( MonadState DhtState m
-  , Networked m
-  ) => NodeInfo -> RpcPacket NodesRequest -> m ()
+handleNodesRequest ::
+  DhtNodeMonad m => NodeInfo -> RpcPacket NodesRequest -> m ()
 handleNodesRequest from (RpcPacket (NodesRequest key) requestID) = do
   nodes <- DhtState.takeClosestNodesTo responseMaxNodes key <$> get
   unless (null nodes) $ sendResponse from requestID nodes
@@ -307,11 +288,8 @@ DHT request packets are used for DHT public key packets (see
 
 \begin{code}
 
-handleDhtRequestPacket ::
-  ( MonadState DhtState m
-  , Networked m
-  ) => DhtRequestPacket -> m ()
-handleDhtRequestPacket packet@(DhtRequestPacket addresseePublicKey dhtPacket) = do
+handleDhtRequestPacket :: DhtNodeMonad m => NodeInfo -> DhtRequestPacket -> m ()
+handleDhtRequestPacket _from packet@(DhtRequestPacket addresseePublicKey dhtPacket) = do
   keyPair <- gets DhtState.dhtKeyPair
   if addresseePublicKey == KeyPair.publicKey keyPair
   then void . runMaybeT $ msum
@@ -357,20 +335,14 @@ TODO: handling these packets.
 \begin{code}
 
 -- | TODO
-data NatPingPacket
-handleNatPingPacket ::
-  ( MonadState DhtState m
-  , Networked m
-  ) => NatPingPacket -> m ()
-handleNatPingPacket = return ()
+type NatPingPacket = ()
+handleNatPingPacket :: DhtNodeMonad m => NatPingPacket -> m ()
+handleNatPingPacket _ = return ()
 
 -- | TODO
-data DhtPKPacket
-handleDhtPKPacket ::
-  ( MonadState DhtState m
-  , Networked m
-  ) => DhtPKPacket -> m ()
-handleDhtPKPacket = return ()
+type DhtPKPacket = ()
+handleDhtPKPacket :: DhtNodeMonad m => DhtPKPacket -> m ()
+handleDhtPKPacket _ = return ()
 
 \end{code}
 
