@@ -2,22 +2,25 @@
 
 \begin{code}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative                  ((<$>), (<*>))
 import           Control.Monad                        (guard, msum, unless,
                                                        void, when)
+import           Control.Monad.Identity               (Identity, runIdentity)
 import           Control.Monad.IO.Class               (MonadIO, liftIO)
 import           Control.Monad.Random                 (RandT, evalRandT)
-import           Control.Monad.Reader                 (MonadReader, ask,
-                                                       runReaderT)
-import           Control.Monad.State                  (MonadState, StateT,
-                                                       execStateT, get, gets,
-                                                       modify, put)
+import           Control.Monad.Reader                 (MonadReader, ReaderT,
+                                                       ask, runReaderT)
+import           Control.Monad.State                  (MonadState, State,
+                                                       StateT, execStateT, evalStateT, get,
+                                                       gets, modify, put)
 import           Control.Monad.Trans                  (lift)
 import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
 import           Control.Monad.Writer                 (MonadWriter, Writer,
@@ -66,6 +69,7 @@ import qualified Network.Tox.Protocol.PacketKind      as PacketKind
 import           Network.Tox.Time                     (TimeDiff, Timestamp)
 import qualified Network.Tox.Time                     as Time
 import           Network.Tox.Timed                    (Timed, askTime)
+import qualified Network.Tox.Timed                    as Timed
 
 
 {-------------------------------------------------------------------------------
@@ -413,13 +417,19 @@ TODO: consider giving min and max values for the constants.
  -
  ------------------------------------------------------------------------------}
 
-runTestOperation :: Monoid w => ArbStdGen -> RandT StdGen (Writer w) a -> (a,w)
-runTestOperation seed = runWriter . (`evalRandT` getArbStdGen seed)
-execTestOperation :: Monoid w => ArbStdGen -> RandT StdGen (Writer w) a -> w
-execTestOperation = (snd .) . runTestOperation
+type TestDhtNodeMonad = Timed.TimedT (RandT StdGen (StateT DhtState (Networked.NetworkLogged Identity)))
+instance DhtNodeMonad TestDhtNodeMonad
+
+evalTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> a
+evalTestDhtNode seed time s =
+  runIdentity
+    . Networked.evalNetworkLogged
+    . (`evalStateT` s)
+    . (`evalRandT` unwrapArbStdGen seed)
+    . (`Timed.runTimedT` time)
 
 -- | wrap StdGen so the Arbitrary instance isn't an orphan
-newtype ArbStdGen = ArbStdGen { getArbStdGen :: StdGen }
+newtype ArbStdGen = ArbStdGen { unwrapArbStdGen :: StdGen }
   deriving (Read, Show)
 
 instance Arbitrary ArbStdGen

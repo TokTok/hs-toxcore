@@ -7,6 +7,7 @@ import           Test.QuickCheck
 
 import           Control.Monad                 (mzero, when)
 import           Data.Proxy                    (Proxy (..))
+import           Control.Monad.Writer                 (execWriterT)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
@@ -26,9 +27,8 @@ spec = do
     property $ \keyPair time time' seed ->
       let
         dhtState = DhtState.empty time keyPair
-        requests = Operation.execTestOperation seed $
-          Operation.randomRequests time' dhtState >>=
-          Operation.pingNodes time'
+        requests = Operation.evalTestDhtNode seed time' dhtState . execWriterT $
+          Operation.randomRequests >> Operation.pingNodes
       in
       requests `shouldBe` []
 
@@ -39,7 +39,8 @@ spec = do
           dhtState       = DhtState.empty time keyPair
           afterAdd       = foldr (DhtState.addNode time) dhtState nodeInfos
           time'          = time Time.+ Operation.randomRequestPeriod
-          randomRequests = Operation.execTestOperation seed $ Operation.randomRequests time' afterAdd
+          randomRequests = Operation.evalTestDhtNode seed time' afterAdd
+            . execWriterT $ Operation.randomRequests
         in
         case randomRequests of
           [] -> DhtState.size dhtState `shouldBe` 0
@@ -55,7 +56,8 @@ spec = do
           afterAdd          = foldr (DhtState.addNode time) afterSearch nodeInfos
           nodeAddedToSearch = not $ all ((== publicKey) . NodeInfo.publicKey) nodeInfos
           time'             = time Time.+ Operation.randomRequestPeriod
-          randomRequests    = Operation.execTestOperation seed $ Operation.randomRequests time' afterAdd
+          randomRequests    = Operation.evalTestDhtNode seed time' afterAdd
+            . execWriterT $ Operation.randomRequests
 
           requestIsForSearch (Operation.RequestInfo nodeInfo publicKey') =
             publicKey == publicKey' && nodeInfo `elem` nodeInfos &&
@@ -71,12 +73,11 @@ spec = do
           viable   = DhtState.viable nodeInfo dhtState
           afterAdd = DhtState.addNode time nodeInfo dhtState
           time'    = time Time.+ Operation.pingPeriod
-          pings    = Operation.execTestOperation seed $ Operation.pingNodes time' afterAdd
+          pings    = Operation.evalTestDhtNode seed time' afterAdd
+            . execWriterT $ Operation.pingNodes
         in
         when viable $ map Operation.requestTo pings `shouldSatisfy` (nodeInfo `elem`)
 
   it "removes nodes from which we consistently fail to receive Node Responses"
     pending -- need something more precise to test
 
-  describe "handleNodesResponse" pending
-  describe "handleNodesRequest" pending

@@ -1,6 +1,7 @@
 \begin{code}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE Safe              #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE Trustworthy                #-}
 
 -- | abstraction layer for network functionality.
 -- The intention is to
@@ -8,23 +9,24 @@
 --   (ii) allow a simulated network in place of actual network IO.
 module Network.Tox.Network.Networked where
 
-import           Control.Monad                 (guard, replicateM, void)
-import           Control.Monad.IO.Class        (liftIO)
-import           Control.Monad.Random          (RandT)
-import           Control.Monad.Reader          (ReaderT, ask, runReaderT)
-import           Control.Monad.State           (State, StateT, execStateT, gets,
-                                                modify)
-import           Control.Monad.Trans.Class     (lift)
-import           Control.Monad.Trans.Maybe     (MaybeT (..), runMaybeT)
-import           Control.Monad.Writer          (WriterT, tell)
-import           Data.Binary                   (Binary)
-import           Data.Map                      (Map)
-import qualified Data.Map                      as Map
-import           System.Random                 (Random, StdGen, randomIO)
+import           Control.Monad                        (guard, replicateM, void)
+import           Control.Monad.IO.Class               (liftIO)
+import           Control.Monad.Random                 (RandT)
+import           Control.Monad.Reader                 (ReaderT, ask, runReaderT)
+import           Control.Monad.State                  (MonadState, StateT)
+import           Control.Monad.Trans.Class            (lift)
+import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
+import           Control.Monad.Writer                 (WriterT, tell, runWriterT, execWriterT)
+import           Data.Binary                          (Binary)
+import           Data.Map                             (Map)
+import qualified Data.Map                             as Map
+import           System.Random                        (Random, StdGen, randomIO)
 
-import           Network.Tox.DHT.DhtState      (DhtState)
-import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
-import           Network.Tox.Protocol.Packet   (Packet (..))
+import           Network.Tox.DHT.DhtState             (DhtState)
+import           Network.Tox.Network.MonadRandomBytes (MonadRandomBytes)
+import           Network.Tox.NodeInfo.NodeInfo        (NodeInfo)
+import           Network.Tox.Protocol.Packet          (Packet (..))
+import           Network.Tox.Timed                    (Timed, TimedT)
 
 class Monad m => Networked m where
   sendPacket :: (Binary payload, Show payload) => NodeInfo -> Packet payload -> m ()
@@ -37,10 +39,20 @@ instance Networked (StateT NetworkState IO) where
 type NetworkState = ()
 
 type NetworkEvent = String
-type NetworkLogged m = RandT StdGen (WriterT [NetworkEvent] m)
+newtype NetworkLogged m a = NetworkLogged (WriterT [NetworkEvent] m a)
+  deriving (Monad, Functor, Applicative, MonadState s, MonadRandomBytes, Timed)
+
+runNetworkLogged :: Monad m => NetworkLogged m a -> m (a, [NetworkEvent])
+runNetworkLogged (NetworkLogged m) = runWriterT m
+evalNetworkLogged :: Monad m => NetworkLogged m a -> m a
+evalNetworkLogged = (fst <$>) . runNetworkLogged
+execNetworkLogged :: Monad m => NetworkLogged m a -> m [NetworkEvent]
+execNetworkLogged (NetworkLogged m) = execWriterT m
+
 -- | just log network events
 instance Monad m => Networked (NetworkLogged m) where
-  sendPacket to packet = tell [">>> " ++ show to ++ " : " ++ show packet]
+  sendPacket to packet = NetworkLogged $
+    tell [">>> " ++ show to ++ " : " ++ show packet]
 
 instance Networked m => Networked (ReaderT r m) where
   sendPacket = (lift .) . sendPacket
@@ -50,22 +62,7 @@ instance Networked m => Networked (RandT s m) where
   sendPacket = (lift .) . sendPacket
 instance Networked m => Networked (StateT s m) where
   sendPacket = (lift .) . sendPacket
-
-{- Earlier attempt:
-newtype NetworkIOT m a = NetworkIOT { runNetworkIOT :: m a }
-instance MonadTrans NetworkIOT where
-  lift = NetworkIOT
-instance Monad m => Monad (NetworkIOT m) where
-  (NetworkIOT m) >>= f = m >>= runNetworkIOT . f
-instance Monad m => Applicative (NetworkIOT m) where
-  pure = return
-  (<*>) = ap
-instance Monad m => Functor (NetworkIOT m) where
-  fmap f x = pure f <*> x
-instance MonadIO m => MonadIO (NetworkIOT m) where
-  liftIO = lift . liftIO
-instance MonadIO m => Networked (NetworkIOT m) where
-  sendPacket _ = liftIO $ return () -- TODO
--}
+instance Networked m => Networked (TimedT m) where
+  sendPacket = (lift .) . sendPacket
 
 \end{code}
