@@ -4,8 +4,8 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE Trustworthy           #-}
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative           (Applicative, pure, (*>), (<$>),
