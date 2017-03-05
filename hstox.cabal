@@ -92,6 +92,7 @@ library
       Network.Tox.Protocol.PacketKind
       Network.Tox.Testing
       Network.Tox.Time
+      Network.Tox.Timed
   if !flag(library-only)
     hs-source-dirs:
         src/testsuite
