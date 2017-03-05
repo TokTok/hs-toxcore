@@ -4,63 +4,68 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE Trustworthy           #-}
 module Network.Tox.DHT.Operation where
 
-import           Control.Applicative              ((<$>), (<*>))
-import           Control.Monad                    (guard, msum, unless, void,
-                                                   when)
-import           Control.Monad.IO.Class           (MonadIO, liftIO)
-import           Control.Monad.Random             (RandT, evalRandT)
-import           Control.Monad.Random.Class       (MonadRandom, uniform)
-import           Control.Monad.Reader             (MonadReader, ask, runReaderT)
-import           Control.Monad.State              (MonadState, execStateT, get,
-                                                   gets, modify, put, StateT)
-import           Control.Monad.Trans              (lift)
-import           Control.Monad.Trans.Maybe        (MaybeT (..), runMaybeT)
-import           Control.Monad.Writer             (MonadWriter, Writer, WriterT,
-                                                   execWriter, execWriterT,
-                                                   runWriter, tell)
-import           Data.Binary                      (Binary)
-import           Data.Foldable                    (for_)
-import           Data.Map                         (Map)
-import qualified Data.Map                         as Map
-import           Data.Traversable                 (for, traverse)
-import           System.Random                    (StdGen, getStdGen, mkStdGen)
-import           Test.QuickCheck.Arbitrary        (Arbitrary, arbitrary, shrink)
+import           Control.Applicative                  ((<$>), (<*>))
+import           Control.Monad                        (guard, msum, unless,
+                                                       void, when)
+import           Control.Monad.IO.Class               (MonadIO, liftIO)
+import           Control.Monad.Random                 (RandT, evalRandT)
+import           Control.Monad.Reader                 (MonadReader, ask,
+                                                       runReaderT)
+import           Control.Monad.State                  (MonadState, StateT,
+                                                       execStateT, get, gets,
+                                                       modify, put)
+import           Control.Monad.Trans                  (lift)
+import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
+import           Control.Monad.Writer                 (MonadWriter, Writer,
+                                                       WriterT, execWriter,
+                                                       execWriterT, runWriter,
+                                                       tell)
+import           Data.Binary                          (Binary)
+import           Data.Foldable                        (for_)
+import           Data.Map                             (Map)
+import qualified Data.Map                             as Map
+import           Data.Traversable                     (for, traverse)
+import           System.Random                        (StdGen, getStdGen,
+                                                       mkStdGen)
+import           Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary,
+                                                       shrink)
 
-import           Network.Tox.Crypto.Key           (Nonce, PublicKey)
-import qualified Network.Tox.Crypto.KeyPair       as KeyPair
-import           Network.Tox.DHT.ClientList       (ClientList)
-import qualified Network.Tox.DHT.ClientList       as ClientList
-import           Network.Tox.DHT.ClientNode       (ClientNode)
-import qualified Network.Tox.DHT.ClientNode       as ClientNode
-import           Network.Tox.DHT.DhtPacket        (DhtPacket (..))
-import qualified Network.Tox.DHT.DhtPacket        as DhtPacket
-import           Network.Tox.DHT.DhtRequestPacket (DhtRequestPacket (..))
-import qualified Network.Tox.DHT.DhtRequestPacket as DhtRequestPacket
-import           Network.Tox.DHT.DhtState         (DhtState)
-import qualified Network.Tox.DHT.DhtState         as DhtState
-import           Network.Tox.DHT.NodeList         (NodeList)
-import qualified Network.Tox.DHT.NodeList         as NodeList
-import           Network.Tox.DHT.NodesRequest     (NodesRequest (..))
-import           Network.Tox.DHT.NodesResponse    (NodesResponse (..))
-import           Network.Tox.DHT.RpcPacket        (RpcPacket (..))
-import qualified Network.Tox.DHT.RpcPacket        as RpcPacket
-import           Network.Tox.DHT.Stamped          (Stamped)
-import qualified Network.Tox.DHT.Stamped          as Stamped
-import           Network.Tox.Network.Networked    (Networked)
-import qualified Network.Tox.Network.Networked    as Networked
-import qualified Network.Tox.Network.Networked
-import           Network.Tox.NodeInfo.NodeInfo    (NodeInfo)
-import qualified Network.Tox.NodeInfo.NodeInfo    as NodeInfo
-import           Network.Tox.Protocol.Packet      (Packet (..))
-import           Network.Tox.Protocol.PacketKind  (PacketKind)
-import qualified Network.Tox.Protocol.PacketKind  as PacketKind
-import           Network.Tox.Time                 (TimeDiff, Timestamp)
-import qualified Network.Tox.Time                 as Time
-import           Network.Tox.Timed                (Timed, askTime)
+import           Network.Tox.Crypto.Key               (Nonce, PublicKey)
+import qualified Network.Tox.Crypto.KeyPair           as KeyPair
+import           Network.Tox.DHT.ClientList           (ClientList)
+import qualified Network.Tox.DHT.ClientList           as ClientList
+import           Network.Tox.DHT.ClientNode           (ClientNode)
+import qualified Network.Tox.DHT.ClientNode           as ClientNode
+import           Network.Tox.DHT.DhtPacket            (DhtPacket (..))
+import qualified Network.Tox.DHT.DhtPacket            as DhtPacket
+import           Network.Tox.DHT.DhtRequestPacket     (DhtRequestPacket (..))
+import qualified Network.Tox.DHT.DhtRequestPacket     as DhtRequestPacket
+import           Network.Tox.DHT.DhtState             (DhtState)
+import qualified Network.Tox.DHT.DhtState             as DhtState
+import           Network.Tox.DHT.NodeList             (NodeList)
+import qualified Network.Tox.DHT.NodeList             as NodeList
+import           Network.Tox.DHT.NodesRequest         (NodesRequest (..))
+import           Network.Tox.DHT.NodesResponse        (NodesResponse (..))
+import           Network.Tox.DHT.RpcPacket            (RpcPacket (..))
+import qualified Network.Tox.DHT.RpcPacket            as RpcPacket
+import           Network.Tox.DHT.Stamped              (Stamped)
+import qualified Network.Tox.DHT.Stamped              as Stamped
+import           Network.Tox.Network.MonadRandomBytes (MonadRandomBytes)
+import qualified Network.Tox.Network.MonadRandomBytes as MonadRandomBytes
+import           Network.Tox.Network.Networked        (Networked)
+import qualified Network.Tox.Network.Networked        as Networked
+import           Network.Tox.NodeInfo.NodeInfo        (NodeInfo)
+import qualified Network.Tox.NodeInfo.NodeInfo        as NodeInfo
+import           Network.Tox.Protocol.Packet          (Packet (..))
+import           Network.Tox.Protocol.PacketKind      (PacketKind)
+import qualified Network.Tox.Protocol.PacketKind      as PacketKind
+import           Network.Tox.Time                     (TimeDiff, Timestamp)
+import qualified Network.Tox.Time                     as Time
+import           Network.Tox.Timed                    (Timed, askTime)
 
 
 {-------------------------------------------------------------------------------
@@ -82,8 +87,12 @@ easier, as it adds a possible attack vector.
 
 \begin{code}
 
-class (Networked m, Timed m, MonadState DhtState m) => DhtNodeMonad m where
-  {}
+class
+  ( Networked m
+  , Timed m
+  , MonadRandomBytes m
+  , MonadState DhtState m
+  ) => DhtNodeMonad m where {}
 
 data RequestInfo = RequestInfo
   { requestTo     :: NodeInfo
@@ -95,13 +104,13 @@ sendDhtPacket :: (DhtNodeMonad m, Binary payload) =>
   NodeInfo -> PacketKind -> payload -> m ()
 sendDhtPacket to kind payload = do
   keyPair <- gets DhtState.dhtKeyPair
-  nonce <- Networked.newNonce
+  nonce <- MonadRandomBytes.newNonce
   Networked.sendPacket to . Packet kind $
     DhtPacket.encode keyPair (NodeInfo.publicKey to) nonce
 
 sendRequest :: DhtNodeMonad m => RequestInfo -> m ()
 sendRequest (RequestInfo to key) = do
-  requestID <- RpcPacket.RequestId <$> Networked.random
+  requestID <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
   time <- askTime
   DhtState.pendingResponsesL . modify $ Stamped.add time (to, requestID)
   sendDhtPacket to PacketKind.NodesRequest $
@@ -132,8 +141,9 @@ randomRequests = do
     doList ::
       ( NodeList l
       , Timed m
-      , MonadWriter [RequestInfo] m
+      , MonadRandomBytes m
       , MonadState Timestamp m
+      , MonadWriter [RequestInfo] m
       ) => l -> m ()
     doList nodeList = do
       time <- askTime
@@ -142,12 +152,9 @@ randomRequests = do
         case NodeList.nodeListList nodeList of
           [] -> put time
           nodes -> do
-            node <- uniform nodes
+            node <- MonadRandomBytes.uniform nodes
             tell [RequestInfo node $ NodeList.baseKey nodeList]
             put time
-      where
-        -- TODO
-        uniform = return . head
 
 \end{code}
 

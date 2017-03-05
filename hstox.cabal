@@ -37,10 +37,11 @@ library
     , clock                     >= 0.3
     , containers
     , data-msgpack
+    , entropy
     , integer-gmp
     , iproute
     , lenses
-    , MonadRandom               >= 0.5
+    , MonadRandom
     , mtl
     -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
     -- it explicitly here.
@@ -77,6 +78,9 @@ library
       Network.Tox.DHT.Stamped
       Network.Tox.Encoding
       Network.Tox.Network.Networked
+      Network.Tox.Network.Event
+      Network.Tox.Network.SimulatedDht
+      Network.Tox.Network.MonadRandomBytes
       Network.Tox.NodeInfo
       Network.Tox.NodeInfo.HostAddress
       Network.Tox.NodeInfo.NodeInfo
