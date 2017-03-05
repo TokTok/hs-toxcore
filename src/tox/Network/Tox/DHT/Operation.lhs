@@ -11,16 +11,17 @@
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative                  ((<$>), (<*>))
-import           Control.Monad                        (guard, msum, unless,
-                                                       void, when)
+import           Control.Monad                        (guard, msum, replicateM,
+                                                       unless, void, when)
 import           Control.Monad.Identity               (Identity, runIdentity)
 import           Control.Monad.IO.Class               (MonadIO, liftIO)
 import           Control.Monad.Random                 (RandT, evalRandT)
 import           Control.Monad.Reader                 (MonadReader, ReaderT,
                                                        ask, runReaderT)
 import           Control.Monad.State                  (MonadState, State,
-                                                       StateT, execStateT, evalStateT, get,
-                                                       gets, modify, put)
+                                                       StateT, evalStateT,
+                                                       execStateT, get, gets,
+                                                       modify, put)
 import           Control.Monad.Trans                  (lift)
 import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
 import           Control.Monad.Writer                 (MonadWriter, Writer,
@@ -68,7 +69,7 @@ import           Network.Tox.Protocol.PacketKind      (PacketKind)
 import qualified Network.Tox.Protocol.PacketKind      as PacketKind
 import           Network.Tox.Time                     (TimeDiff, Timestamp)
 import qualified Network.Tox.Time                     as Time
-import           Network.Tox.Timed                    (Timed, askTime)
+import           Network.Tox.Timed                    (Timed)
 import qualified Network.Tox.Timed                    as Timed
 
 
@@ -77,19 +78,6 @@ import qualified Network.Tox.Timed                    as Timed
  - :: Implementation.
  -
  ------------------------------------------------------------------------------}
-
-\end{code}
-
-\subsection{Periodic sending of Nodes Requests}
-
-For each Nodes List in the DHT State, every 20 seconds a Nodes Request is sent
-to a random node on the list, searching for the base key of the list.
-
-Random nodes are chosen since being able to predict which node a node will
-send a request to next could make some attacks that disrupt the network
-easier, as it adds a possible attack vector.
-
-\begin{code}
 
 class
   ( Networked m
@@ -108,14 +96,14 @@ sendDhtPacket :: (DhtNodeMonad m, Binary payload) =>
   NodeInfo -> PacketKind -> payload -> m ()
 sendDhtPacket to kind payload = do
   keyPair <- gets DhtState.dhtKeyPair
-  nonce <- MonadRandomBytes.newNonce
+  nonce <- MonadRandomBytes.randomNonce
   Networked.sendPacket to . Packet kind $
     DhtPacket.encode keyPair (NodeInfo.publicKey to) nonce
 
 sendRequest :: DhtNodeMonad m => RequestInfo -> m ()
 sendRequest (RequestInfo to key) = do
   requestID <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
-  time <- askTime
+  time <- Timed.askTime
   DhtState.pendingResponsesL . modify $ Stamped.add time (to, requestID)
   sendDhtPacket to PacketKind.NodesRequest $
     RpcPacket (NodesRequest key) requestID
@@ -130,8 +118,27 @@ sendResponse to requestID nodes =
 modifyM :: MonadState s m => (s -> m s) -> m ()
 modifyM = (put =<<) . (get >>=)
 
+\end{code}
+
+\subsection{Periodic sending of Nodes Requests}
+
+For each Nodes List in the DHT State, every 20 seconds a Nodes Request is sent
+to a random node on the list, searching for the base key of the list.
+
+When a Nodes List first becomes populated with nodes, 5 such random Nodes
+Requests are sent in quick succession.
+
+Random nodes are chosen since being able to predict which node a node will
+send a request to next could make some attacks that disrupt the network
+easier, as it adds a possible attack vector.
+
+\begin{code}
+
 randomRequestPeriod :: TimeDiff
 randomRequestPeriod = Time.seconds 20
+
+maxBootstrapTimes :: Int
+maxBootstrapTimes = 5
 
 randomRequests :: DhtNodeMonad m => WriterT [RequestInfo] m ()
 randomRequests = do
@@ -146,19 +153,20 @@ randomRequests = do
       ( NodeList l
       , Timed m
       , MonadRandomBytes m
-      , MonadState Timestamp m
+      , MonadState DhtState.ListStamp m
       , MonadWriter [RequestInfo] m
       ) => l -> m ()
-    doList nodeList = do
-      time <- askTime
-      lastTime <- get
-      when (time Time.- lastTime >= randomRequestPeriod) $
-        case NodeList.nodeListList nodeList of
-          [] -> put time
-          nodes -> do
+    doList nodeList =
+      case NodeList.nodeListList nodeList of
+        [] -> return ()
+        nodes -> do
+          time <- Timed.askTime
+          DhtState.ListStamp lastTime bootstrapped <- get
+          when (time Time.- lastTime >= randomRequestPeriod
+              || bootstrapped < maxBootstrapTimes) $ do
             node <- MonadRandomBytes.uniform nodes
             tell [RequestInfo node $ NodeList.baseKey nodeList]
-            put time
+            put $ DhtState.ListStamp time (bootstrapped + 1)
 
 \end{code}
 
@@ -213,7 +221,7 @@ pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
         traverseMaybe f = (Map.mapMaybe id <$>) . traverse f
 
         pingNode :: ClientNode -> WriterT [RequestInfo] m (Maybe ClientNode)
-        pingNode clientNode = askTime >>= \time ->
+        pingNode clientNode = Timed.askTime >>= \time ->
           if time Time.- lastPing < pingPeriod
           then pure $ Just clientNode
           else (tell [requestInfo] *>) . pure $
@@ -256,7 +264,7 @@ requireResponseWithin = Time.seconds 60
 handleNodesResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesResponse -> m ()
 handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) =
-  askTime >>= \time -> do
+  Timed.askTime >>= \time -> do
     isPending <- DhtState.pendingResponsesL $ do
       modify $ Stamped.dropOlder (time Time.+ negate requireResponseWithin)
       elem (from, requestID) . Stamped.getList <$> get
@@ -367,14 +375,31 @@ handleDhtPKPacket _ = return ()
 \end{code}
 
 \section{DHT Initialisation}
-TODO: describe behaviour at start up, including bootstrapping,
-bootstrap_times, fake friends, and any other subtleties.
+A new DHT node is initialised with a DHT State with a fresh random key pair, an
+empty close list, and a search list containing 2 empty search entries searching
+for random public keys. 
 
 \begin{code}
 
--- | TODO
-initDHT :: (MonadState DhtState m, Networked m) => m ()
-initDHT = return ()
+randomSearches :: Int
+randomSearches = 2
+
+initDHT :: (MonadRandomBytes m, Timed m) => m DhtState
+initDHT = do
+  dhtState <- DhtState.empty <$> Timed.askTime <*> MonadRandomBytes.newKeyPair
+  time <- Timed.askTime
+  (`execStateT` dhtState) $ replicateM randomSearches $ do
+    publicKey <- MonadRandomBytes.randomKey
+    DhtState.dhtSearchListL . modify . Map.insert publicKey $
+      DhtState.emptySearchEntry time publicKey
+
+bootstrapNode :: DhtNodeMonad m => NodeInfo -> m ()
+bootstrapNode nodeInfo =
+  sendRequest . RequestInfo nodeInfo =<<
+    KeyPair.publicKey <$> gets DhtState.dhtKeyPair
+
+-- TODO
+--loadDHT :: ??
 
 \end{code}
 

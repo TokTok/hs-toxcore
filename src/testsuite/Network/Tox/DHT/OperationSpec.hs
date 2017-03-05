@@ -6,8 +6,8 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Control.Monad                 (mzero, when)
+import           Control.Monad.Writer          (execWriterT)
 import           Data.Proxy                    (Proxy (..))
-import           Control.Monad.Writer                 (execWriterT)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair

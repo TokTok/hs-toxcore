@@ -16,7 +16,8 @@ import           Control.Monad.Reader                 (ReaderT, ask, runReaderT)
 import           Control.Monad.State                  (MonadState, StateT)
 import           Control.Monad.Trans.Class            (lift)
 import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
-import           Control.Monad.Writer                 (WriterT, tell, runWriterT, execWriterT)
+import           Control.Monad.Writer                 (WriterT, execWriterT,
+                                                       runWriterT, tell)
 import           Data.Binary                          (Binary)
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map

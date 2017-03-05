@@ -1,4 +1,5 @@
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE Trustworthy         #-}
 
 module Network.Tox.Network.MonadRandomBytes where
 
@@ -12,22 +13,29 @@ import           Control.Monad.Trans.Class         (lift)
 import           Control.Monad.Writer              (WriterT)
 import qualified Crypto.Saltine.Class              as Sodium (decode)
 import qualified Crypto.Saltine.Internal.ByteSizes as Sodium (boxNonce)
+import           Data.Binary                       (get)
 import           Data.Binary.Get                   (Get, getWord64be, runGet)
 import           Data.Bits                         (FiniteBits, finiteBitSize)
 import qualified Data.Bits                         as Bits
 import           Data.ByteString                   (ByteString, pack, unpack)
 import           Data.ByteString.Lazy              (fromStrict)
 import           Data.Maybe                        (fromJust)
+import           Data.Proxy                        (Proxy (..))
 import           Data.Word                         (Word64, Word8)
 import           System.Entropy                    (getEntropy)
 import           System.Random                     (RandomGen)
 
 
-import           Network.Tox.Crypto.Key            (Key (..), Nonce, PublicKey)
-import qualified Network.Tox.Crypto.Nonce          as Nonce
+import           Network.Tox.Crypto.Key            (Key)
+import qualified Network.Tox.Crypto.Key            as Key
+import           Network.Tox.Crypto.KeyPair        (KeyPair)
+import qualified Network.Tox.Crypto.KeyPair        as KeyPair
 
 class Monad m => MonadRandomBytes m where
   randomBytes :: Int -> m ByteString
+
+  newKeyPair :: m KeyPair
+  newKeyPair = KeyPair.fromSecretKey <$> randomKey
 
 instance (Monad m, RandomGen s) => MonadRandomBytes (RandT s m) where
   randomBytes n = pack . take n <$> getRandoms
@@ -35,21 +43,29 @@ instance (Monad m, RandomGen s) => MonadRandomBytes (RandT s m) where
 -- | cryptographically secure random bytes from system source
 instance MonadRandomBytes IO where
   randomBytes = getEntropy
+  newKeyPair = KeyPair.newKeyPair
 
 instance MonadRandomBytes m => MonadRandomBytes (ReaderT r m) where
   randomBytes = lift . randomBytes
+  newKeyPair = lift newKeyPair
 instance (Monoid w, MonadRandomBytes m) => MonadRandomBytes (WriterT w m) where
   randomBytes = lift . randomBytes
+  newKeyPair = lift newKeyPair
 instance MonadRandomBytes m => MonadRandomBytes (StateT s m) where
   randomBytes = lift . randomBytes
+  newKeyPair = lift newKeyPair
 instance (Monoid w, MonadRandomBytes m) => MonadRandomBytes (RWST r w s m) where
   randomBytes = lift . randomBytes
-
-newNonce :: MonadRandomBytes m => m Nonce
-newNonce = Key . fromJust . Sodium.decode <$> randomBytes Sodium.boxNonce
+  newKeyPair = lift newKeyPair
 
 randomBinary :: MonadRandomBytes m => Get a -> Int -> m a
 randomBinary g len = runGet g . fromStrict <$> randomBytes len
+
+randomKey :: forall m a. (MonadRandomBytes m, Key.CryptoNumber a) => m (Key a)
+randomKey = randomBinary get $ Key.encodedByteSize (Proxy :: Proxy a)
+
+randomNonce :: MonadRandomBytes m => m Key.Nonce
+randomNonce = randomKey
 
 randomWord64 :: MonadRandomBytes m => m Word64
 randomWord64 = randomBinary getWord64be 8

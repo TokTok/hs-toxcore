@@ -65,12 +65,17 @@ Every DHT node contains the following state:
 
 type PendingResponses = Stamped (NodeInfo, RpcPacket.RequestID)
 
+data ListStamp = ListStamp { listTime :: Timestamp, listBootstrappedTimes :: Int }
+  deriving (Eq, Read, Show)
+newListStamp :: Timestamp -> ListStamp
+newListStamp t = ListStamp t 0
+
 data DhtState = DhtState
   { dhtKeyPair        :: KeyPair
   , dhtCloseList      :: KBuckets
   , dhtSearchList     :: Map PublicKey DhtSearchEntry
 
-  , dhtCloseListStamp :: Timestamp
+  , dhtCloseListStamp :: ListStamp
   , pendingResponses  :: PendingResponses
   }
   deriving (Eq, Read, Show)
@@ -79,7 +84,7 @@ dhtKeyPairL :: MonadState DhtState m => StateT KeyPair m a -> m a
 dhtKeyPairL = fromGetSet dhtKeyPair $ \x s -> s{ dhtKeyPair = x }
 
 dhtCloseListStampL ::
-  MonadState DhtState m => StateT Timestamp m a -> m a
+  MonadState DhtState m => StateT ListStamp m a -> m a
 dhtCloseListStampL = fromGetSet dhtCloseListStamp $
   \x s -> s{ dhtCloseListStamp = x }
 
@@ -103,7 +108,8 @@ Lists are initialised to be empty.
 
 empty :: Timestamp -> KeyPair -> DhtState
 empty time keyPair =
-  DhtState keyPair (KBuckets.empty $ KeyPair.publicKey keyPair) Map.empty time Stamped.empty
+  DhtState keyPair (KBuckets.empty $ KeyPair.publicKey keyPair)
+    Map.empty (newListStamp time) Stamped.empty
 
 \end{code}
 
@@ -127,7 +133,7 @@ Lists simultaneously.
 
 data DhtSearchEntry = DhtSearchEntry
   { searchNode       :: Maybe NodeInfo
-  , searchStamp      :: Timestamp
+  , searchStamp      :: ListStamp
   , searchClientList :: ClientList
   }
   deriving (Eq, Read, Show)
@@ -135,7 +141,7 @@ data DhtSearchEntry = DhtSearchEntry
 searchNodeL :: MonadState DhtSearchEntry m => StateT (Maybe NodeInfo) m a -> m a
 searchNodeL = fromGetSet searchNode $ \x s -> s{ searchNode = x }
 
-searchStampL :: MonadState DhtSearchEntry m => StateT Timestamp m a -> m a
+searchStampL :: MonadState DhtSearchEntry m => StateT ListStamp m a -> m a
 searchStampL = fromGetSet searchStamp $ \x s -> s{ searchStamp = x }
 
 searchClientListL :: MonadState DhtSearchEntry m => StateT ClientList m a -> m a
@@ -153,7 +159,8 @@ Client List is initialised to be empty.
 
 emptySearchEntry :: Timestamp -> PublicKey -> DhtSearchEntry
 emptySearchEntry time publicKey =
-  DhtSearchEntry Nothing time $ ClientList.empty publicKey searchEntryClientListSize
+  DhtSearchEntry Nothing (newListStamp time) $
+    ClientList.empty publicKey searchEntryClientListSize
 
 \end{code}
 
