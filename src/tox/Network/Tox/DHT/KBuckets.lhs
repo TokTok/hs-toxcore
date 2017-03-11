@@ -83,7 +83,7 @@ newtype KBucketIndex = KBucketIndex Word8
 \subsection{Bucket Index}
 
 The index of the bucket can be computed using the following function:
-\texttt{bucketIndex(baseKey, nodeKey) = 255 - log_2(distance(baseKey,
+\texttt{bucketIndex(baseKey, nodeKey) = 255 - log\_2(distance(baseKey,
 nodeKey))}.  This function is not defined when \texttt{baseKey == nodeKey},
 meaning k-buckets will never contain a Node Info about the base node.
 

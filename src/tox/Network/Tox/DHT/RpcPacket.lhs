@@ -43,7 +43,7 @@ DHT RPC Packets are encrypted and transported within DHT Packets.
   Length             & Type               & \href{#dht-packet}{Contents} \\
   \hline
   \texttt{[0,]}      & Bytes              & Payload \\
-  \texttt{8}         & \texttt{uint64_t}  & Request ID \\
+  \texttt{8}         & \texttt{uint64\_t}  & Request ID \\
 \end{tabular}
 
 The minimum payload size is 0, but in reality the smallest sensible payload

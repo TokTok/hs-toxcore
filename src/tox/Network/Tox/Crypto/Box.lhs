@@ -115,7 +115,7 @@ decode (PlainText bytes) =
 \end{code}
 
 The encryption function takes a Combined Key, a Nonce, and a Plain Text, and
-returns a Cipher Text.  It uses \texttt{crypto_box_afternm} to perform the
+returns a Cipher Text.  It uses \texttt{crypto\_box\_afternm} to perform the
 encryption.  The meaning of the sentence "encrypting with a secret key, a
 public key, and a nonce" is: compute a combined key from the secret key and the
 public key and then use the encryption function for the transformation.
@@ -136,7 +136,7 @@ encryptR =
 
 The decryption function takes a Combined Key, a Nonce, and a Cipher Text, and
 returns either a Plain Text or an error.  It uses
-\texttt{crypto_box_open_afternm} from the NaCl library.  Since the cipher is
+\texttt{crypto\_box\_open\_afternm} from the NaCl library.  Since the cipher is
 symmetric, the encryption function can also perform decryption, but will not
 perform message authentication, so the implementation must be careful to use
 the correct functions.
@@ -155,7 +155,7 @@ decryptR =
 
 \end{code}
 
-\texttt{crypto_box} uses xsalsa20 symmetric encryption and poly1305
+\texttt{crypto\_box} uses xsalsa20 symmetric encryption and poly1305
 authentication.
 
 The create and handle request functions are the encrypt and decrypt functions

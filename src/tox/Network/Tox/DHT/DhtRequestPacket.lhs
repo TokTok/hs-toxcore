@@ -8,7 +8,7 @@ addressee, and a DHT Packet which is to be received by the addressee.
 \begin{tabular}{l|l}
   Length             & Type        & \href{#protocol-packet}{Contents} \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0x20) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x20) \\
   \texttt{32}        & addressee DHT public key \\
   \texttt{?}         & DHT Packet \\
 \end{tabular}

@@ -46,7 +46,7 @@ A Crypto Number is a large fixed size unsigned (non-negative) integer.  Its bina
 encoding is as a Big Endian integer in exactly the encoded byte size.  Its
 human-readable encoding is as a base-16 number encoded as String.  The NaCl
 implementation \href{https://github.com/jedisct1/libsodium}{libsodium} supplies
-the functions \texttt{sodium_bin2hex} and \texttt{sodium_hex2bin} to aid in
+the functions \texttt{sodium\_bin2hex} and \texttt{sodium\_hex2bin} to aid in
 implementing the human-readable encoding.  The in-memory encoding of these
 crypto numbers in NaCl already satisfies the binary encoding, so for
 applications directly using those APIs, binary encoding and decoding is the

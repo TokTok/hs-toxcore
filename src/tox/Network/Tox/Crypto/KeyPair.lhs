@@ -1,13 +1,13 @@
 \subsection{Key Pair}
 
 A Key Pair is a pair of Secret Key and Public Key.  A new key pair is generated
-using the \texttt{crypto_box_keypair} function of the NaCl crypto library.  Two
+using the \texttt{crypto\_box\_keypair} function of the NaCl crypto library.  Two
 separate calls to the key pair generation function must return distinct key
 pairs.  See the \href{https://nacl.cr.yp.to/box.html}{NaCl documentation} for
 details.
 
 A Public Key can be computed from a Secret Key using the NaCl function
-\texttt{crypto_scalarmult_base}, which computes the scalar product of a
+\texttt{crypto\_scalarmult\_base}, which computes the scalar product of a
 standard group element and the Secret Key.  See the
 \href{https://nacl.cr.yp.to/scalarmult.html}{NaCl documentation} for details.
 

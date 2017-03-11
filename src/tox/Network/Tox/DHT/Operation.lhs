@@ -343,9 +343,9 @@ is online and ready to do the hole punching.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0xfe) \\
-  \texttt{1}         & \texttt{uint8_t} (0x00) \\
-  \texttt{8}         & \texttt{uint64_t} random number \\
+  \texttt{1}         & \texttt{uint8\_t} (0xfe) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x00) \\
+  \texttt{8}         & \texttt{uint64\_t} random number \\
 \end{tabular}
 
 \subsubsection{NAT ping response}
@@ -353,9 +353,9 @@ is online and ready to do the hole punching.
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
-  \texttt{1}         & \texttt{uint8_t} (0xfe) \\
-  \texttt{1}         & \texttt{uint8_t} (0x01) \\
-  \texttt{8}         & \texttt{uint64_t} random number (the same that was received in request) \\
+  \texttt{1}         & \texttt{uint8\_t} (0xfe) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x01) \\
+  \texttt{8}         & \texttt{uint64\_t} random number (the same that was received in request) \\
 \end{tabular}
 
 TODO: handling these packets.
