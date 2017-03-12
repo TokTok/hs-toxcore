@@ -5,7 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE Trustworthy                #-}
+{-# LANGUAGE Trustworthy           #-}
 module Network.Tox.DHT.DhtState where
 
 import           Control.Applicative           (Applicative, Const (..),
@@ -18,10 +18,10 @@ import           Data.List                     (nub, sortBy)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import qualified Data.Maybe                    as Maybe
-import           Data.Monoid                   (All (..), getAll, Monoid)
+import           Data.Monoid                   (All (..), Monoid, getAll)
+import           Data.Ord                      (comparing)
 import           Data.Traversable              (traverse)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
-import Data.Ord (comparing)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.Crypto.KeyPair    (KeyPair)

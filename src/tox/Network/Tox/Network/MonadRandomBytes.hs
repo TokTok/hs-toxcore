@@ -3,7 +3,7 @@
 
 module Network.Tox.Network.MonadRandomBytes where
 
-import           Control.Applicative           (Applicative, (<$>), (<*>))
+import           Control.Applicative               (Applicative, (<$>), (<*>))
 import           Control.Monad.Random              (RandT, getRandoms)
 import           Control.Monad.Reader              (ReaderT)
 import           Control.Monad.RWS                 (MonadReader, MonadState,
@@ -15,15 +15,18 @@ import           Control.Monad.Writer              (WriterT)
 import qualified Crypto.Saltine.Class              as Sodium (decode)
 import qualified Crypto.Saltine.Internal.ByteSizes as Sodium (boxNonce)
 import           Data.Binary                       (get)
-import           Data.Binary.Get                   (Get, getWord64be, getWord32be, getWord16be, getWord8, runGet)
+import           Data.Binary.Get                   (Get, getWord16be,
+                                                    getWord32be, getWord64be,
+                                                    getWord8, runGet)
 import qualified Data.Bits                         as Bits
 import           Data.ByteString                   (ByteString, pack, unpack)
 import           Data.ByteString.Lazy              (fromStrict)
+import           Data.Functor                      (Functor)
 import           Data.Maybe                        (fromJust)
+import           Data.Monoid                       (Monoid)
 import           Data.Proxy                        (Proxy (..))
-import           Data.Word                         (Word64, Word32, Word16, Word8)
-import Data.Monoid (Monoid)
-import Data.Functor (Functor)
+import           Data.Word                         (Word16, Word32, Word64,
+                                                    Word8)
 import           System.Entropy                    (getEntropy)
 import           System.Random                     (RandomGen)
 

@@ -6,8 +6,9 @@
 
 module Network.Tox.Timed where
 
-import Control.Applicative (Applicative)
+import           Control.Applicative                  (Applicative)
 import           Control.Monad                        (Monad)
+import           Control.Monad.IO.Class               (MonadIO)
 import           Control.Monad.Random                 (RandT, mapRandT)
 import           Control.Monad.Reader                 (ReaderT, ask, local,
                                                        mapReaderT, runReaderT)

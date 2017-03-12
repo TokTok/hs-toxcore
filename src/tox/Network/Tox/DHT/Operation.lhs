@@ -10,8 +10,8 @@
 {-# LANGUAGE TypeSynonymInstances  #-}
 module Network.Tox.DHT.Operation where
 
-import           Control.Applicative           (Applicative, pure, (*>), (<$>),
-                                                (<*>))
+import           Control.Applicative                  (Applicative, pure, (*>),
+                                                       (<$>), (<*>))
 import           Control.Monad                        (guard, msum, replicateM,
                                                        unless, void, when)
 import           Control.Monad.Identity               (Identity, runIdentity)

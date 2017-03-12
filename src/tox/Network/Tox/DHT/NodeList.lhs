@@ -4,7 +4,8 @@ the DHT State.
 \begin{code}
 module Network.Tox.DHT.NodeList where
 
-import           Control.Applicative           (Applicative, Const (..), getConst)
+import           Control.Applicative           (Applicative, Const (..),
+                                                getConst)
 import           Control.Monad                 (guard)
 import           Data.Maybe                    (listToMaybe)
 import           Data.Monoid                   (Dual (..), Endo (..), Monoid,
