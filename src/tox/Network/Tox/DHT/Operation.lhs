@@ -33,6 +33,7 @@ import           Data.Binary                          (Binary)
 import           Data.Foldable                        (for_)
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
+import Data.Maybe (isNothing)
 import           Data.Traversable                     (for, traverse)
 import           System.Random                        (StdGen, getStdGen,
                                                        mkStdGen)
@@ -254,8 +255,13 @@ sent with the Nodes Request. If not, the packet is ignored.
 Otherwise, firstly the node from which the response was sent is added to the
 state; see the k-Buckets and Client List specs for details on this operation.
 Secondly, for each node listed in the response and for each Nodes List in the
-DHT State to which the node is viable for entry, a Nodes Request is sent to the
-node with the requested public key being the base key of the Nodes List.
+DHT State which does not currently contain the node and to which the node is
+viable for entry, a Nodes Request is sent to the node with the requested public
+key being the base key of the Nodes List.
+
+NOTE: c-toxcore actually checks for the node already being in the node list
+only for search lists, not for the close list.
+I think this should be considered a bug.
 
 \begin{code}
 
@@ -273,14 +279,17 @@ handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) =
       modify $ DhtState.addNode time from
       for_ nodes $ \node ->
         (>>= mapM_ sendRequest) $ (<$> get) $ DhtState.foldMapNodeLists $
-          \nodeList -> guard (NodeList.viable node nodeList) >>
+          \nodeList ->
+            guard (isNothing (NodeList.lookupPublicKey
+                (NodeInfo.publicKey node) nodeList)
+              && NodeList.viable node nodeList) >>
             [ RequestInfo node $ NodeList.baseKey nodeList ]
 
 \end{code}
 
 An implementation may choose not to send every such Nodes Request.
 (c-toxcore only sends only so many per list (8 for the Close List, 4 for a
-Search Entry) per call to Do_DHT(), prioritising the closest to the base key).
+Search Entry) per call to Do\_DHT(), prioritising the closest to the base key).
 
 \subsection{Handling Nodes Request packets}
 On receiving a Nodes Request packet, the 4 nodes in the DHT State which are
@@ -288,6 +297,8 @@ closest to the public key in the packet are found, and sent back to the node
 which sent the request in a Nodes Response packet. If there are fewer than 4
 nodes in the state, just those nodes are sent. If there are no nodes in the
 state, no response is sent.
+
+TODO: add\_to\_ping() and ping.c
 
 \begin{code}
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-my $INPUT  = "src/Network/Tox.lhs";
+my $INPUT  = "src/tox/Network/Tox.lhs";
 my $OUTPUT = "tox-spec.md";
 
 my $FORMAT = join "", (

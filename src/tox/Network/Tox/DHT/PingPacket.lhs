@@ -8,6 +8,9 @@ it into the NAT Ping section as appropriate. (NAT Pings are essentially as
 described here, except that the RPC Packet is encapsulated within a DHT
 Request packet rather than a DHT Packet.)
 
+TODO: well actually something similar at least is implemented in ping.c; is it
+exactly this?
+
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
