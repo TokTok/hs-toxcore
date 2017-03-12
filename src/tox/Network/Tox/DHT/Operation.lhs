@@ -33,7 +33,7 @@ import           Data.Binary                          (Binary)
 import           Data.Foldable                        (for_)
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
-import Data.Maybe (isNothing)
+import           Data.Maybe                           (isNothing)
 import           Data.Traversable                     (for, traverse)
 import           System.Random                        (StdGen, getStdGen,
                                                        mkStdGen)
