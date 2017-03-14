@@ -41,6 +41,9 @@ import           Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary,
                                                        shrink)
 
 import           Network.Tox.Crypto.Key               (Nonce, PublicKey)
+import           Network.Tox.Crypto.Keyed             (Keyed)
+import           Network.Tox.Crypto.KeyedT            (KeyedT)
+import qualified Network.Tox.Crypto.KeyedT            as KeyedT
 import qualified Network.Tox.Crypto.KeyPair           as KeyPair
 import           Network.Tox.DHT.ClientList           (ClientList)
 import qualified Network.Tox.DHT.ClientList           as ClientList
@@ -88,6 +91,7 @@ class
   , Timed m
   , MonadRandomBytes m
   , MonadState DhtState m
+  , Keyed m
   ) => DhtNodeMonad m where {}
 
 data RequestInfo = RequestInfo
@@ -101,8 +105,8 @@ sendDhtPacket :: (DhtNodeMonad m, Binary payload) =>
 sendDhtPacket to kind payload = do
   keyPair <- gets DhtState.dhtKeyPair
   nonce <- MonadRandomBytes.randomNonce
-  Networked.sendPacket to . Packet kind $
-    DhtPacket.encode keyPair (NodeInfo.publicKey to) nonce
+  Networked.sendPacket to . Packet kind =<<
+    DhtPacket.encodeKeyed keyPair (NodeInfo.publicKey to) nonce payload
 
 sendRequest :: DhtNodeMonad m => RequestInfo -> m ()
 sendRequest (RequestInfo to key) = do
@@ -335,8 +339,8 @@ handleDhtRequestPacket _from packet@(DhtRequestPacket addresseePublicKey dhtPack
   keyPair <- gets DhtState.dhtKeyPair
   if addresseePublicKey == KeyPair.publicKey keyPair
   then void . runMaybeT $ msum
-    [ MaybeT (DhtPacket.decode keyPair DhtPacket) >>= handleNatPingPacket
-    , MaybeT (DhtPacket.decode keyPair DhtPacket) >>= handleDhtPKPacket
+    [ (MaybeT $ DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleNatPingPacket
+    , (MaybeT $ DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleDhtPKPacket
     ]
   else void . runMaybeT $ do
     node <- MaybeT $
@@ -456,7 +460,7 @@ TODO: consider giving min and max values for the constants.
  -
  ------------------------------------------------------------------------------}
 
-type TestDhtNodeMonad = TimedT (RandT StdGen (StateT DhtState (Networked.NetworkLogged Identity)))
+type TestDhtNodeMonad = KeyedT (TimedT (RandT StdGen (StateT DhtState (Networked.NetworkLogged Identity))))
 instance DhtNodeMonad TestDhtNodeMonad
 
 evalTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> a
@@ -466,6 +470,7 @@ evalTestDhtNode seed time s =
     . (`evalStateT` s)
     . (`evalRandT` unwrapArbStdGen seed)
     . (`TimedT.runTimedT` time)
+    . (`KeyedT.evalKeyedT` Map.empty)
 
 -- | wrap StdGen so the Arbitrary instance isn't an orphan
 newtype ArbStdGen = ArbStdGen { unwrapArbStdGen :: StdGen }

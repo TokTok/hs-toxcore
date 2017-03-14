@@ -41,6 +41,8 @@ import           Network.Tox.Crypto.Box         (CipherText, PlainText (..),
 import qualified Network.Tox.Crypto.Box         as Box
 import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
 import           Network.Tox.Crypto.Key         (Nonce, PublicKey)
+import           Network.Tox.Crypto.Keyed       (Keyed)
+import qualified Network.Tox.Crypto.Keyed       as Keyed
 import           Network.Tox.Crypto.KeyPair     (KeyPair (..))
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
@@ -74,14 +76,21 @@ instance Binary DhtPacket where
 
 
 encrypt :: KeyPair -> PublicKey -> Nonce -> PlainText -> DhtPacket
-encrypt (KeyPair senderSecretKey senderPublicKey') receiverPublicKey nonce plainText =
-  DhtPacket senderPublicKey' nonce $ Box.encrypt combinedKey nonce plainText
-  where combinedKey = CombinedKey.precompute senderSecretKey receiverPublicKey
+encrypt = (((Keyed.runNullKeyed .) .) .) . encryptKeyed
+
+encryptKeyed :: Keyed m => KeyPair -> PublicKey -> Nonce -> PlainText -> m DhtPacket
+encryptKeyed (KeyPair senderSecretKey senderPublicKey') receiverPublicKey nonce plainText =
+  (\combinedKey -> DhtPacket senderPublicKey' nonce $
+    Box.encrypt combinedKey nonce plainText) <$>
+  Keyed.getCombinedKey senderSecretKey receiverPublicKey
 
 
 encode :: Binary payload => KeyPair -> PublicKey -> Nonce -> payload -> DhtPacket
-encode keyPair receiverPublicKey nonce =
-  encrypt keyPair receiverPublicKey nonce
+encode = (((Keyed.runNullKeyed .) .) .) . encodeKeyed
+
+encodeKeyed :: (Binary payload, Keyed m) => KeyPair -> PublicKey -> Nonce -> payload -> m DhtPacket
+encodeKeyed keyPair receiverPublicKey nonce =
+  encryptKeyed keyPair receiverPublicKey nonce
   . PlainText
   . LazyByteString.toStrict
   . runPut
@@ -89,13 +98,19 @@ encode keyPair receiverPublicKey nonce =
 
 
 decrypt :: KeyPair -> DhtPacket -> Maybe PlainText
-decrypt (KeyPair receiverSecretKey _) DhtPacket { senderPublicKey, encryptionNonce, encryptedPayload } =
-  Box.decrypt combinedKey encryptionNonce encryptedPayload
-  where combinedKey = CombinedKey.precompute receiverSecretKey senderPublicKey
+decrypt = (Keyed.runNullKeyed .) . decryptKeyed
+
+decryptKeyed :: Keyed m => KeyPair -> DhtPacket -> m (Maybe PlainText)
+decryptKeyed (KeyPair receiverSecretKey _) DhtPacket { senderPublicKey, encryptionNonce, encryptedPayload } =
+  (\combinedKey -> Box.decrypt combinedKey encryptionNonce encryptedPayload) <$>
+  Keyed.getCombinedKey receiverSecretKey senderPublicKey
 
 
 decode :: Binary payload => KeyPair -> DhtPacket -> Maybe payload
-decode keyPair packet = decrypt keyPair packet >>= Box.decode
+decode = (Keyed.runNullKeyed .) . decodeKeyed
+
+decodeKeyed :: (Binary payload, Keyed m) => KeyPair -> DhtPacket -> m (Maybe payload)
+decodeKeyed keyPair packet = (>>= Box.decode) <$> decryptKeyed keyPair packet
 
 
 {-------------------------------------------------------------------------------

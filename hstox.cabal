@@ -60,6 +60,8 @@ library
       Network.Tox.Crypto.Box
       Network.Tox.Crypto.CombinedKey
       Network.Tox.Crypto.Key
+      Network.Tox.Crypto.Keyed
+      Network.Tox.Crypto.KeyedT
       Network.Tox.Crypto.KeyPair
       Network.Tox.Crypto.Nonce
       Network.Tox.DHT
