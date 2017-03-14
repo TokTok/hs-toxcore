@@ -94,6 +94,7 @@ library
       Network.Tox.Testing
       Network.Tox.Time
       Network.Tox.Timed
+      Network.Tox.TimedT
   if !flag(library-only)
     hs-source-dirs:
         src/testsuite

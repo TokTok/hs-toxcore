@@ -30,7 +30,7 @@ import           Network.Tox.DHT.DhtState             (DhtState)
 import           Network.Tox.Network.MonadRandomBytes (MonadRandomBytes)
 import           Network.Tox.NodeInfo.NodeInfo        (NodeInfo)
 import           Network.Tox.Protocol.Packet          (Packet (..))
-import           Network.Tox.Timed                    (Timed, TimedT)
+import           Network.Tox.Timed                    (Timed)
 
 class Monad m => Networked m where
   sendPacket :: (Binary payload, Show payload) => NodeInfo -> Packet payload -> m ()
@@ -65,8 +65,6 @@ instance (Monoid w, Networked m) => Networked (WriterT w m) where
 instance Networked m => Networked (RandT s m) where
   sendPacket = (lift .) . sendPacket
 instance Networked m => Networked (StateT s m) where
-  sendPacket = (lift .) . sendPacket
-instance Networked m => Networked (TimedT m) where
   sendPacket = (lift .) . sendPacket
 
 \end{code}

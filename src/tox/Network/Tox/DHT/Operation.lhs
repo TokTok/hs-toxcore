@@ -73,6 +73,8 @@ import           Network.Tox.Time                     (TimeDiff, Timestamp)
 import qualified Network.Tox.Time                     as Time
 import           Network.Tox.Timed                    (Timed)
 import qualified Network.Tox.Timed                    as Timed
+import           Network.Tox.TimedT                   (TimedT)
+import qualified Network.Tox.TimedT                   as TimedT
 
 
 {-------------------------------------------------------------------------------
@@ -454,7 +456,7 @@ TODO: consider giving min and max values for the constants.
  -
  ------------------------------------------------------------------------------}
 
-type TestDhtNodeMonad = Timed.TimedT (RandT StdGen (StateT DhtState (Networked.NetworkLogged Identity)))
+type TestDhtNodeMonad = TimedT (RandT StdGen (StateT DhtState (Networked.NetworkLogged Identity)))
 instance DhtNodeMonad TestDhtNodeMonad
 
 evalTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> a
@@ -463,7 +465,7 @@ evalTestDhtNode seed time s =
     . Networked.evalNetworkLogged
     . (`evalStateT` s)
     . (`evalRandT` unwrapArbStdGen seed)
-    . (`Timed.runTimedT` time)
+    . (`TimedT.runTimedT` time)
 
 -- | wrap StdGen so the Arbitrary instance isn't an orphan
 newtype ArbStdGen = ArbStdGen { unwrapArbStdGen :: StdGen }
