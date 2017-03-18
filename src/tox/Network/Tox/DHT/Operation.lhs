@@ -59,6 +59,7 @@ import           Network.Tox.DHT.NodeList             (NodeList)
 import qualified Network.Tox.DHT.NodeList             as NodeList
 import           Network.Tox.DHT.NodesRequest         (NodesRequest (..))
 import           Network.Tox.DHT.NodesResponse        (NodesResponse (..))
+import           Network.Tox.DHT.PingPacket           (PingPacket (..))
 import           Network.Tox.DHT.RpcPacket            (RpcPacket (..))
 import qualified Network.Tox.DHT.RpcPacket            as RpcPacket
 import           Network.Tox.DHT.Stamped              (Stamped)
@@ -108,19 +109,42 @@ sendDhtPacket to kind payload = do
   Networked.sendPacket to . Packet kind =<<
     DhtPacket.encodeKeyed keyPair (NodeInfo.publicKey to) nonce payload
 
-sendRequest :: DhtNodeMonad m => RequestInfo -> m ()
-sendRequest (RequestInfo to key) = do
+sendRpcRequest :: (DhtNodeMonad m, Binary payload) =>
+  NodeInfo -> PacketKind -> payload -> m ()
+sendRpcRequest to packetKind payload = do
   requestID <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
   time <- Timed.askTime
   DhtState.pendingResponsesL . modify $ Stamped.add time (to, requestID)
-  sendDhtPacket to PacketKind.NodesRequest $
-    RpcPacket (NodesRequest key) requestID
+  sendDhtPacket to packetKind $
+    RpcPacket payload requestID
 
-sendResponse ::
+checkResponsePending :: DhtNodeMonad m =>
+  TimeDiff -> NodeInfo -> RpcPacket.RequestId -> m Bool
+checkResponsePending timeLimit node requestID = do
+  cutoff <- (Time.+ negate timeLimit) <$> Timed.askTime
+  DhtState.pendingResponsesL $ do
+    modify $ Stamped.dropOlder cutoff
+    elem (node, requestID) . Stamped.getList <$> get
+
+sendNodesRequest :: DhtNodeMonad m => RequestInfo -> m ()
+sendNodesRequest (RequestInfo to key) =
+  sendRpcRequest to PacketKind.NodesRequest $ NodesRequest key
+
+sendNodesResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket.RequestId -> [NodeInfo] -> m ()
-sendResponse to requestID nodes =
+sendNodesResponse to requestID nodes =
   sendDhtPacket to PacketKind.NodesResponse $
     RpcPacket (NodesResponse nodes) requestID
+
+sendPingRequest :: DhtNodeMonad m => NodeInfo -> m ()
+sendPingRequest to =
+  sendRpcRequest to PacketKind.PingRequest PingRequest
+
+sendPingResponse ::
+  DhtNodeMonad m => NodeInfo -> RpcPacket.RequestId -> m ()
+sendPingResponse to requestID =
+  sendDhtPacket to PacketKind.PingResponse $
+    RpcPacket PingResponse requestID
 
 modifyM :: MonadState s m => (s -> m s) -> m ()
 modifyM = (put =<<) . (get >>=)
@@ -246,7 +270,7 @@ checkNodes = modifyM $ DhtState.traverseClientLists checkNodes'
 
 doDHT :: DhtNodeMonad m => m ()
 doDHT =
-  execWriterT (randomRequests >> checkNodes) >>= mapM_ sendRequest
+  execWriterT (randomRequests >> checkNodes) >>= mapM_ sendNodesRequest
 
 
 \end{code}
@@ -257,7 +281,7 @@ Nodes Request was sent within the last 60 seconds to the node from which the
 response was received, and that the Request ID on the received RpcPacket is that
 sent with the Nodes Request. If not, the packet is ignored.
 
-Otherwise, firstly the node from which the response was sent is added to the
+If so, firstly the node from which the response was sent is added to the
 state; see the k-Buckets and Client List specs for details on this operation.
 Secondly, for each node listed in the response and for each Nodes List in the
 DHT State which does not currently contain the node and to which the node is
@@ -269,20 +293,18 @@ only for search lists, not for the close list. See #511.
 
 \begin{code}
 
-requireResponseWithin :: TimeDiff
-requireResponseWithin = Time.seconds 60
+requireNodesResponseWithin :: TimeDiff
+requireNodesResponseWithin = Time.seconds 60
 
 handleNodesResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesResponse -> m ()
-handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) =
-  Timed.askTime >>= \time -> do
-    isPending <- DhtState.pendingResponsesL $ do
-      modify $ Stamped.dropOlder (time Time.+ negate requireResponseWithin)
-      elem (from, requestID) . Stamped.getList <$> get
+handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) = do
+    isPending <- checkResponsePending requireNodesResponseWithin from requestID
     when isPending $ do
+      time <- Timed.askTime
       modify $ DhtState.addNode time from
       for_ nodes $ \node ->
-        (>>= mapM_ sendRequest) $ (<$> get) $ DhtState.foldMapNodeLists $
+        (>>= mapM_ sendNodesRequest) $ (<$> get) $ DhtState.foldMapNodeLists $
           \nodeList ->
             guard (isNothing (NodeList.lookupPublicKey
                 (NodeInfo.publicKey node) nodeList)
@@ -302,7 +324,7 @@ which sent the request in a Nodes Response packet. If there are fewer than 4
 nodes in the state, just those nodes are sent. If there are no nodes in the
 state, no response is sent.
 
-TODO: add\_to\_ping() and ping.c
+A Ping Request may also be sent; see below.
 
 \begin{code}
 
@@ -313,7 +335,70 @@ handleNodesRequest ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesRequest -> m ()
 handleNodesRequest from (RpcPacket (NodesRequest key) requestID) = do
   nodes <- DhtState.takeClosestNodesTo responseMaxNodes key <$> get
-  unless (null nodes) $ sendResponse from requestID nodes
+  unless (null nodes) $ sendNodesResponse from requestID nodes
+  sendPingRequestIfAppropriate from
+
+\end{code}
+
+\subsection{Handling Ping Request packets}
+When a valid Ping Request packet is received, a Ping Response is sent in reply.
+
+A Ping Request may also be sent; see below.
+
+\begin{code}
+
+handlePingRequest ::
+  DhtNodeMonad m => NodeInfo -> RpcPacket PingPacket -> m ()
+handlePingRequest from (RpcPacket PingRequest requestID) = do
+  sendPingResponse from requestID
+  sendPingRequestIfAppropriate from
+handlePingRequest _ _ = return ()
+
+\end{code}
+
+\subsection{Handling Ping Response packets}
+When a valid Ping Response packet is received, it is first checked that a
+Ping Request was sent within the last 5 seconds to the node from which the
+response was received, and that the Request ID on the received RpcPacket is that
+sent with the Ping Request. If not, the packet is ignored.
+
+If so, the node from which the response was sent is added to the state; see the
+k-Buckets and Client List specs for details on this operation.
+
+\begin{code}
+
+requirePingResponseWithin :: TimeDiff
+requirePingResponseWithin = Time.seconds 5
+
+handlePingResponse ::
+  DhtNodeMonad m => NodeInfo -> RpcPacket PingPacket -> m ()
+handlePingResponse from (RpcPacket PingResponse requestID) = do
+    isPending <- checkResponsePending requirePingResponseWithin from requestID
+    when isPending $ do
+      time <- Timed.askTime
+      modify $ DhtState.addNode time from
+handlePingResponse _ _ = return ()
+
+\end{code}
+
+\subsection{Sending Ping Requests}
+When a Nodes Request or a Ping Request is received, in addition to the handling
+described above, a Ping Request may be sent.
+Namely, if the node which sent the packet is viable for entry in the close list
+and not already in it, a Ping Request is sent to it.
+An implementation may (TODO: should?) choose not to send every such Ping
+Request.
+(c-toxcore sends at most 32 every 2 seconds, preferring closer nodes.)
+
+\begin{code}
+
+sendPingRequestIfAppropriate :: DhtNodeMonad m => NodeInfo -> m ()
+sendPingRequestIfAppropriate from = do
+  closeList <- gets DhtState.dhtCloseList
+  when
+    (isNothing (NodeList.lookupPublicKey (NodeInfo.publicKey from) closeList)
+      && NodeList.viable from closeList) $
+    sendPingRequest from
 
 \end{code}
 
@@ -411,7 +496,7 @@ initDHT = do
 
 bootstrapNode :: DhtNodeMonad m => NodeInfo -> m ()
 bootstrapNode nodeInfo =
-  sendRequest . RequestInfo nodeInfo =<<
+  sendNodesRequest . RequestInfo nodeInfo =<<
     KeyPair.publicKey <$> gets DhtState.dhtKeyPair
 
 -- TODO
