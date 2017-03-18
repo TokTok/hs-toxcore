@@ -183,24 +183,24 @@ sent a Nodes Request every 60 seconds, searching for the base key of the list.
 Nodes from which we consistently fail to receive Nodes Responses should be
 removed from the DHT State.
 
-c-toxcore's implementation of pinging and timeouts:
-A Last Pinged time is maintained for each node in each list. When a node is
-added to a list, if doing so evicts a node from the list then the Last Pinged
+c-toxcore's implementation of checking and timeouts:
+A Last Checked time is maintained for each node in each list. When a node is
+added to a list, if doing so evicts a node from the list then the Last Checked
 time is set to that of the evicted node, and otherwise it is set to 0.  Nodes
 from which we have not received a Nodes Response for 122 seconds are considered
 Bad; they remain in the DHT State, but are preferentially overwritten when
 adding to the DHT State, and are ignored for all operations except the
-once-per-60s pinging described above. If we have not received a Nodes Response
-for 182 seconds, the node is not even pinged. So one ping is sent after the node
+once-per-60s checking described above. If we have not received a Nodes Response
+for 182 seconds, the node is not even checked. So one check is sent after the node
 becomes Bad. In the special case that every node in the Close List is Bad, they
-are all pinged once more.)
+are all checked once more.)
 
-hs-toxcore implementation of pinging and timeouts:
-For each node in the Dht State, a Last Pinged timestamp and a Pings Counter are
+hs-toxcore implementation of checking and timeouts:
+For each node in the Dht State, a Last Checked timestamp and a Checks Counter are
 maintained.  Nodes are added with these set to the current time and 0,
 respectively.  This includes updating an already present node.  The DHT State
-nodes are passed through periodically, and for each which is due a ping, we:
-ping it, update the timestamp, increment the counter, and, if the counter is
+nodes are passed through periodically, and for each which is due a check, we:
+check it, update the timestamp, increment the counter, and, if the counter is
 then 2 (configurable constant), remove the node from the list. This is pretty
 close to the behaviour of c-toxcore, but much simpler.
 TODO: currently it doesn't do anything to try to recover if the Close List
@@ -209,44 +209,44 @@ nodes, and repopulate the Close List with that if the Close List becomes empty.
 
 \begin{code}
 
-pingPeriod :: TimeDiff
-pingPeriod = Time.seconds 60
+checkPeriod :: TimeDiff
+checkPeriod = Time.seconds 60
 
-maxPings :: Int
-maxPings = 2
+maxChecks :: Int
+maxChecks = 2
 
-pingNodes :: forall m. DhtNodeMonad m => WriterT [RequestInfo] m ()
-pingNodes = modifyM $ DhtState.traverseClientLists pingNodes'
+checkNodes :: forall m. DhtNodeMonad m => WriterT [RequestInfo] m ()
+checkNodes = modifyM $ DhtState.traverseClientLists checkNodes'
   where
-    pingNodes' :: ClientList -> WriterT [RequestInfo] m ClientList
-    pingNodes' clientList =
+    checkNodes' :: ClientList -> WriterT [RequestInfo] m ClientList
+    checkNodes' clientList =
       (\x -> clientList{ ClientList.nodes = x }) <$>
-        traverseMaybe pingNode (ClientList.nodes clientList)
+        traverseMaybe checkNode (ClientList.nodes clientList)
       where
         traverseMaybe :: Applicative f =>
           (a -> f (Maybe b)) -> Map k a -> f (Map k b)
         traverseMaybe f = (Map.mapMaybe id <$>) . traverse f
 
-        pingNode :: ClientNode -> WriterT [RequestInfo] m (Maybe ClientNode)
-        pingNode clientNode = Timed.askTime >>= \time ->
-          if time Time.- lastPing < pingPeriod
+        checkNode :: ClientNode -> WriterT [RequestInfo] m (Maybe ClientNode)
+        checkNode clientNode = Timed.askTime >>= \time ->
+          if time Time.- lastCheck < checkPeriod
           then pure $ Just clientNode
           else (tell [requestInfo] *>) . pure $
-            if pingCount + 1 < maxPings
+            if checkCount + 1 < maxChecks
             then Just $ clientNode
-              { ClientNode.lastPing = time
-              , ClientNode.pingCount = pingCount + 1
+              { ClientNode.lastCheck = time
+              , ClientNode.checkCount = checkCount + 1
               }
             else Nothing
           where
             nodeInfo = ClientNode.nodeInfo clientNode
-            lastPing = ClientNode.lastPing clientNode
-            pingCount = ClientNode.pingCount clientNode
+            lastCheck = ClientNode.lastCheck clientNode
+            checkCount = ClientNode.checkCount clientNode
             requestInfo = RequestInfo nodeInfo $ NodeList.baseKey clientList
 
 doDHT :: DhtNodeMonad m => m ()
 doDHT =
-  execWriterT (randomRequests >> pingNodes) >>= mapM_ sendRequest
+  execWriterT (randomRequests >> checkNodes) >>= mapM_ sendRequest
 
 
 \end{code}

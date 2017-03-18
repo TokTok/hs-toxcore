@@ -18,8 +18,8 @@ import           Network.Tox.Time              (Timestamp)
 
 data ClientNode = ClientNode
   { nodeInfo  :: NodeInfo
-  , lastPing  :: Timestamp
-  , pingCount :: Int
+  , lastCheck  :: Timestamp
+  , checkCount :: Int
   }
   deriving (Eq, Read, Show)
 

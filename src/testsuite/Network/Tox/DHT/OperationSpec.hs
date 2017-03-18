@@ -28,7 +28,7 @@ spec = do
       let
         dhtState = DhtState.empty time keyPair
         requests = Operation.evalTestDhtNode seed time' dhtState . execWriterT $
-          Operation.randomRequests >> Operation.pingNodes
+          Operation.randomRequests >> Operation.checkNodes
       in
       requests `shouldBe` []
 
@@ -66,17 +66,17 @@ spec = do
         when nodeAddedToSearch $
           randomRequests `shouldSatisfy` not . all (not . requestIsForSearch)
 
-  describe "pingNodes" $
-    it "generates a Nodes Request to a newly added node after pingPeriod" $
+  describe "checkNodes" $
+    it "generates a Nodes Request to a newly added node after checkPeriod" $
       property $ \time dhtState nodeInfo seed ->
         let
           viable   = DhtState.viable nodeInfo dhtState
           afterAdd = DhtState.addNode time nodeInfo dhtState
-          time'    = time Time.+ Operation.pingPeriod
-          pings    = Operation.evalTestDhtNode seed time' afterAdd
-            . execWriterT $ Operation.pingNodes
+          time'    = time Time.+ Operation.checkPeriod
+          checks    = Operation.evalTestDhtNode seed time' afterAdd
+            . execWriterT $ Operation.checkNodes
         in
-        when viable $ map Operation.requestTo pings `shouldSatisfy` (nodeInfo `elem`)
+        when viable $ map Operation.requestTo checks `shouldSatisfy` (nodeInfo `elem`)
 
   it "removes nodes from which we consistently fail to receive Node Responses"
     pending -- need something more precise to test
