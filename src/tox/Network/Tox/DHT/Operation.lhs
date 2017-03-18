@@ -318,11 +318,11 @@ An implementation may choose not to send every such Nodes Request.
 Search Entry) per call to Do\_DHT(), prioritising the closest to the base key).
 
 \subsection{Handling Nodes Request packets}
-On receiving a Nodes Request packet, the 4 nodes in the DHT State which are
-closest to the public key in the packet are found, and sent back to the node
-which sent the request in a Nodes Response packet. If there are fewer than 4
-nodes in the state, just those nodes are sent. If there are no nodes in the
-state, no response is sent.
+On receiving a Nodes Request packet from another node, the 4 nodes in the DHT
+State which are closest to the public key in the packet are found, and sent
+in a Nodes Response packet to the node which sent the request. If there are
+fewer than 4 nodes in the state, just those nodes are sent. If there are no
+nodes in the state, no response is sent.
 
 A Ping Request may also be sent; see below.
 
@@ -334,9 +334,11 @@ responseMaxNodes = 4
 handleNodesRequest ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesRequest -> m ()
 handleNodesRequest from (RpcPacket (NodesRequest key) requestID) = do
-  nodes <- DhtState.takeClosestNodesTo responseMaxNodes key <$> get
-  unless (null nodes) $ sendNodesResponse from requestID nodes
-  sendPingRequestIfAppropriate from
+  ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
+  when (ourPublicKey /= NodeInfo.publicKey from) $ do
+    nodes <- DhtState.takeClosestNodesTo responseMaxNodes key <$> get
+    unless (null nodes) $ sendNodesResponse from requestID nodes
+    sendPingRequestIfAppropriate from
 
 \end{code}
 
@@ -357,10 +359,10 @@ handlePingRequest _ _ = return ()
 \end{code}
 
 \subsection{Handling Ping Response packets}
-When a valid Ping Response packet is received, it is first checked that a
-Ping Request was sent within the last 5 seconds to the node from which the
-response was received, and that the Request ID on the received RpcPacket is that
-sent with the Ping Request. If not, the packet is ignored.
+When a valid Ping Response packet is received from another node, it is first
+checked that a Ping Request was sent within the last 5 seconds to the node from
+which the response was received, and that the Request ID on the received
+RpcPacket is that sent with the Ping Request. If not, the packet is ignored.
 
 If so, the node from which the response was sent is added to the state; see the
 k-Buckets and Client List specs for details on this operation.
@@ -373,10 +375,11 @@ requirePingResponseWithin = Time.seconds 5
 handlePingResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket PingPacket -> m ()
 handlePingResponse from (RpcPacket PingResponse requestID) = do
-    isPending <- checkResponsePending requirePingResponseWithin from requestID
-    when isPending $ do
-      time <- Timed.askTime
-      modify $ DhtState.addNode time from
+  isPending <- checkResponsePending requirePingResponseWithin from requestID
+  ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
+  when (isPending && ourPublicKey /= NodeInfo.publicKey from) $ do
+    time <- Timed.askTime
+    modify $ DhtState.addNode time from
 handlePingResponse _ _ = return ()
 
 \end{code}
