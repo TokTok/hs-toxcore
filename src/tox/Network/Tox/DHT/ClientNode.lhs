@@ -17,7 +17,7 @@ import           Network.Tox.Time              (Timestamp)
  ------------------------------------------------------------------------------}
 
 data ClientNode = ClientNode
-  { nodeInfo  :: NodeInfo
+  { nodeInfo   :: NodeInfo
   , lastCheck  :: Timestamp
   , checkCount :: Int
   }

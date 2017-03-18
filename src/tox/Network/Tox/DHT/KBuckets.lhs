@@ -16,11 +16,10 @@ import           Data.Foldable                 (maximumBy, toList)
 import           Data.List                     (sortBy)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
-import           Data.Maybe                    (maybeToList)
+import           Data.Maybe                    (isJust, maybeToList)
 import           Data.Ord                      (comparing)
 import           Data.Traversable              (Traversable, mapAccumR,
                                                 traverse)
-import           Data.Maybe                    (isJust)
 import           Data.Word                     (Word8)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
 import           Test.QuickCheck.Gen           (Gen)
