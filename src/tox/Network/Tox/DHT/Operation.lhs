@@ -116,7 +116,6 @@ sendRequest (RequestInfo to key) = do
   sendDhtPacket to PacketKind.NodesRequest $
     RpcPacket (NodesRequest key) requestID
 
-sendResponse :: Networked m => NodeInfo -> [NodeInfo] -> m ()
 sendResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket.RequestId -> [NodeInfo] -> m ()
 sendResponse to requestID nodes =
@@ -266,8 +265,7 @@ viable for entry, a Nodes Request is sent to the node with the requested public
 key being the base key of the Nodes List.
 
 NOTE: c-toxcore actually checks for the node already being in the node list
-only for search lists, not for the close list.
-I think this should be considered a bug.
+only for search lists, not for the close list. See #511.
 
 \begin{code}
 
@@ -343,8 +341,8 @@ handleDhtRequestPacket _from packet@(DhtRequestPacket addresseePublicKey dhtPack
     , (MaybeT $ DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleDhtPKPacket
     ]
   else void . runMaybeT $ do
-    node <- MaybeT $
-      NodeList.lookupPublicKey addresseePublicKey =<< gets DhtState.dhtCloseList
+    node :: NodeInfo <- MaybeT $
+      NodeList.lookupPublicKey addresseePublicKey <$> gets DhtState.dhtCloseList
     lift . Networked.sendPacket node . Packet PacketKind.Crypto $ packet
 
 \end{code}

@@ -175,14 +175,6 @@ viable nodeInfo KBuckets{ baseKey, buckets } =
       Nothing     -> True
       Just bucket -> ClientList.viable nodeInfo bucket
 
-viable :: NodeInfo -> KBuckets -> Bool
-viable nodeInfo KBuckets{ baseKey, buckets } =
-  case bucketIndex baseKey $ NodeInfo.publicKey nodeInfo of
-    Nothing    -> False
-    Just index -> case Map.lookup index buckets of
-      Nothing     -> True
-      Just bucket -> ClientList.viable nodeInfo bucket
-
 \end{code}
 
 Iteration order of a k-buckets instance is in order of distance from the base

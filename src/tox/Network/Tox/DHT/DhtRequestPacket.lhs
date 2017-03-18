@@ -31,6 +31,7 @@ import           Network.Tox.Crypto.Key     (Nonce, PublicKey)
 import           Network.Tox.Crypto.KeyPair (KeyPair (..))
 import           Network.Tox.DHT.DhtPacket  (DhtPacket)
 import qualified Network.Tox.DHT.DhtPacket  as DhtPacket
+
 import           Test.QuickCheck.Arbitrary  (Arbitrary, arbitrary)
 
 
@@ -65,11 +66,10 @@ encrypt keyPair addresseePublicKey nonce plainText =
   DhtRequestPacket addresseePublicKey $
     DhtPacket.encrypt keyPair addresseePublicKey nonce plainText
 
-
 encode :: Binary payload => KeyPair -> PublicKey -> Nonce -> payload -> DhtRequestPacket
 encode keyPair addresseePublicKey nonce payload =
   DhtRequestPacket addresseePublicKey $
-    DhtPacket.encode keyPair addresseePublicKey nonce plainText payload
+    DhtPacket.encode keyPair addresseePublicKey nonce payload
 
 {-------------------------------------------------------------------------------
  -

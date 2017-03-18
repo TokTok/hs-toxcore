@@ -74,6 +74,12 @@ randomNonce = randomKey
 
 randomWord64 :: MonadRandomBytes m => m Word64
 randomWord64 = randomBinary getWord64be 8
+randomWord32 :: MonadRandomBytes m => m Word32
+randomWord32 = randomBinary getWord32be 4
+randomWord16 :: MonadRandomBytes m => m Word16
+randomWord16 = randomBinary getWord16be 2
+randomWord8 :: MonadRandomBytes m => m Word8
+randomWord8 = randomBinary getWord8 1
 
 -- produces Int uniformly distributed in range [0,bound)
 randomInt :: MonadRandomBytes m => Int -> m Int

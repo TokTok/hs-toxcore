@@ -81,8 +81,6 @@ library
       Network.Tox.DHT.Stamped
       Network.Tox.Encoding
       Network.Tox.Network.Networked
-      Network.Tox.Network.Event
-      Network.Tox.Network.SimulatedDht
       Network.Tox.Network.MonadRandomBytes
       Network.Tox.NodeInfo
       Network.Tox.NodeInfo.HostAddress

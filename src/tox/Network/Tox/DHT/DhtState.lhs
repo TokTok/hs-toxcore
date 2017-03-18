@@ -66,7 +66,7 @@ Every DHT node contains the following state:
 
 \begin{code}
 
-type PendingResponses = Stamped (NodeInfo, RpcPacket.RequestID)
+type PendingResponses = Stamped (NodeInfo, RpcPacket.RequestId)
 
 data ListStamp = ListStamp { listTime :: Timestamp, listBootstrappedTimes :: Int }
   deriving (Eq, Read, Show)
