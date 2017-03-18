@@ -20,6 +20,7 @@ import           Data.Maybe                    (maybeToList)
 import           Data.Ord                      (comparing)
 import           Data.Traversable              (Traversable, mapAccumR,
                                                 traverse)
+import           Data.Maybe                    (isJust)
 import           Data.Word                     (Word8)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
 import           Test.QuickCheck.Gen           (Gen)
@@ -150,16 +151,22 @@ updateBucketForIndex kBuckets@KBuckets { buckets, baseKey, bucketSize } index f 
 
 Adding a node to, or removing a node from, a k-buckets consists of performing
 the corresponding operation on the Client List bucket whose index is that of
-the node's public key.
-
-A node is considered \textit{viable} for entry to a k-buckets if it is viable
-for entry to the corresponding bucket.
+the node's public key, except that adding a new node to a full bucket has no
+effect.  A node is considered \textit{viable} for entry if the corresponding
+bucket is not full.
 
 \begin{code}
 
 addNode :: Timestamp -> NodeInfo -> KBuckets -> KBuckets
 addNode time nodeInfo kBuckets =
-  updateBucketForKey kBuckets publicKey $ ClientList.addNode time nodeInfo
+  updateBucketForKey kBuckets publicKey $ \clientList ->
+    let
+      full = ClientList.full clientList
+      alreadyIn = isJust $ ClientList.lookup publicKey clientList
+    in
+    if not full || alreadyIn
+      then ClientList.addNode time nodeInfo clientList
+      else clientList
   where
     publicKey = NodeInfo.publicKey nodeInfo
 
@@ -173,7 +180,7 @@ viable nodeInfo KBuckets{ baseKey, buckets } =
     Nothing    -> False
     Just index -> case Map.lookup index buckets of
       Nothing     -> True
-      Just bucket -> ClientList.viable nodeInfo bucket
+      Just bucket -> not $ ClientList.full bucket
 
 \end{code}
 

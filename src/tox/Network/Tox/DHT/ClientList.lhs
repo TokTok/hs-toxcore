@@ -97,6 +97,10 @@ same effect as removing it once.
 
 \begin{code}
 
+full :: ClientList -> Bool
+full ClientList{ nodes, maxSize } =
+  Map.size nodes >= maxSize
+
 addNode :: Timestamp -> NodeInfo -> ClientList -> ClientList
 addNode time nodeInfo clientList@ClientList{ baseKey, maxSize } =
   (`updateClientNodes` clientList) $
