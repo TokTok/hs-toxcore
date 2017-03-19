@@ -151,6 +151,35 @@ modifyM = (put =<<) . (get >>=)
 
 \end{code}
 
+\subsection{DHT Initialisation}
+A new DHT node is initialised with a DHT State with a fresh random key pair, an
+empty close list, and a search list containing 2 empty search entries searching
+for random public keys.
+
+\begin{code}
+
+randomSearches :: Int
+randomSearches = 2
+
+initDHT :: (MonadRandomBytes m, Timed m) => m DhtState
+initDHT = do
+  dhtState <- DhtState.empty <$> Timed.askTime <*> MonadRandomBytes.newKeyPair
+  time <- Timed.askTime
+  (`execStateT` dhtState) $ replicateM randomSearches $ do
+    publicKey <- MonadRandomBytes.randomKey
+    DhtState.dhtSearchListL . modify . Map.insert publicKey $
+      DhtState.emptySearchEntry time publicKey
+
+bootstrapNode :: DhtNodeMonad m => NodeInfo -> m ()
+bootstrapNode nodeInfo =
+  sendNodesRequest . RequestInfo nodeInfo =<<
+    KeyPair.publicKey <$> gets DhtState.dhtKeyPair
+
+-- TODO
+--loadDHT :: ??
+
+\end{code}
+
 \subsection{Periodic sending of Nodes Requests}
 
 For each Nodes List in the DHT State, every 20 seconds a Nodes Request is sent
@@ -285,11 +314,15 @@ If so, firstly the node from which the response was sent is added to the
 state; see the k-Buckets and Client List specs for details on this operation.
 Secondly, for each node listed in the response and for each Nodes List in the
 DHT State which does not currently contain the node and to which the node is
-viable for entry, a Nodes Request is sent to the node with the requested public
+viable for entry, a Nodes Request is sent to the node, with the requested public
 key being the base key of the Nodes List.
 
 NOTE: c-toxcore actually checks for the node already being in the node list
 only for search lists, not for the close list. See #511.
+
+An implementation may choose not to send every such Nodes Request.
+(c-toxcore only sends only so many per list (8 for the Close List, 4 for a
+Search Entry) per call to Do\_DHT(), prioritising the closest to the base key).
 
 \begin{code}
 
@@ -313,16 +346,12 @@ handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) = do
 
 \end{code}
 
-An implementation may choose not to send every such Nodes Request.
-(c-toxcore only sends only so many per list (8 for the Close List, 4 for a
-Search Entry) per call to Do\_DHT(), prioritising the closest to the base key).
-
 \subsection{Handling Nodes Request packets}
 On receiving a Nodes Request packet from another node, the 4 nodes in the DHT
-State which are closest to the public key in the packet are found, and sent
-in a Nodes Response packet to the node which sent the request. If there are
-fewer than 4 nodes in the state, just those nodes are sent. If there are no
-nodes in the state, no response is sent.
+State which are the closest to the public key in the packet are determined, and
+they are sent in a Nodes Response packet to the node which sent the request. If
+there are fewer than 4 nodes in the state, just the nodes in the state are sent.
+If there are no nodes in the state, no response is sent.
 
 A Ping Request may also be sent; see below.
 
@@ -406,7 +435,7 @@ sendPingRequestIfAppropriate from = do
 \end{code}
 
 \input{src/tox/Network/Tox/DHT/DhtRequestPacket.lhs}
-\section{Handling DHT Request packets}
+\subsection{Handling DHT Request packets}
 
 A DHT node that receives a DHT request packet checks whether the addressee
 public key is their DHT public key. If it is, they will decrypt and handle
@@ -475,35 +504,6 @@ handleNatPingPacket _ = return ()
 type DhtPKPacket = ()
 handleDhtPKPacket :: DhtNodeMonad m => DhtPKPacket -> m ()
 handleDhtPKPacket _ = return ()
-
-\end{code}
-
-\section{DHT Initialisation}
-A new DHT node is initialised with a DHT State with a fresh random key pair, an
-empty close list, and a search list containing 2 empty search entries searching
-for random public keys. 
-
-\begin{code}
-
-randomSearches :: Int
-randomSearches = 2
-
-initDHT :: (MonadRandomBytes m, Timed m) => m DhtState
-initDHT = do
-  dhtState <- DhtState.empty <$> Timed.askTime <*> MonadRandomBytes.newKeyPair
-  time <- Timed.askTime
-  (`execStateT` dhtState) $ replicateM randomSearches $ do
-    publicKey <- MonadRandomBytes.randomKey
-    DhtState.dhtSearchListL . modify . Map.insert publicKey $
-      DhtState.emptySearchEntry time publicKey
-
-bootstrapNode :: DhtNodeMonad m => NodeInfo -> m ()
-bootstrapNode nodeInfo =
-  sendNodesRequest . RequestInfo nodeInfo =<<
-    KeyPair.publicKey <$> gets DhtState.dhtKeyPair
-
--- TODO
---loadDHT :: ??
 
 \end{code}
 
