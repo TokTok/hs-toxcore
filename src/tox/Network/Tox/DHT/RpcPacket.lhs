@@ -24,9 +24,9 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 A DHT RPC Service consists of a Request packet and a Response packet.  A DHT
 RPC Packet contains a payload and a Request ID.  This ID is a 64 bit unsigned
-integer that helps identify the response for a given request.  The Request ID
-in the response packet must be equal to the Request ID in the request it is
-responding to.
+integer that helps identify the response for a given request.  A \textit{reply}
+to a Request packet is a Response packet with the Request ID in the Response
+packet set equal to the Request ID in the Request packet.
 
 \begin{code}
 

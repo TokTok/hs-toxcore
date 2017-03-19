@@ -154,7 +154,7 @@ modifyM = (put =<<) . (get >>=)
 \subsection{DHT Initialisation}
 A new DHT node is initialised with a DHT State with a fresh random key pair, an
 empty close list, and a search list containing 2 empty search entries searching
-for random public keys.
+for randomly generated public keys.
 
 \begin{code}
 
@@ -181,12 +181,11 @@ bootstrapNode nodeInfo =
 \end{code}
 
 \subsection{Periodic sending of Nodes Requests}
-
-For each Nodes List in the DHT State, every 20 seconds a Nodes Request is sent
+For each Nodes List in the DHT State, every 20 seconds we send a Nodes Request
 to a random node on the list, searching for the base key of the list.
 
-When a Nodes List first becomes populated with nodes, 5 such random Nodes
-Requests are sent in quick succession.
+When a Nodes List first becomes populated with nodes, we send 5 such random
+Nodes Requests in quick succession.
 
 Random nodes are chosen since being able to predict which node a node will
 send a request to next could make some attacks that disrupt the network
@@ -230,35 +229,35 @@ randomRequests = do
 
 \end{code}
 
-Furthermore, for each Nodes List in the DHT State, each node on the list is
-sent a Nodes Request every 60 seconds, searching for the base key of the list.
-
-Nodes from which we consistently fail to receive Nodes Responses should be
-removed from the DHT State.
+Furthermore, we periodically check every node for responsiveness by sending it a
+Nodes Request: for each Nodes List in the DHT State, we send each node on the
+list a Nodes Request every 60 seconds, searching for the base key of the list.
+We remove from the DHT State any node from which we persistently fail to receive
+Nodes Responses.
 
 c-toxcore's implementation of checking and timeouts:
 A Last Checked time is maintained for each node in each list. When a node is
 added to a list, if doing so evicts a node from the list then the Last Checked
-time is set to that of the evicted node, and otherwise it is set to 0.  Nodes
-from which we have not received a Nodes Response for 122 seconds are considered
-Bad; they remain in the DHT State, but are preferentially overwritten when
-adding to the DHT State, and are ignored for all operations except the
-once-per-60s checking described above. If we have not received a Nodes Response
-for 182 seconds, the node is not even checked. So one check is sent after the node
-becomes Bad. In the special case that every node in the Close List is Bad, they
-are all checked once more.)
+time is set to that of the evicted node, and otherwise it is set to 0. This
+includes updating an already present node. Nodes from which we have not
+received a Nodes Response for 122 seconds are considered Bad; they remain in the
+DHT State, but are preferentially overwritten when adding to the DHT State, and
+are ignored for all operations except the once-per-60s checking described above.
+If we have not received a Nodes Response for 182 seconds, the node is not even
+checked. So one check is sent after the node becomes Bad. In the special case
+that every node in the Close List is Bad, they are all checked once more.)
 
 hs-toxcore implementation of checking and timeouts:
-For each node in the Dht State, a Last Checked timestamp and a Checks Counter are
-maintained.  Nodes are added with these set to the current time and 0,
-respectively.  This includes updating an already present node.  The DHT State
-nodes are passed through periodically, and for each which is due a check, we:
-check it, update the timestamp, increment the counter, and, if the counter is
-then 2 (configurable constant), remove the node from the list. This is pretty
-close to the behaviour of c-toxcore, but much simpler.
-TODO: currently it doesn't do anything to try to recover if the Close List
-becomes empty. We could maintain a separate list of the most recently heard from
-nodes, and repopulate the Close List with that if the Close List becomes empty.
+We maintain a Last Checked timestamp and a Checks Counter on each node on each
+Nodes List in the Dht State. When a node is added to a list, these are set
+respectively to the current time and to 0. This includes updating an already
+present node. We periodically pass through the nodes on the lists, and for each
+which is due a check, we: check it, update the timestamp, increment the counter,
+and, if the counter is then 2, remove the node from the list. This is pretty
+close to the behaviour of c-toxcore, but much simpler. TODO: currently hs-toxcore
+doesn't do anything to try to recover if the Close List becomes empty. We could
+maintain a separate list of the most recently heard from nodes, and repopulate
+the Close List with that if the Close List becomes empty.
 
 \begin{code}
 
@@ -305,24 +304,22 @@ doDHT =
 \end{code}
 
 \subsection{Handling Nodes Response packets}
-When a valid Nodes Response packet is received, it is first checked that a
-Nodes Request was sent within the last 60 seconds to the node from which the
-response was received, and that the Request ID on the received RpcPacket is that
-sent with the Nodes Request. If not, the packet is ignored.
+When we receive a valid Nodes Response packet, we first check that it is a reply
+to a Nodes Request which we sent within the last 60 seconds to the node from
+which we received the response, and that no previous reply has been received. If
+this check fails, the packet is ignored. If the check succeeds, first we add to
+the DHT State the node from which the response was sent. Then, for each node
+listed in the response and for each Nodes List in the DHT State which does not
+currently contain the node and to which the node is viable for entry, we send a
+Nodes Request to the node with the requested public key being the base key of
+the Nodes List.
 
-If so, firstly the node from which the response was sent is added to the
-state; see the k-Buckets and Client List specs for details on this operation.
-Secondly, for each node listed in the response and for each Nodes List in the
-DHT State which does not currently contain the node and to which the node is
-viable for entry, a Nodes Request is sent to the node, with the requested public
-key being the base key of the Nodes List.
-
-NOTE: c-toxcore actually checks for the node already being in the node list
-only for search lists, not for the close list. See #511.
+(NOTE: in fact c-toxcore currently checks that the node isn't already in
+the node list only for search lists, not for the close list. See #511.)
 
 An implementation may choose not to send every such Nodes Request.
-(c-toxcore only sends only so many per list (8 for the Close List, 4 for a
-Search Entry) per call to Do\_DHT(), prioritising the closest to the base key).
+(c-toxcore only sends so many per list (8 for the Close List, 4 for a Search
+Entry) per 50ms, prioritising the closest to the base key).
 
 \begin{code}
 
@@ -347,13 +344,13 @@ handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) = do
 \end{code}
 
 \subsection{Handling Nodes Request packets}
-On receiving a Nodes Request packet from another node, the 4 nodes in the DHT
-State which are the closest to the public key in the packet are determined, and
-they are sent in a Nodes Response packet to the node which sent the request. If
-there are fewer than 4 nodes in the state, just the nodes in the state are sent.
-If there are no nodes in the state, no response is sent.
+When we receive a Nodes Request packet from another node, we reply with a Nodes
+Response packet containing the 4 nodes in the DHT State which are the closest to
+the public key in the packet. If there are fewer than 4 nodes in the state, we
+reply with all the nodes in the state. If there are no nodes in the state, no
+reply is sent.
 
-A Ping Request may also be sent; see below.
+We also send a Ping Request when this is appropriate; see below.
 
 \begin{code}
 
@@ -372,9 +369,9 @@ handleNodesRequest from (RpcPacket (NodesRequest key) requestID) = do
 \end{code}
 
 \subsection{Handling Ping Request packets}
-When a valid Ping Request packet is received, a Ping Response is sent in reply.
+When a valid Ping Request packet is received, we reply with a Ping Response.
 
-A Ping Request may also be sent; see below.
+We also send a Ping Request when this is appropriate; see below.
 
 \begin{code}
 
@@ -388,13 +385,11 @@ handlePingRequest _ _ = return ()
 \end{code}
 
 \subsection{Handling Ping Response packets}
-When a valid Ping Response packet is received from another node, it is first
-checked that a Ping Request was sent within the last 5 seconds to the node from
-which the response was received, and that the Request ID on the received
-RpcPacket is that sent with the Ping Request. If not, the packet is ignored.
-
-If so, the node from which the response was sent is added to the state; see the
-k-Buckets and Client List specs for details on this operation.
+When we receive a valid Nodes Response packet, we first check that it is a reply
+to a Ping Request which we sent within the last 60 seconds to the node from
+which we received the response, and that no previous reply has been received. If
+this check fails, the packet is ignored. If the check succeeds, we add to the
+DHT State the node from which the response was sent.
 
 \begin{code}
 
@@ -414,10 +409,10 @@ handlePingResponse _ _ = return ()
 \end{code}
 
 \subsection{Sending Ping Requests}
-When a Nodes Request or a Ping Request is received, in addition to the handling
-described above, a Ping Request may be sent.
-Namely, if the node which sent the packet is viable for entry in the close list
-and not already in it, a Ping Request is sent to it.
+When we receive a Nodes Request or a Ping Request, in addition to the handling
+described above, we sometimes send a Ping Request.
+Namely, we send a Ping Request to the node which sent the packet if the node is
+viable for entry to the Close List and is not already in the Close List.
 An implementation may (TODO: should?) choose not to send every such Ping
 Request.
 (c-toxcore sends at most 32 every 2 seconds, preferring closer nodes.)
@@ -468,8 +463,8 @@ handleDhtRequestPacket _from packet@(DhtRequestPacket addresseePublicKey dhtPack
 
 A NAT ping packet is sent as the payload of a DHT request packet.
 
-NAT ping packets are used to see if a friend we are not connected to directly
-is online and ready to do the hole punching.
+We use NAT ping packets to see if a friend we are not connected to directly is
+online and ready to do the hole punching.
 
 \subsubsection{NAT ping request}
 
