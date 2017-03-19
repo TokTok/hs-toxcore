@@ -30,6 +30,7 @@ import qualified Network.Tox.Crypto.Box                 as T
 import qualified Network.Tox.Crypto.Key                 as T
 import qualified Network.Tox.Crypto.KeyPair             as T
 import qualified Network.Tox.DHT.DhtPacket              as T
+import qualified Network.Tox.DHT.DhtRequestPacket       as T
 import qualified Network.Tox.DHT.NodesRequest           as T
 import qualified Network.Tox.DHT.NodesResponse          as T
 import qualified Network.Tox.DHT.PingPacket             as T
@@ -51,6 +52,7 @@ typeName (Proxy :: Proxy a) =
 data KnownType
   = CipherText        T.CipherText
   | DhtPacket         T.DhtPacket
+  | DhtRequestPacket  T.DhtRequestPacket
   | HostAddress       T.HostAddress
   | Word64            Word64
   | Key               T.PublicKey
@@ -72,6 +74,7 @@ knownTypeToObject :: KnownType -> MessagePack.Object
 knownTypeToObject = \case
   CipherText        x -> toObject x
   DhtPacket         x -> toObject x
+  DhtRequestPacket  x -> toObject x
   HostAddress       x -> toObject x
   Word64            x -> toObject x
   Key               x -> toObject x
@@ -93,6 +96,7 @@ knownTypeEncode :: KnownType -> ByteString
 knownTypeEncode = \case
   CipherText        x -> encode x
   DhtPacket         x -> encode x
+  DhtRequestPacket  x -> encode x
   HostAddress       x -> encode x
   Word64            x -> encode x
   Key               x -> encode x
@@ -138,6 +142,7 @@ decodeS = Server.method "Binary.decode"
     decodeKnownType = \case
       "CipherText"        -> go CipherText
       "DhtPacket"         -> go DhtPacket
+      "DhtRequestPacket"  -> go DhtRequestPacket
       "HostAddress"       -> go HostAddress
       "Word64"            -> go Word64
       "Key PublicKey"     -> go Key
@@ -185,6 +190,7 @@ encodeS = Server.method "Binary.encode"
     encodeKnownType = \case
       "CipherText"        -> go CipherText
       "DhtPacket"         -> go DhtPacket
+      "DhtRequestPacket"  -> go DhtRequestPacket
       "HostAddress"       -> go HostAddress
       "Word64"            -> go Word64
       "Key PublicKey"     -> go Key
