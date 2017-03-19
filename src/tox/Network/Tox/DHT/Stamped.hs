@@ -2,6 +2,7 @@
 module Network.Tox.DHT.Stamped where
 
 import qualified Data.Foldable    as F
+import           Data.List        ((\\))
 import           Data.Map         (Map)
 import qualified Data.Map         as Map
 
@@ -23,6 +24,12 @@ empty = Map.empty
 -- than that of previously added objects.
 add :: Timestamp -> a -> Stamped a -> Stamped a
 add time x = Map.insertWith (++) time [x]
+
+delete :: Eq a => Timestamp -> a -> Stamped a -> Stamped a
+delete time x = Map.adjust (\\ [x]) time
+
+findStamps :: (a -> Bool) -> Stamped a -> [Timestamp]
+findStamps p = Map.keys . Map.filter (any p)
 
 dropOlder :: Timestamp -> Stamped a -> Stamped a
 dropOlder time = Map.mapMaybeWithKey $

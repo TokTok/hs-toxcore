@@ -3,6 +3,7 @@
 \begin{code}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE Safe                  #-}
@@ -11,7 +12,7 @@
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative                  (Applicative, pure, (*>),
-                                                       (<$>), (<*>))
+                                                       (<$), (<$>), (<*>))
 import           Control.Monad                        (guard, msum, replicateM,
                                                        unless, void, when)
 import           Control.Monad.Identity               (Identity, runIdentity)
@@ -124,7 +125,9 @@ checkResponsePending timeLimit node requestID = do
   cutoff <- (Time.+ negate timeLimit) <$> Timed.askTime
   DhtState.pendingResponsesL $ do
     modify $ Stamped.dropOlder cutoff
-    elem (node, requestID) . Stamped.getList <$> get
+    Stamped.findStamps (== (node, requestID)) <$> get >>= \case
+      [] -> return False
+      time:_ -> True <$ modify (Stamped.delete time (node, requestID))
 
 sendNodesRequest :: DhtNodeMonad m => RequestInfo -> m ()
 sendNodesRequest (RequestInfo to key) =
