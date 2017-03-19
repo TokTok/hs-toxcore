@@ -13,7 +13,6 @@ import           Data.Word                 (Word64)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
-
 {-------------------------------------------------------------------------------
  -
  - :: Implementation.
@@ -24,9 +23,7 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 A DHT RPC Service consists of a Request packet and a Response packet.  A DHT
 RPC Packet contains a payload and a Request ID.  This ID is a 64 bit unsigned
-integer that helps identify the response for a given request.  A \textit{reply}
-to a Request packet is a Response packet with the Request ID in the Response
-packet set equal to the Request ID in the Request packet.
+integer that helps identify the response for a given request.
 
 \begin{code}
 
@@ -36,6 +33,8 @@ newtype RequestId = RequestId Word64
 instance MessagePack RequestId
 
 \end{code}
+
+\input{src/tox/Network/Tox/DHT/PendingReplies}
 
 DHT RPC Packets are encrypted and transported within DHT Packets.
 

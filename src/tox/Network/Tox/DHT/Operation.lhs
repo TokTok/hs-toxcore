@@ -23,7 +23,7 @@ import           Control.Monad.Reader                 (MonadReader, ReaderT,
 import           Control.Monad.State                  (MonadState, State,
                                                        StateT, evalStateT,
                                                        execStateT, get, gets,
-                                                       modify, put)
+                                                       modify, put, state)
 import           Control.Monad.Trans                  (lift)
 import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
 import           Control.Monad.Writer                 (MonadWriter, Writer,
@@ -60,6 +60,8 @@ import           Network.Tox.DHT.NodeList             (NodeList)
 import qualified Network.Tox.DHT.NodeList             as NodeList
 import           Network.Tox.DHT.NodesRequest         (NodesRequest (..))
 import           Network.Tox.DHT.NodesResponse        (NodesResponse (..))
+import           Network.Tox.DHT.PendingReplies       (PendingReplies)
+import qualified Network.Tox.DHT.PendingReplies       as PendingReplies
 import           Network.Tox.DHT.PingPacket           (PingPacket (..))
 import           Network.Tox.DHT.RpcPacket            (RpcPacket (..))
 import qualified Network.Tox.DHT.RpcPacket            as RpcPacket
@@ -113,21 +115,12 @@ sendDhtPacket to kind payload = do
 sendRpcRequest :: (DhtNodeMonad m, Binary payload) =>
   NodeInfo -> PacketKind -> payload -> m ()
 sendRpcRequest to packetKind payload = do
-  requestID <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
+  requestId <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
   time <- Timed.askTime
-  DhtState.pendingResponsesL . modify $ Stamped.add time (to, requestID)
+  DhtState.pendingRepliesL . modify $
+    PendingReplies.expectReply time to requestId
   sendDhtPacket to packetKind $
-    RpcPacket payload requestID
-
-checkResponsePending :: DhtNodeMonad m =>
-  TimeDiff -> NodeInfo -> RpcPacket.RequestId -> m Bool
-checkResponsePending timeLimit node requestID = do
-  cutoff <- (Time.+ negate timeLimit) <$> Timed.askTime
-  DhtState.pendingResponsesL $ do
-    modify $ Stamped.dropOlder cutoff
-    Stamped.findStamps (== (node, requestID)) <$> get >>= \case
-      [] -> return False
-      time:_ -> True <$ modify (Stamped.delete time (node, requestID))
+    RpcPacket payload requestId
 
 sendNodesRequest :: DhtNodeMonad m => RequestInfo -> m ()
 sendNodesRequest (RequestInfo to key) =
@@ -135,9 +128,9 @@ sendNodesRequest (RequestInfo to key) =
 
 sendNodesResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket.RequestId -> [NodeInfo] -> m ()
-sendNodesResponse to requestID nodes =
+sendNodesResponse to requestId nodes =
   sendDhtPacket to PacketKind.NodesResponse $
-    RpcPacket (NodesResponse nodes) requestID
+    RpcPacket (NodesResponse nodes) requestId
 
 sendPingRequest :: DhtNodeMonad m => NodeInfo -> m ()
 sendPingRequest to =
@@ -145,9 +138,9 @@ sendPingRequest to =
 
 sendPingResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket.RequestId -> m ()
-sendPingResponse to requestID =
+sendPingResponse to requestId =
   sendDhtPacket to PacketKind.PingResponse $
-    RpcPacket PingResponse requestID
+    RpcPacket PingResponse requestId
 
 modifyM :: MonadState s m => (s -> m s) -> m ()
 modifyM = (put =<<) . (get >>=)
@@ -331,18 +324,22 @@ requireNodesResponseWithin = Time.seconds 60
 
 handleNodesResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesResponse -> m ()
-handleNodesResponse from (RpcPacket (NodesResponse nodes) requestID) = do
-    isPending <- checkResponsePending requireNodesResponseWithin from requestID
-    when isPending $ do
-      time <- Timed.askTime
-      modify $ DhtState.addNode time from
-      for_ nodes $ \node ->
-        (>>= mapM_ sendNodesRequest) $ (<$> get) $ DhtState.foldMapNodeLists $
-          \nodeList ->
-            guard (isNothing (NodeList.lookupPublicKey
-                (NodeInfo.publicKey node) nodeList)
-              && NodeList.viable node nodeList) >>
-            [ RequestInfo node $ NodeList.baseKey nodeList ]
+handleNodesResponse from (RpcPacket (NodesResponse nodes) requestId) = do
+  isReply <- DhtState.pendingRepliesL $ do
+    let clearOldLimit = max requireNodesResponseWithin requirePingResponseWithin
+    modify . Stamped.dropOlder =<< (Time.+ negate clearOldLimit) <$> Timed.askTime
+    recentCutoff <- (Time.+ negate requireNodesResponseWithin) <$> Timed.askTime
+    state $ PendingReplies.checkExpectedReply recentCutoff from requestId
+  when isReply $ do
+    time <- Timed.askTime
+    modify $ DhtState.addNode time from
+    for_ nodes $ \node ->
+      (>>= mapM_ sendNodesRequest) $ (<$> get) $ DhtState.foldMapNodeLists $
+        \nodeList ->
+          guard (isNothing (NodeList.lookupPublicKey
+              (NodeInfo.publicKey node) nodeList)
+            && NodeList.viable node nodeList) >>
+          [ RequestInfo node $ NodeList.baseKey nodeList ]
 
 \end{code}
 
@@ -362,11 +359,11 @@ responseMaxNodes = 4
 
 handleNodesRequest ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesRequest -> m ()
-handleNodesRequest from (RpcPacket (NodesRequest key) requestID) = do
+handleNodesRequest from (RpcPacket (NodesRequest key) requestId) = do
   ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
   when (ourPublicKey /= NodeInfo.publicKey from) $ do
     nodes <- DhtState.takeClosestNodesTo responseMaxNodes key <$> get
-    unless (null nodes) $ sendNodesResponse from requestID nodes
+    unless (null nodes) $ sendNodesResponse from requestId nodes
     sendPingRequestIfAppropriate from
 
 \end{code}
@@ -380,8 +377,8 @@ We also send a Ping Request when this is appropriate; see below.
 
 handlePingRequest ::
   DhtNodeMonad m => NodeInfo -> RpcPacket PingPacket -> m ()
-handlePingRequest from (RpcPacket PingRequest requestID) = do
-  sendPingResponse from requestID
+handlePingRequest from (RpcPacket PingRequest requestId) = do
+  sendPingResponse from requestId
   sendPingRequestIfAppropriate from
 handlePingRequest _ _ = return ()
 
@@ -401,10 +398,14 @@ requirePingResponseWithin = Time.seconds 5
 
 handlePingResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket PingPacket -> m ()
-handlePingResponse from (RpcPacket PingResponse requestID) = do
-  isPending <- checkResponsePending requirePingResponseWithin from requestID
+handlePingResponse from (RpcPacket PingResponse requestId) = do
+  isReply <- DhtState.pendingRepliesL $ do
+    let clearOldLimit = max requireNodesResponseWithin requirePingResponseWithin
+    modify . Stamped.dropOlder =<< (Time.+ negate clearOldLimit) <$> Timed.askTime
+    recentCutoff <- (Time.+ negate requirePingResponseWithin) <$> Timed.askTime
+    state $ PendingReplies.checkExpectedReply recentCutoff from requestId
   ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
-  when (isPending && ourPublicKey /= NodeInfo.publicKey from) $ do
+  when (isReply && ourPublicKey /= NodeInfo.publicKey from) $ do
     time <- Timed.askTime
     modify $ DhtState.addNode time from
 handlePingResponse _ _ = return ()

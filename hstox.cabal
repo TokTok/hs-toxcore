@@ -76,6 +76,7 @@ library
       Network.Tox.DHT.NodesRequest
       Network.Tox.DHT.NodesResponse
       Network.Tox.DHT.Operation
+      Network.Tox.DHT.PendingReplies
       Network.Tox.DHT.PingPacket
       Network.Tox.DHT.RpcPacket
       Network.Tox.DHT.Stamped

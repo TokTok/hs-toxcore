@@ -8,38 +8,39 @@
 {-# LANGUAGE Trustworthy           #-}
 module Network.Tox.DHT.DhtState where
 
-import           Control.Applicative           (Applicative, Const (..),
-                                                getConst, pure, (<$>), (<*>),
-                                                (<|>))
-import           Control.Monad.State           (MonadState, StateT)
-import           Data.Functor.Identity         (Identity (..))
-import           Data.Lenses                   (fromGetSet)
-import           Data.List                     (nub, sortBy)
-import           Data.Map                      (Map)
-import qualified Data.Map                      as Map
-import qualified Data.Maybe                    as Maybe
-import           Data.Monoid                   (All (..), Monoid, getAll)
-import           Data.Ord                      (comparing)
-import           Data.Traversable              (traverse)
-import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary, shrink)
+import           Control.Applicative            (Applicative, Const (..),
+                                                 getConst, pure, (<$>), (<*>),
+                                                 (<|>))
+import           Control.Monad.State            (MonadState, StateT)
+import           Data.Functor.Identity          (Identity (..))
+import           Data.Lenses                    (fromGetSet)
+import           Data.List                      (nub, sortBy)
+import           Data.Map                       (Map)
+import qualified Data.Map                       as Map
+import qualified Data.Maybe                     as Maybe
+import           Data.Monoid                    (All (..), Monoid, getAll)
+import           Data.Ord                       (comparing)
+import           Data.Traversable               (traverse)
+import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary, shrink)
 
-import           Network.Tox.Crypto.Key        (PublicKey)
-import           Network.Tox.Crypto.KeyPair    (KeyPair)
-import qualified Network.Tox.Crypto.KeyPair    as KeyPair
-import           Network.Tox.DHT.ClientList    (ClientList)
-import qualified Network.Tox.DHT.ClientList    as ClientList
-import           Network.Tox.DHT.Distance      (Distance)
-import           Network.Tox.DHT.KBuckets      (KBuckets)
-import qualified Network.Tox.DHT.KBuckets      as KBuckets
-import           Network.Tox.DHT.NodeList      (NodeList)
-import qualified Network.Tox.DHT.NodeList      as NodeList
-import qualified Network.Tox.DHT.RpcPacket     as RpcPacket
-import           Network.Tox.DHT.Stamped       (Stamped)
-import qualified Network.Tox.DHT.Stamped       as Stamped
-import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
-import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (Timestamp)
-import qualified Network.Tox.Time              as Time
+import           Network.Tox.Crypto.Key         (PublicKey)
+import           Network.Tox.Crypto.KeyPair     (KeyPair)
+import qualified Network.Tox.Crypto.KeyPair     as KeyPair
+import           Network.Tox.DHT.ClientList     (ClientList)
+import qualified Network.Tox.DHT.ClientList     as ClientList
+import           Network.Tox.DHT.Distance       (Distance)
+import           Network.Tox.DHT.KBuckets       (KBuckets)
+import qualified Network.Tox.DHT.KBuckets       as KBuckets
+import           Network.Tox.DHT.NodeList       (NodeList)
+import qualified Network.Tox.DHT.NodeList       as NodeList
+import           Network.Tox.DHT.PendingReplies (PendingReplies)
+import qualified Network.Tox.DHT.RpcPacket      as RpcPacket
+import           Network.Tox.DHT.Stamped        (Stamped)
+import qualified Network.Tox.DHT.Stamped        as Stamped
+import           Network.Tox.NodeInfo.NodeInfo  (NodeInfo)
+import qualified Network.Tox.NodeInfo.NodeInfo  as NodeInfo
+import           Network.Tox.Time               (Timestamp)
+import qualified Network.Tox.Time               as Time
 
 
 {-------------------------------------------------------------------------------
@@ -66,8 +67,6 @@ Every DHT node contains the following state:
 
 \begin{code}
 
-type PendingResponses = Stamped (NodeInfo, RpcPacket.RequestId)
-
 data ListStamp = ListStamp { listTime :: Timestamp, listBootstrappedTimes :: Int }
   deriving (Eq, Read, Show)
 newListStamp :: Timestamp -> ListStamp
@@ -79,7 +78,7 @@ data DhtState = DhtState
   , dhtSearchList     :: Map PublicKey DhtSearchEntry
 
   , dhtCloseListStamp :: ListStamp
-  , pendingResponses  :: PendingResponses
+  , pendingReplies    :: PendingReplies
   }
   deriving (Eq, Read, Show)
 
@@ -98,8 +97,9 @@ dhtSearchListL ::
   MonadState DhtState m => StateT (Map PublicKey DhtSearchEntry) m a -> m a
 dhtSearchListL = fromGetSet dhtSearchList $ \x s -> s{ dhtSearchList = x }
 
-pendingResponsesL :: MonadState DhtState m => StateT PendingResponses m a -> m a
-pendingResponsesL = fromGetSet pendingResponses $ \x s -> s{ pendingResponses = x }
+pendingRepliesL ::
+  MonadState DhtState m => StateT PendingReplies m a -> m a
+pendingRepliesL = fromGetSet pendingReplies $ \x s -> s{ pendingReplies = x }
 
 \end{code}
 
