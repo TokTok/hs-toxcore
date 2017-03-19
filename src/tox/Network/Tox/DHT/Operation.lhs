@@ -466,7 +466,7 @@ handleDhtRequestPacket _from packet@(DhtRequestPacket addresseePublicKey dhtPack
 
 \subsection{NAT ping packets}
 
-A NAT ping packet is sent as the payload of a DHT request packet. 
+A NAT ping packet is sent as the payload of a DHT request packet.
 
 NAT ping packets are used to see if a friend we are not connected to directly
 is online and ready to do the hole punching.

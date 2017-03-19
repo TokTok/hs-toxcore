@@ -21,7 +21,7 @@ import           Network.Tox.Crypto.Key         (CombinedKey, PublicKey,
                                                  SecretKey)
 import           Network.Tox.Time               (Timestamp)
 
-class (Monad m, Applicative m, Functor m) => Keyed m where
+class (Monad m, Applicative m) => Keyed m where
   getCombinedKey :: SecretKey -> PublicKey -> m CombinedKey
 
 instance Keyed m => Keyed (ReaderT r m) where

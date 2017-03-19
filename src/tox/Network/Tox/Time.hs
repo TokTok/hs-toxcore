@@ -1,4 +1,3 @@
-\begin{code}
 {-# LANGUAGE Safe #-}
 module Network.Tox.Time where
 
@@ -54,4 +53,3 @@ instance Arbitrary Timestamp
 
 instance Arbitrary TimeDiff
   where arbitrary = (TimeDiff <$>) $ Clock.TimeSpec <$> arbitrary <*> arbitrary
-\end{code}

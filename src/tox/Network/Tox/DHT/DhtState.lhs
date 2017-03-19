@@ -212,7 +212,7 @@ iteration order in the corresponding specification.
 
 traverseNodeLists :: Applicative f =>
   (forall l. NodeList l => l -> f l) -> DhtState -> f DhtState
-traverseNodeLists f dhtState@DhtState{ dhtCloseList, dhtSearchList }  =
+traverseNodeLists f dhtState@DhtState{ dhtCloseList, dhtSearchList } =
   (\close' search' ->
       dhtState{ dhtCloseList = close', dhtSearchList = search' }) <$>
     f dhtCloseList <*>

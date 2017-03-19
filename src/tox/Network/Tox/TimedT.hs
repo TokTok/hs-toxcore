@@ -20,7 +20,7 @@ import           Network.Tox.Time                     (Timestamp)
 import           Network.Tox.Timed                    (Timed (..))
 
 newtype TimedT m a = TimedT (ReaderT Timestamp m a)
-  deriving (Monad, Functor, Applicative, MonadState s, MonadWriter w
+  deriving (Monad, Applicative, Functor, MonadState s, MonadWriter w
     , MonadRandomBytes, MonadTrans, MonadIO, Networked, Keyed)
 
 runTimedT :: Monad m => TimedT m a -> Timestamp -> m a

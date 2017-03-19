@@ -21,7 +21,6 @@ import           Data.Binary.Get                   (Get, getWord16be,
 import qualified Data.Bits                         as Bits
 import           Data.ByteString                   (ByteString, pack, unpack)
 import           Data.ByteString.Lazy              (fromStrict)
-import           Data.Functor                      (Functor)
 import           Data.Maybe                        (fromJust)
 import           Data.Monoid                       (Monoid)
 import           Data.Proxy                        (Proxy (..))
@@ -36,13 +35,13 @@ import qualified Network.Tox.Crypto.Key            as Key
 import           Network.Tox.Crypto.KeyPair        (KeyPair)
 import qualified Network.Tox.Crypto.KeyPair        as KeyPair
 
-class (Monad m, Applicative m, Functor m) => MonadRandomBytes m where
+class (Monad m, Applicative m) => MonadRandomBytes m where
   randomBytes :: Int -> m ByteString
 
   newKeyPair :: m KeyPair
   newKeyPair = KeyPair.fromSecretKey <$> randomKey
 
-instance (Monad m, Applicative m, Functor m, RandomGen s) => MonadRandomBytes (RandT s m) where
+instance (Monad m, Applicative m, RandomGen s) => MonadRandomBytes (RandT s m) where
   randomBytes n = pack . take n <$> getRandoms
 
 -- | cryptographically secure random bytes from system source

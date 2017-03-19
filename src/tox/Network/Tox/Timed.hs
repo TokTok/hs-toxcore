@@ -16,6 +16,7 @@ import           Data.Monoid          (Monoid)
 
 import           Network.Tox.Time     (Timestamp)
 
+-- |Essentially a synonym for MonadReader Timestamp
 class Monad m => Timed m where
   askTime :: m Timestamp
   adjustTime :: (Timestamp -> Timestamp) -> m a -> m a

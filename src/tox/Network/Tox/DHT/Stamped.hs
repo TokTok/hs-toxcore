@@ -1,4 +1,3 @@
-\begin{code}
 {-# LANGUAGE Safe #-}
 module Network.Tox.DHT.Stamped where
 
@@ -7,8 +6,6 @@ import           Data.Map         (Map)
 import qualified Data.Map         as Map
 
 import           Network.Tox.Time (Timestamp)
-
--- Stub module, awaiting a proper event loop architecture
 
 {-------------------------------------------------------------------------------
  -
@@ -48,5 +45,3 @@ popFirst stamped =
  - :: Tests.
  -
  ------------------------------------------------------------------------------}
-
-\end{code}

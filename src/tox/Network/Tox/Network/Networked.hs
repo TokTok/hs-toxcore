@@ -1,4 +1,3 @@
-\begin{code}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Trustworthy                #-}
@@ -34,6 +33,7 @@ import           Network.Tox.Timed                    (Timed)
 
 class Monad m => Networked m where
   sendPacket :: (Binary payload, Show payload) => NodeInfo -> Packet payload -> m ()
+
 -- | actual network IO
 instance Networked (StateT NetworkState IO) where
   -- | TODO
@@ -44,11 +44,11 @@ type NetworkState = ()
 
 type NetworkEvent = String
 newtype NetworkLogged m a = NetworkLogged (WriterT [NetworkEvent] m a)
-  deriving (Monad, Functor, Applicative, MonadState s, MonadRandomBytes, Timed)
+  deriving (Monad, Applicative, Functor, MonadState s, MonadRandomBytes, Timed)
 
 runNetworkLogged :: Monad m => NetworkLogged m a -> m (a, [NetworkEvent])
 runNetworkLogged (NetworkLogged m) = runWriterT m
-evalNetworkLogged :: (Monad m, Functor m) => NetworkLogged m a -> m a
+evalNetworkLogged :: (Monad m, Applicative m) => NetworkLogged m a -> m a
 evalNetworkLogged = (fst <$>) . runNetworkLogged
 execNetworkLogged :: Monad m => NetworkLogged m a -> m [NetworkEvent]
 execNetworkLogged (NetworkLogged m) = execWriterT m
@@ -66,5 +66,3 @@ instance Networked m => Networked (RandT s m) where
   sendPacket = (lift .) . sendPacket
 instance Networked m => Networked (StateT s m) where
   sendPacket = (lift .) . sendPacket
-
-\end{code}

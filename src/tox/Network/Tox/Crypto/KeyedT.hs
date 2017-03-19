@@ -33,7 +33,7 @@ type KeyRing = Map (SecretKey, PublicKey) CombinedKey
 
 -- | caches computations of combined keys. Makes no attempt to delete old keys.
 newtype KeyedT m a = KeyedT (StateT KeyRing m a)
-  deriving (Monad, Functor, Applicative, MonadWriter w
+  deriving (Monad, Applicative, Functor, MonadWriter w
     , MonadRandomBytes, MonadTrans, MonadIO, Networked, Timed)
 
 runKeyedT :: Monad m => KeyedT m a -> KeyRing -> m (a, KeyRing)
@@ -42,10 +42,10 @@ runKeyedT (KeyedT m) = runStateT m
 evalKeyedT :: Monad m => KeyedT m a -> KeyRing -> m a
 evalKeyedT (KeyedT m) = evalStateT m
 
-instance (MonadState s m, Functor m) => MonadState s (KeyedT m) where
+instance (MonadState s m, Applicative m) => MonadState s (KeyedT m) where
   state f = KeyedT . StateT $ \s -> flip (,) s <$> state f
 
-instance (Monad m, Applicative m, Functor m) => Keyed (KeyedT m) where
+instance (Monad m, Applicative m) => Keyed (KeyedT m) where
   getCombinedKey secretKey publicKey =
     let keys = (secretKey, publicKey)
     in KeyedT $ gets (Map.lookup keys) >>= \case
