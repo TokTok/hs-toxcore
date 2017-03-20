@@ -53,17 +53,13 @@ configure: .configure.stamp
 	@touch $@
 
 doc: $(DOCS)
-../spec/spec.md: src/tox/Network/Tox.lhs $(shell find src -name "*.lhs") ../spec/pandoc.mk Makefile
+../spec/spec.md: src/tox/Network/Tox.lhs $(shell find src -name "*.lhs") Makefile
 	echo '% The Tox Reference' > $@
 	echo '' >> $@
-	pandoc $< $(PANDOC_ARGS)							\
-		-f latex+lhs								\
-		-t $(FORMAT)								\
-		| perl -pe 'BEGIN{undef $$/} s/\`\`\` sourceCode\n.*?\`\`\`\n\n//sg'	\
-		>> $@
-	pandoc $(PANDOC_ARGS) -f $(FORMAT) -t $(FORMAT) $@ -o $@
+	semdoc $< $@
+	if which pandoc; then $(MAKE) -C $(@D) format; fi
 	if which mdl; then $(MAKE) -C $(@D) check; fi
-	cd $(@D) && git diff
+	cd $(@D) && git diff --exit-code
 
 libsodium: .libsodium.stamp
 .libsodium.stamp: tools/install-libsodium

@@ -4,10 +4,9 @@ else
 PROCS	:= $(shell sysctl -n hw.ncpu)
 endif
 
-ifneq ($(wildcard ../spec/pandoc.mk),)
-ifneq ($(shell which pandoc),)
+ifneq ($(wildcard ../spec/Makefile),)
+ifneq ($(shell which semdoc),)
 DOCS	:= ../spec/spec.md
-include ../spec/pandoc.mk
 endif
 endif
 
