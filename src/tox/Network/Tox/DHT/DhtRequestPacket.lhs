@@ -2,15 +2,15 @@
 DHT Request packets are used to route encrypted data from a sender to another
 node, referred to as the addressee of the packet, via a third node.
 
-A DHT Request Packet is a Protocol Packet. It contains the DHT Public Key of an
-addressee, and a DHT Packet which is to be received by the addressee.
+A DHT Request Packet is sent as the payload of a Protocol Packet with the
+corresponding Packet Kind. It contains the DHT Public Key of an addressee, and a
+DHT Packet which is to be received by the addressee.
 
-\begin{tabular}{l|l}
+\begin{tabular}{l|l|l}
   Length             & Type        & \href{#protocol-packet}{Contents} \\
   \hline
-  \texttt{1}         & \texttt{uint8\_t} (0x20) \\
-  \texttt{32}        & addressee DHT public key \\
-  \texttt{?}         & DHT Packet \\
+  \texttt{32}        & Public Key  & Addressee DHT Public Key \\
+  \texttt{[72,]}     & DHT Packet  & DHT Packet \\
 \end{tabular}
 
 \begin{code}
