@@ -60,17 +60,6 @@ instance Binary DhtRequestPacket where
   get =
     DhtRequestPacket <$> get <*> get
 
-
-encrypt :: KeyPair -> PublicKey -> Nonce -> PlainText -> DhtRequestPacket
-encrypt keyPair addresseePublicKey nonce plainText =
-  DhtRequestPacket addresseePublicKey $
-    DhtPacket.encrypt keyPair addresseePublicKey nonce plainText
-
-encode :: Binary payload => KeyPair -> PublicKey -> Nonce -> payload -> DhtRequestPacket
-encode keyPair addresseePublicKey nonce payload =
-  DhtRequestPacket addresseePublicKey $
-    DhtPacket.encode keyPair addresseePublicKey nonce payload
-
 {-------------------------------------------------------------------------------
  -
  - :: Tests.
