@@ -6,6 +6,7 @@
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE Trustworthy           #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
@@ -23,7 +24,8 @@ import           Control.Monad.Reader                 (MonadReader, ReaderT,
 import           Control.Monad.State                  (MonadState, State,
                                                        StateT, evalStateT,
                                                        execStateT, get, gets,
-                                                       modify, put, state)
+                                                       modify, put, runStateT,
+                                                       state)
 import           Control.Monad.Trans                  (lift)
 import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
 import           Control.Monad.Writer                 (MonadWriter, Writer,
@@ -36,6 +38,8 @@ import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
 import           Data.Maybe                           (isNothing)
 import           Data.Traversable                     (for, traverse)
+import           Lens.Family2                         (Lens')
+import           Lens.Family2.State                   (zoom, (%%=), (%=))
 import           System.Random                        (StdGen, getStdGen,
                                                        mkStdGen)
 import           Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary,
@@ -117,8 +121,7 @@ sendRpcRequest :: (DhtNodeMonad m, Binary payload) =>
 sendRpcRequest to packetKind payload = do
   requestId <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
   time <- Timed.askTime
-  DhtState.pendingRepliesL . modify $
-    PendingReplies.expectReply time to requestId
+  DhtState._pendingReplies %= PendingReplies.expectReply time to requestId
   sendDhtPacket to packetKind $
     RpcPacket payload requestId
 
@@ -145,6 +148,22 @@ sendPingResponse to requestId =
 modifyM :: MonadState s m => (s -> m s) -> m ()
 modifyM = (put =<<) . (get >>=)
 
+-- | adapted from michaelt's lens-simple:
+-- zoom_ is like zoom but for convenience returns an mtl style
+-- abstracted MonadState state, rather than a concrete StateT, recapturing
+-- a bit more of the abstractness of Control.Lens.zoom
+zoom_ :: MonadState s' m => Lens' s' s -> StateT s m a -> m a
+-- full signature:
+-- zoom_ :: MonadState s' m =>
+--   LensLike' (Zooming m a) s' s -> StateT s m a -> m a
+zoom_ l f = abstract $ zoom l f
+  where
+    abstract :: MonadState s m => StateT s m a -> m a
+    abstract st = do
+      (a,s') <- runStateT st =<< get
+      put s'
+      return a
+
 \end{code}
 
 \subsection{DHT Initialisation}
@@ -163,8 +182,8 @@ initDHT = do
   time <- Timed.askTime
   (`execStateT` dhtState) $ replicateM randomSearches $ do
     publicKey <- MonadRandomBytes.randomKey
-    DhtState.dhtSearchListL . modify . Map.insert publicKey $
-      DhtState.emptySearchEntry time publicKey
+    DhtState._dhtSearchList %=
+      Map.insert publicKey (DhtState.emptySearchEntry time publicKey)
 
 bootstrapNode :: DhtNodeMonad m => NodeInfo -> m ()
 bootstrapNode nodeInfo =
@@ -198,11 +217,11 @@ maxBootstrapTimes = 5
 randomRequests :: DhtNodeMonad m => WriterT [RequestInfo] m ()
 randomRequests = do
   closeList <- gets DhtState.dhtCloseList
-  DhtState.dhtCloseListStampL $ doList closeList
-  DhtState.dhtSearchListL .
+  zoom_ DhtState._dhtCloseListStamp $ doList closeList
+  zoom_ DhtState._dhtSearchList .
     modifyM . traverse . execStateT $ do
       searchList <- gets DhtState.searchClientList
-      DhtState.searchStampL $ doList searchList
+      zoom_ DhtState._searchStamp $ doList searchList
   where
     doList ::
       ( NodeList l
@@ -325,11 +344,7 @@ requireNodesResponseWithin = Time.seconds 60
 handleNodesResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesResponse -> m ()
 handleNodesResponse from (RpcPacket (NodesResponse nodes) requestId) = do
-  isReply <- DhtState.pendingRepliesL $ do
-    let clearOldLimit = max requireNodesResponseWithin requirePingResponseWithin
-    modify . Stamped.dropOlder =<< (Time.+ negate clearOldLimit) <$> Timed.askTime
-    recentCutoff <- (Time.+ negate requireNodesResponseWithin) <$> Timed.askTime
-    state $ PendingReplies.checkExpectedReply recentCutoff from requestId
+  isReply <- checkPending requireNodesResponseWithin from requestId
   when isReply $ do
     time <- Timed.askTime
     modify $ DhtState.addNode time from
@@ -396,14 +411,25 @@ DHT State the node from which the response was sent.
 requirePingResponseWithin :: TimeDiff
 requirePingResponseWithin = Time.seconds 5
 
+maxPendingTime :: TimeDiff
+maxPendingTime = maximum
+  [ requireNodesResponseWithin
+  , requirePingResponseWithin
+  ]
+
+checkPending :: DhtNodeMonad m =>
+  TimeDiff -> NodeInfo -> RpcPacket.RequestId -> m Bool
+checkPending timeLimit from requestId = do
+  oldTime <- (Time.+ negate maxPendingTime) <$> Timed.askTime
+  DhtState._pendingReplies %= Stamped.dropOlder oldTime
+  recentCutoff <- (Time.+ negate timeLimit) <$> Timed.askTime
+  DhtState._pendingReplies %%=
+    PendingReplies.checkExpectedReply recentCutoff from requestId
+
 handlePingResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket PingPacket -> m ()
 handlePingResponse from (RpcPacket PingResponse requestId) = do
-  isReply <- DhtState.pendingRepliesL $ do
-    let clearOldLimit = max requireNodesResponseWithin requirePingResponseWithin
-    modify . Stamped.dropOlder =<< (Time.+ negate clearOldLimit) <$> Timed.askTime
-    recentCutoff <- (Time.+ negate requirePingResponseWithin) <$> Timed.askTime
-    state $ PendingReplies.checkExpectedReply recentCutoff from requestId
+  isReply <- checkPending requirePingResponseWithin from requestId
   ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
   when (isReply && ourPublicKey /= NodeInfo.publicKey from) $ do
     time <- Timed.askTime

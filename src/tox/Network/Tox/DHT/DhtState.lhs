@@ -13,7 +13,6 @@ import           Control.Applicative            (Applicative, Const (..),
                                                  (<|>))
 import           Control.Monad.State            (MonadState, StateT)
 import           Data.Functor.Identity          (Identity (..))
-import           Data.Lenses                    (fromGetSet)
 import           Data.List                      (nub, sortBy)
 import           Data.Map                       (Map)
 import qualified Data.Map                       as Map
@@ -21,6 +20,7 @@ import qualified Data.Maybe                     as Maybe
 import           Data.Monoid                    (All (..), Monoid, getAll)
 import           Data.Ord                       (comparing)
 import           Data.Traversable               (traverse)
+import           Lens.Family2                   (Lens')
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary, shrink)
 
 import           Network.Tox.Crypto.Key         (PublicKey)
@@ -78,28 +78,30 @@ data DhtState = DhtState
   , dhtSearchList     :: Map PublicKey DhtSearchEntry
 
   , dhtCloseListStamp :: ListStamp
+  -- FIXME: guess it should be dhtPendingReplies
   , pendingReplies    :: PendingReplies
   }
   deriving (Eq, Read, Show)
 
-dhtKeyPairL :: MonadState DhtState m => StateT KeyPair m a -> m a
-dhtKeyPairL = fromGetSet dhtKeyPair $ \x s -> s{ dhtKeyPair = x }
+_dhtKeyPair :: Lens' DhtState KeyPair
+_dhtKeyPair f d@DhtState{ dhtKeyPair = a } =
+  (\a' -> d{ dhtKeyPair = a' }) <$> f a
 
-dhtCloseListStampL ::
-  MonadState DhtState m => StateT ListStamp m a -> m a
-dhtCloseListStampL = fromGetSet dhtCloseListStamp $
-  \x s -> s{ dhtCloseListStamp = x }
+_dhtCloseListStamp :: Lens' DhtState ListStamp
+_dhtCloseListStamp f d@DhtState{ dhtCloseListStamp = a } =
+  (\a' -> d{ dhtCloseListStamp = a' }) <$> f a
 
-dhtCloseListL :: MonadState DhtState m => StateT KBuckets m a -> m a
-dhtCloseListL = fromGetSet dhtCloseList $ \x s -> s{ dhtCloseList = x }
+_dhtCloseList :: Lens' DhtState KBuckets
+_dhtCloseList f d@DhtState{ dhtCloseList = a } =
+  (\a' -> d{ dhtCloseList = a' }) <$> f a
 
-dhtSearchListL ::
-  MonadState DhtState m => StateT (Map PublicKey DhtSearchEntry) m a -> m a
-dhtSearchListL = fromGetSet dhtSearchList $ \x s -> s{ dhtSearchList = x }
+_dhtSearchList :: Lens' DhtState (Map PublicKey DhtSearchEntry)
+_dhtSearchList f d@DhtState{ dhtSearchList = a } =
+  (\a' -> d{ dhtSearchList = a' }) <$> f a
 
-pendingRepliesL ::
-  MonadState DhtState m => StateT PendingReplies m a -> m a
-pendingRepliesL = fromGetSet pendingReplies $ \x s -> s{ pendingReplies = x }
+_pendingReplies :: Lens' DhtState PendingReplies
+_pendingReplies f d@DhtState{ pendingReplies = a } =
+  (\a' -> d{ pendingReplies = a' }) <$> f a
 
 \end{code}
 
@@ -141,14 +143,17 @@ data DhtSearchEntry = DhtSearchEntry
   }
   deriving (Eq, Read, Show)
 
-searchNodeL :: MonadState DhtSearchEntry m => StateT (Maybe NodeInfo) m a -> m a
-searchNodeL = fromGetSet searchNode $ \x s -> s{ searchNode = x }
+_searchNode :: Lens' DhtSearchEntry (Maybe NodeInfo)
+_searchNode f d@DhtSearchEntry{ searchNode = a } =
+  (\a' -> d{ searchNode = a' }) <$> f a
 
-searchStampL :: MonadState DhtSearchEntry m => StateT ListStamp m a -> m a
-searchStampL = fromGetSet searchStamp $ \x s -> s{ searchStamp = x }
+_searchStamp :: Lens' DhtSearchEntry ListStamp
+_searchStamp f d@DhtSearchEntry{ searchStamp = a } =
+  (\a' -> d{ searchStamp = a' }) <$> f a
 
-searchClientListL :: MonadState DhtSearchEntry m => StateT ClientList m a -> m a
-searchClientListL = fromGetSet searchClientList $ \x s -> s{ searchClientList = x }
+_searchClientList :: Lens' DhtSearchEntry ClientList
+_searchClientList f d@DhtSearchEntry{ searchClientList = a } =
+  (\a' -> d{ searchClientList = a' }) <$> f a
 
 searchEntryClientListSize :: Int
 searchEntryClientListSize = 8
