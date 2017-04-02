@@ -121,7 +121,7 @@ sendRpcRequest :: (DhtNodeMonad m, Binary payload) =>
 sendRpcRequest to packetKind payload = do
   requestId <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
   time <- Timed.askTime
-  DhtState._pendingReplies %= PendingReplies.expectReply time to requestId
+  DhtState._dhtPendingReplies %= PendingReplies.expectReply time to requestId
   sendDhtPacket to packetKind $
     RpcPacket payload requestId
 
@@ -421,9 +421,9 @@ checkPending :: DhtNodeMonad m =>
   TimeDiff -> NodeInfo -> RpcPacket.RequestId -> m Bool
 checkPending timeLimit from requestId = do
   oldTime <- (Time.+ negate maxPendingTime) <$> Timed.askTime
-  DhtState._pendingReplies %= Stamped.dropOlder oldTime
+  DhtState._dhtPendingReplies %= Stamped.dropOlder oldTime
   recentCutoff <- (Time.+ negate timeLimit) <$> Timed.askTime
-  DhtState._pendingReplies %%=
+  DhtState._dhtPendingReplies %%=
     PendingReplies.checkExpectedReply recentCutoff from requestId
 
 handlePingResponse ::

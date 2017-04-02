@@ -78,8 +78,7 @@ data DhtState = DhtState
   , dhtSearchList     :: Map PublicKey DhtSearchEntry
 
   , dhtCloseListStamp :: ListStamp
-  -- FIXME: guess it should be dhtPendingReplies
-  , pendingReplies    :: PendingReplies
+  , dhtPendingReplies    :: PendingReplies
   }
   deriving (Eq, Read, Show)
 
@@ -99,9 +98,9 @@ _dhtSearchList :: Lens' DhtState (Map PublicKey DhtSearchEntry)
 _dhtSearchList f d@DhtState{ dhtSearchList = a } =
   (\a' -> d{ dhtSearchList = a' }) <$> f a
 
-_pendingReplies :: Lens' DhtState PendingReplies
-_pendingReplies f d@DhtState{ pendingReplies = a } =
-  (\a' -> d{ pendingReplies = a' }) <$> f a
+_dhtPendingReplies :: Lens' DhtState PendingReplies
+_dhtPendingReplies f d@DhtState{ dhtPendingReplies = a } =
+  (\a' -> d{ dhtPendingReplies = a' }) <$> f a
 
 \end{code}
 
