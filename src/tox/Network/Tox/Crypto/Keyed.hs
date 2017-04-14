@@ -8,7 +8,7 @@ module Network.Tox.Crypto.Keyed where
 
 import           Control.Applicative            (Applicative, pure, (<*>))
 import           Control.Monad                  (Monad)
-import           Control.Monad.Random           (RandT, mapRandT)
+import           Control.Monad.Random           (RandT)
 import           Control.Monad.Reader           (ReaderT, mapReaderT)
 import           Control.Monad.RWS              (RWST, mapRWST)
 import           Control.Monad.State            (StateT, mapStateT)

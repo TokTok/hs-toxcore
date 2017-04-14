@@ -28,4 +28,3 @@ runTimedT (TimedT m) = runReaderT m
 
 instance Monad m => Timed (TimedT m) where
   askTime = TimedT ask
-  adjustTime f (TimedT m) = TimedT $ local f m
