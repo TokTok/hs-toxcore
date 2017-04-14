@@ -8,6 +8,7 @@ import           Test.QuickCheck
 import           Control.Monad                 (mzero, when)
 import           Control.Monad.Writer          (execWriterT)
 import           Data.Proxy                    (Proxy (..))
+import qualified Data.Map                             as Map
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
@@ -21,19 +22,28 @@ import qualified Network.Tox.Time              as Time
 
 spec :: Spec
 spec = do
-  readShowSpec (Proxy :: Proxy DhtState)
+  describe "a newly initialised DHT node" $ do
+    it "contains no nodes" $
+      property $ \time seed ->
+        (DhtState.size $ Operation.initTestDhtState seed time) `shouldBe` 0
 
-  it "generates no periodic Nodes Request for an empty DhtState" $
-    property $ \keyPair time time' seed ->
-      let
-        dhtState = DhtState.empty time keyPair
-        requests = Operation.evalTestDhtNode seed time' dhtState . execWriterT $
-          Operation.randomRequests >> Operation.checkNodes
-      in
-      requests `shouldBe` []
+    it "has a search list containing initRandomSearches search entries" $
+      property $ \time seed ->
+        (Map.size . DhtState.dhtSearchList $ Operation.initTestDhtState seed time)
+        `shouldBe` Operation.initRandomSearches
+
+  describe "periodic nodes requests" $ do
+    it "are not generated for an empty DHT State" $
+      property $ \keyPair time time' seed ->
+        let
+          dhtState = DhtState.empty time keyPair
+          requests = Operation.evalTestDhtNode seed time' dhtState . execWriterT $
+            Operation.randomRequests >> Operation.checkNodes
+        in
+        requests `shouldBe` []
 
   describe "randomRequests" $ do
-    it "generates a Nodes Request to a node in the close list after randomRequestPeriod" $
+    it "generates a single Nodes Request to a node in the close list after randomRequestPeriod" $
       property $ \keyPair time (nodeInfos::[NodeInfo]) seed ->
         let
           dhtState       = DhtState.empty time keyPair
@@ -73,11 +83,7 @@ spec = do
           viable   = DhtState.viable nodeInfo dhtState
           afterAdd = DhtState.addNode time nodeInfo dhtState
           time'    = time Time.+ Operation.checkPeriod
-          checks    = Operation.evalTestDhtNode seed time' afterAdd
+          checks   = Operation.evalTestDhtNode seed time' afterAdd
             . execWriterT $ Operation.checkNodes
         in
         when viable $ map Operation.requestTo checks `shouldSatisfy` (nodeInfo `elem`)
-
-  it "removes nodes from which we consistently fail to receive Node Responses"
-    pending -- need something more precise to test
-

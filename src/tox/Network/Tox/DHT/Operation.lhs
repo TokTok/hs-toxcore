@@ -173,14 +173,14 @@ for randomly generated public keys.
 
 \begin{code}
 
-randomSearches :: Int
-randomSearches = 2
+initRandomSearches :: Int
+initRandomSearches = 2
 
-initDHT :: (MonadRandomBytes m, Timed m) => m DhtState
-initDHT = do
+initDht :: (MonadRandomBytes m, Timed m) => m DhtState
+initDht = do
   dhtState <- DhtState.empty <$> Timed.askTime <*> MonadRandomBytes.newKeyPair
   time <- Timed.askTime
-  (`execStateT` dhtState) $ replicateM randomSearches $ do
+  (`execStateT` dhtState) $ replicateM initRandomSearches $ do
     publicKey <- MonadRandomBytes.randomKey
     DhtState._dhtSearchList %=
       Map.insert publicKey (DhtState.emptySearchEntry time publicKey)
@@ -574,14 +574,26 @@ TODO: consider giving min and max values for the constants.
 type TestDhtNodeMonad = KeyedT (TimedT (RandT StdGen (StateT DhtState (Networked.NetworkLogged Identity))))
 instance DhtNodeMonad TestDhtNodeMonad
 
-evalTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> a
-evalTestDhtNode seed time s =
+runTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> (a, DhtState)
+runTestDhtNode seed time s =
   runIdentity
     . Networked.evalNetworkLogged
-    . (`evalStateT` s)
+    . (`runStateT` s)
     . (`evalRandT` unwrapArbStdGen seed)
     . (`TimedT.runTimedT` time)
     . (`KeyedT.evalKeyedT` Map.empty)
+
+evalTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> a
+evalTestDhtNode seed time s = fst . runTestDhtNode seed time s
+execTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> DhtState
+execTestDhtNode seed time s = snd . runTestDhtNode seed time s
+
+initTestDhtState :: ArbStdGen -> Timestamp -> DhtState
+initTestDhtState seed time =
+  runIdentity
+    . (`evalRandT` unwrapArbStdGen seed)
+    . (`TimedT.runTimedT` time)
+    $ initDht
 
 -- | wrap StdGen so the Arbitrary instance isn't an orphan
 newtype ArbStdGen = ArbStdGen { unwrapArbStdGen :: StdGen }
