@@ -78,7 +78,7 @@ data DhtState = DhtState
   , dhtSearchList     :: Map PublicKey DhtSearchEntry
 
   , dhtCloseListStamp :: ListStamp
-  , dhtPendingReplies    :: PendingReplies
+  , dhtPendingReplies :: PendingReplies
   }
   deriving (Eq, Read, Show)
 

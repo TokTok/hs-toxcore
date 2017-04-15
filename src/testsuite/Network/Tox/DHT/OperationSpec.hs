@@ -7,8 +7,8 @@ import           Test.QuickCheck
 
 import           Control.Monad                 (mzero, when)
 import           Control.Monad.Writer          (execWriterT)
+import qualified Data.Map                      as Map
 import           Data.Proxy                    (Proxy (..))
-import qualified Data.Map                             as Map
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
@@ -25,14 +25,14 @@ spec = do
   describe "a newly initialised DHT node" $ do
     it "contains no nodes" $
       property $ \time seed ->
-        (DhtState.size $ Operation.initTestDhtState seed time) `shouldBe` 0
+        DhtState.size (Operation.initTestDhtState seed time) `shouldBe` 0
 
     it "has a search list containing initRandomSearches search entries" $
       property $ \time seed ->
         (Map.size . DhtState.dhtSearchList $ Operation.initTestDhtState seed time)
         `shouldBe` Operation.initRandomSearches
 
-  describe "periodic nodes requests" $ do
+  describe "periodic nodes requests" $
     it "are not generated for an empty DHT State" $
       property $ \keyPair time time' seed ->
         let
