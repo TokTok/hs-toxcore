@@ -400,8 +400,8 @@ handlePingRequest _ _ = return ()
 \end{code}
 
 \subsection{Handling Ping Response packets}
-When we receive a valid Nodes Response packet, we first check that it is a reply
-to a Ping Request which we sent within the last 60 seconds to the node from
+When we receive a valid Ping Response packet, we first check that it is a reply
+to a Ping Request which we sent within the last 5 seconds to the node from
 which we received the response, and that no previous reply has been received. If
 this check fails, the packet is ignored. If the check succeeds, we add to the
 DHT State the node from which the response was sent.
