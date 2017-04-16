@@ -117,6 +117,7 @@ library
         Network.Tox.DHT.NodesRequestSpec
         Network.Tox.DHT.NodesResponseSpec
         Network.Tox.DHT.OperationSpec
+        Network.Tox.DHT.PendingRepliesSpec
         Network.Tox.DHT.PingPacketSpec
         Network.Tox.DHT.RpcPacketSpec
         Network.Tox.DHTSpec
