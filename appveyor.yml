@@ -13,7 +13,8 @@ build_script:
 - cabal install --enable-tests --enable-benchmarks --disable-documentation --only-dependencies --extra-include-dirs=%CD%\libsodium-win64\include --extra-lib-dirs=%CD%\libsodium-win64\lib
 
 test_script:
-- cabal test || type dist\test\hstox-0.0.1-testsuite.log
+- cabal test || type dist\test\*-testsuite.log
+- dist\build\testsuite\testsuite.exe
 
 branches:
   only:
