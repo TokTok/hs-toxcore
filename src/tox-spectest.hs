@@ -15,15 +15,22 @@ getSutAndArgs = do
     sut : rest -> return (sut, rest)
 
 
-main :: IO ()
-main = do
-  (sut, args) <- getSutAndArgs
+withSut :: String -> IO () -> IO ()
+withSut "" action = action
+withSut sut action = do
   -- Start a SUT (System Under Test) process that will listen on port 1234.
   (_, _, _, sutProc) <- createProcess $ proc sut []
   -- 100ms delay to give the SUT time to set up its socket before we try to
   -- build connections in the test runner.
   threadDelay $ 100 * 1000
-  -- TestSuite (the test runner) makes connections to port 1234 to communicate
-  -- with the SUT.
-  withArgs (["--print-cpu-time", "--color"] ++ args) ToxTestSuite.main
+  action
   terminateProcess sutProc
+
+
+main :: IO ()
+main = do
+  (sut, args) <- getSutAndArgs
+  withSut sut $
+    -- TestSuite (the test runner) makes connections to port 1234 to communicate
+    -- with the SUT.
+    withArgs (["--print-cpu-time", "--color"] ++ args) ToxTestSuite.main
