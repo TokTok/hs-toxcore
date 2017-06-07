@@ -1,5 +1,0 @@
-#!/bin/sh
-
-docker pull $DOCKER_IMAGE
-docker run --rm $DOCKER_IMAGE cat /root/dockrun > dockrun
-chmod +x dockrun

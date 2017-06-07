@@ -1,0 +1,21 @@
+diff -u -r a/System/Clock.hsc b/System/Clock.hsc
+--- a/System/Clock.hsc  2016-04-20 02:14:45.000000000 +0100
++++ b/System/Clock.hsc  2017-06-09 12:15:31.229226983 +0100
+@@ -41,8 +41,6 @@
+ #  endif
+ #endif
+
+-#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+-
+ -- | Clock types. A clock may be system-wide (that is, visible to all processes)
+ --   or per-process (measuring time that is meaningful only within a process).
+ --   All implementations shall support CLOCK_REALTIME. (The only suspend-aware
+@@ -216,7 +214,7 @@
+ #else
+ instance Storable TimeSpec where
+   sizeOf _ = #{size struct timespec}
+-  alignment _ = #{alignment struct timespec}
++  alignment _ = #{const __alignof__(struct timespec)}
+   poke ptr ts = do
+       let xs :: #{type time_t} = fromIntegral $ sec ts
+           xn :: #{type long} = fromIntegral $ nsec ts

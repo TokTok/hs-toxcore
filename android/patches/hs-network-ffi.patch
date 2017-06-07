@@ -1,0 +1,12 @@
+diff -u -r a/Network/Socket/Types.hsc b/Network/Socket/Types.hsc
+--- a/Network/Socket/Types.hsc	2017-05-30 20:10:33.000000000 +0000
++++ b/Network/Socket/Types.hsc	2017-06-10 16:34:51.782365107 +0000
+@@ -1085,7 +1085,7 @@
+ 
+ instance Storable In6Addr where
+     sizeOf _    = #const sizeof(struct in6_addr)
+-    alignment _ = #alignment struct in6_addr
++    alignment _ = #const __alignof__(struct in6_addr)
+ 
+     peek p = do
+         a <- peek32 p 0

@@ -43,9 +43,7 @@ library
     , lens-family
     , MonadRandom
     , mtl
-    -- network-2.6.2.1 is the last version that can be cross-compiled, so we install
-    -- it explicitly here.
-    , network                   <= 2.6.2.1
+    , network
     , network-msgpack-rpc       >= 0.0.3
     , saltine
     , random

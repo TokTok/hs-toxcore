@@ -1,0 +1,74 @@
+version: 2
+
+jobs:
+  build:
+    working_directory: ~/work
+    docker:
+      - image: circleci/python:latest
+
+    steps:
+      - checkout
+      - run: .circleci/launch-job aarch64
+      - run: .circleci/launch-job arm
+      - run: .circleci/launch-job i686
+      - run: .circleci/launch-job x86_64
+
+  # aarch64-linux-android-4.9
+  aarch64:
+    working_directory: ~/work
+    docker:
+      - image: toktoknet/ghc-android:latest.aarch64
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-cabal-cache-aarch64
+      - run: android/build.sh
+      - save_cache:
+          key: v1-cabal-cache-aarch64
+          paths: [~/.ghc/android-21/aarch64-linux-android-4.9]
+
+  # arm-linux-androideabi-4.9
+  arm:
+    working_directory: ~/work
+    docker:
+      - image: toktoknet/ghc-android:latest.arm
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-cabal-cache-arm
+      - run: android/build.sh
+      - save_cache:
+          key: v1-cabal-cache-arm
+          paths: [~/.ghc/android-9/arm-linux-androideabi-4.9]
+
+  # x86-4.9
+  i686:
+    working_directory: ~/work
+    docker:
+      - image: toktoknet/ghc-android:latest.i686
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-cabal-cache-i686
+      - run: android/build.sh
+      - save_cache:
+          key: v1-cabal-cache-i686
+          paths: [~/.ghc/android-9/x86-4.9]
+
+  # x86_64-4.9
+  x86_64:
+    working_directory: ~/work
+    docker:
+      - image: toktoknet/ghc-android:latest.x86_64
+
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-cabal-cache-x86_64
+      - run: android/build.sh
+      - save_cache:
+          key: v1-cabal-cache-x86_64
+          paths: [~/.ghc/android-21/x86_64-4.9]

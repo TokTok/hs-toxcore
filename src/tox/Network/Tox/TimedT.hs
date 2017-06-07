@@ -23,7 +23,7 @@ newtype TimedT m a = TimedT (ReaderT Timestamp m a)
   deriving (Monad, Applicative, Functor, MonadState s, MonadWriter w
     , MonadRandomBytes, MonadTrans, MonadIO, Networked, Keyed)
 
-runTimedT :: Monad m => TimedT m a -> Timestamp -> m a
+runTimedT :: TimedT m a -> Timestamp -> m a
 runTimedT (TimedT m) = runReaderT m
 
 instance Monad m => Timed (TimedT m) where

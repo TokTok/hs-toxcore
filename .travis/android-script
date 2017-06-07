@@ -1,4 +1,0 @@
-#!/bin/sh
-
-./dockrun target-cabal configure -flibrary-only
-./dockrun target-cabal build
