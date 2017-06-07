@@ -1,0 +1,13 @@
+machine:
+  services:
+  - docker
+  environment:
+    TARGET_ARCH: arm
+
+dependencies:
+  override:
+  - .travis/android-install
+
+compile:
+  override:
+  - .travis/android-script

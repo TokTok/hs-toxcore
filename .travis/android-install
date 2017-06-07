@@ -1,5 +1,6 @@
 #!/bin/sh
 
+DOCKER_IMAGE=toktoknet/ghc-android:latest.$TARGET_ARCH
+
 docker pull $DOCKER_IMAGE
-docker run --rm $DOCKER_IMAGE cat /root/dockrun > dockrun
-chmod +x dockrun
+docker run --rm -v ${PWD}:/work $DOCKER_IMAGE cp /root/dockrun /work/dockrun
