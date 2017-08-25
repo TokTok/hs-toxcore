@@ -329,9 +329,6 @@ currently contain the node and to which the node is viable for entry, we send a
 Nodes Request to the node with the requested public key being the base key of
 the Nodes List.
 
-(NOTE: in fact c-toxcore currently checks that the node isn't already in
-the node list only for search lists, not for the close list. See #511.)
-
 An implementation may choose not to send every such Nodes Request.
 (c-toxcore only sends so many per list (8 for the Close List, 4 for a Search
 Entry) per 50ms, prioritising the closest to the base key).

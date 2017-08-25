@@ -3078,14 +3078,13 @@ the other cannot generate \texttt{ping\_id}s and must ask for them.  The reason
 for the 2 \texttt{ping\_id}s is that we want to make sure that the timeout is at
 least 20 seconds and cannot be 0.
 
-If one of the two ping ids is equal to the public key used to encrypt the
-announce packet (the pk the peer is announcing himself as), the sendback data
-public key and the sendback data are stored in the datastructure used to store
-announced peers.  If the implementation has a limit to how many announced
-entries it can store, it should only store the entries closest (determined by
-the DHT distance function) to its DHT public key.  If the entry is already
-there, the information will simply be updated with the new one and the timeout
-will be reset for that entry.
+If one of the two ping ids is equal to the ping id in the announce request,
+the sendback data public key and the sendback data are stored in the
+datastructure used to store announced peers.  If the implementation has a
+limit to how many announced entries it can store, it should only store the
+entries closest (determined by the DHT distance function) to its DHT public
+key.  If the entry is already there, the information will simply be updated
+with the new one and the timeout will be reset for that entry.
 
 Toxcore has a timeout of 300 seconds for announce entries after which they are
 removed which is long enough to make sure the entries don't expire prematurely
@@ -3096,9 +3095,9 @@ Toxcore will then copy the 4 DHT nodes closest to the public key being searched
 to a new packet (the response).
 
 Toxcore will look if the public key being searched is in the datastructure.  If
-it isn't it will copy the first generated \texttt{ping\_id} (the one generated
-with the current time) to the response, set the \texttt{is\_stored} number to 0
-and send the packet back.
+it isn't it will copy the second generated \texttt{ping\_id} (the one generated
+with the current time plus 20 seconds) to the response, set the
+\texttt{is\_stored} number to 0 and send the packet back.
 
 If the public key is in the datastructure, it will check whether the public key
 that was used to encrypt the announce packet is equal to the announced public
@@ -3109,11 +3108,11 @@ data public key in the announce entry is copied to the packet.
 If it (key used to encrypt the announce packet) is equal (to the announced
 public key which is also the 'public key we are searching for' in the announce
 packet) meaning the peer is announcing itself and an entry for it exists, the
-sending back data public key is checked to see if it equals the one it the
+sending back data public key is checked to see if it equals the one in the
 packet.  If it is not equal it means that it is outdated, probably because the
 announcing peer's toxcore instance was restarted and so their
 \texttt{is\_stored} is set to 0, if it is equal it means the peer is announced
-correctly so the \texttt{is\_stored} is set to 2.  The first generated
+correctly so the \texttt{is\_stored} is set to 2.  The second generated
 \texttt{ping\_id} is then copied to the packet.
 
 Once the packet is contructed a random 24 byte nonce is generated, the packet
@@ -3157,27 +3156,30 @@ only 4 could be tried at a time.  A too high number meanwhile would mean each
 path is used (and tested) less.  The reason why the numbers are the same for
 both types of paths is for code simplification purposes.
 
-To search/announce itself to peers, toxcore keeps the 8 closest peers to each
-key it is searching (or announcing itself to).  To populate these it starts by
-sending announce requests to random peers for all the public keys it is
-searching for.  It then recursively searches closer and closer peers (DHT
-distance function) until it no longer finds any.  It is important to make sure
-it is not too aggressive at searching the peers as some might no longer be
-online but peers might still send announce responses with their information.
-Toxcore keeps lists of last pinged nodes for each key searched so as not to
-ping dead nodes too aggressively.
+To search/announce itself to peers, toxcore keeps the 8 closest peers (12 for
+announcing) to each key it is searching (or announcing itself to).  To
+populate these it starts by sending announce requests to random peers for all
+the public keys it is searching for.  It then recursively searches closer and
+closer peers (DHT distance function) until it no longer finds any.  It is
+important to make sure it is not too aggressive at searching the peers as some
+might no longer be online but peers might still send announce responses with
+their information. Toxcore keeps lists of last pinged nodes for each key
+searched so as not to ping dead nodes too aggressively.
 
 Toxcore decides if it will send an announce packet to one of the 4 peers in the
 announce response by checking if the peer would be stored as one of the stored
-8 closest peers if it responded; if it would not be it doesn't send an announce
+closest peers if it responded; if it would not be it doesn't send an announce
 request, if it would be it sends one.
 
-Peers are only put in the 8 closest peers array if they respond to an announce
+Peers are only put in the closest peers array if they respond to an announce
 request.  If the peers fail to respond to 3 announce requests they are deemed
-timed out and removed.
+timed out and removed.  When sending an announce request to a peer to which we
+have been announcing ourselves for at least 90 seconds and which has failed to
+respond to the previous 2 requests, toxcore uses a random path for the request.
+This reduces the chances that a good node will be removed due to bad paths.
 
-The reason for the number of peers being 8 is that a lower number might make
-searching for and announcing too unreliable and a higher number too
+The reason for the numbers of peers being 8 and 12 is that lower numbers might
+make searching for and announcing too unreliable and a higher number too
 bandwidth/resource intensive.
 
 Toxcore uses \texttt{ping\_array} (see \texttt{ping\_array}) for the 8 byte
@@ -3189,13 +3191,18 @@ if the key in the unencrypted part of the packet is the right public key.
 
 For peers we are announcing ourselves to, if we are not announced to them
 toxcore tries every 3 seconds to announce ourselves to them until they return
-that we have announced ourselves to, then toxcore sends an announce request
-packet every 15 seconds to see if we are still announced and re announce
-ourselves at the same time.  The timeout of 15 seconds means a \texttt{ping\_id}
-received in the last packet will not have had time to expire (20 second minimum
-timeout) before it is resent 15 seconds later.  Toxcore sends every announce
-packet with the \texttt{ping\_id} previously received from that peer with the
-same path (if possible).
+that we have announced ourselves to them, then initially toxcore sends an
+announce request packet every 15 seconds to see if we are still announced and
+reannounce ourselves at the same time.  The timeout of 15 seconds means a
+\texttt{ping\_id} received in the last packet will not have had time to expire
+(20 second minimum timeout) before it is resent 15 seconds later.  Toxcore sends
+every announce packet with the \texttt{ping\_id} previously received from that
+peer with the same path (if possible).  Toxcore use a timeout of 120 seconds
+rather than 15 seconds if we have been announcing to the peer for at least 90
+seconds, and the onion path we are are using for the peer has also been alive
+for at least 90 seconds, and we have not been waiting for at least 15 seconds
+for a response to a request sent to the peer, nor for at least 10 seconds for a
+response to a request sent via the path.
 
 For friends this is slightly different.  It is important to start searching for
 friends after we are fully announced.  Assuming a perfect network, we would
@@ -3207,10 +3214,16 @@ their clients at the same time but are unable to find each other right away
 because they start searching for each other while they have not announced
 themselves.
 
-For this reason, after the peer is announced successfully for 17 seconds,
+For this reason, after the peer is announced successfully, for 17 seconds
 announce packets are sent aggressively every 3 seconds to each known close peer
 (in the list of 8 peers) to search aggressively for peers that know the peer we
 are searching for.
+
+After this, toxcore sends requests once per 15 seconds initially, then
+uses linear backoff to increase the interval.  In detail, the interval used
+when searching for a given friend is at least 15 and at most 2400 seconds, and
+within these bounds is calculated as one quarter of the time since we began
+searching for the friend or some peer reported that the friend was announced.
 
 There are other ways this could be done and which would still work but, if
 making your own implementation, keep in mind that these are likely not the most
@@ -3309,7 +3322,7 @@ If a friend is online and connected to us, the onion will stop all of its
 actions for that friend.  If the peer goes offline it will restart searching
 for the friend as if toxcore was just started.
 
-If toxcore goes offline (no onion traffic for 20 seconds) toxcore will
+If toxcore goes offline (no onion traffic for 75 seconds) toxcore will
 aggressively reannounce itself and search for friends as if it was just
 started.
 
