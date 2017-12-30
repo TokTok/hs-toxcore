@@ -1,7 +1,7 @@
 \chapter{Testing}
 
 The final part of the architecture is the test protocol. We use a
-\href{http://msgpack.org}{MessagePack} based RPC protocol to expose language
+MessagePack (https://msgpack.org) based RPC protocol to expose language
 agnostic interfaces to internal functions. Using property based testing with
 random inputs as well as specific edge case tests help ensure that an
 implementation of the Tox protocol following the architecture specified in this
