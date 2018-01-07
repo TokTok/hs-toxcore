@@ -2,7 +2,7 @@
 module Network.Tox.Crypto.NonceSpec where
 
 import           Control.Monad.IO.Class   (liftIO)
-import           Network.MessagePack.Rpc  (rpc, rpc)
+import           Network.MessagePack.Rpc  (rpc)
 import           Network.Tox.RPCTest      (equivProp1, runTest)
 import           Test.Hspec
 import           Test.QuickCheck

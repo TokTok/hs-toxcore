@@ -5,7 +5,7 @@ module Network.Tox.Crypto.BoxSpec where
 
 import           Control.Monad.IO.Class         (liftIO)
 import qualified Data.ByteString                as ByteString
-import qualified Data.MessagePack.Result        as R
+import qualified Data.MessagePack.Types.Result  as R
 import           Data.Proxy                     (Proxy (..))
 import           Network.MessagePack.Rpc        (rpc)
 import           Network.Tox.RPCTest            (equiv3, equivProp, equivProp3,

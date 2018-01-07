@@ -4,7 +4,7 @@ module Network.Tox.Crypto.KeyPairSpec where
 import           Control.Monad.IO.Class         (liftIO)
 import qualified Crypto.Saltine.Class           as Sodium (encode)
 import           Data.Proxy                     (Proxy (..))
-import           Network.MessagePack.Rpc        (rpc, rpc)
+import           Network.MessagePack.Rpc        (rpc)
 import           Network.Tox.RPCTest            (equivProp1, runTest)
 import           Test.Hspec
 import           Test.QuickCheck

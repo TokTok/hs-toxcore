@@ -5,7 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE Trustworthy           #-}
+{-# LANGUAGE Safe                  #-}
 module Network.Tox.DHT.DhtState where
 
 import           Control.Applicative            (Applicative, Const (..),

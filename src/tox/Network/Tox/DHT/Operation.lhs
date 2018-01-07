@@ -7,8 +7,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE Trustworthy           #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 module Network.Tox.DHT.Operation where
 
