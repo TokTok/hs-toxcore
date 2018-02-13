@@ -8,9 +8,7 @@ module Network.Tox.Binary
   , decode, decodeC, decodeS
   ) where
 
-import           Control.Applicative                    ((<$>))
-import           Control.Monad                          ((>=>))
-import           Data.Binary                            (Binary, get, put)
+import           Data.Binary                            (Binary)
 import           Data.ByteString                        (ByteString)
 import           Data.MessagePack                       (MessagePack,
                                                          fromObject, toObject)

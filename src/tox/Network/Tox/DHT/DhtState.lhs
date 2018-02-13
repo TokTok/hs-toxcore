@@ -9,9 +9,7 @@
 module Network.Tox.DHT.DhtState where
 
 import           Control.Applicative            (Applicative, Const (..),
-                                                 getConst, pure, (<$>), (<*>),
-                                                 (<|>))
-import           Control.Monad.State            (MonadState, StateT)
+                                                 getConst, (<$>), (<*>), (<|>))
 import           Data.Functor.Identity          (Identity (..))
 import           Data.List                      (nub, sortBy)
 import           Data.Map                       (Map)
@@ -34,13 +32,10 @@ import qualified Network.Tox.DHT.KBuckets       as KBuckets
 import           Network.Tox.DHT.NodeList       (NodeList)
 import qualified Network.Tox.DHT.NodeList       as NodeList
 import           Network.Tox.DHT.PendingReplies (PendingReplies)
-import qualified Network.Tox.DHT.RpcPacket      as RpcPacket
-import           Network.Tox.DHT.Stamped        (Stamped)
 import qualified Network.Tox.DHT.Stamped        as Stamped
 import           Network.Tox.NodeInfo.NodeInfo  (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo  as NodeInfo
 import           Network.Tox.Time               (Timestamp)
-import qualified Network.Tox.Time               as Time
 
 
 {-------------------------------------------------------------------------------

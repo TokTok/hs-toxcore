@@ -5,8 +5,7 @@
 {-# LANGUAGE Safe           #-}
 module Network.Tox.DHT.ClientList where
 
-import           Control.Applicative           (Const (..), getConst, (<$>),
-                                                (<*>))
+import           Control.Applicative           ((<$>), (<*>))
 import           Control.Monad                 (join)
 import           Data.List                     (sort)
 import           Data.Map                      (Map)
@@ -23,8 +22,7 @@ import           Network.Tox.DHT.Distance      (Distance)
 import qualified Network.Tox.DHT.Distance      as Distance
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
-import           Network.Tox.Time              (TimeDiff, Timestamp)
-import qualified Network.Tox.Time              as Time
+import           Network.Tox.Time              (Timestamp)
 
 
 {-------------------------------------------------------------------------------

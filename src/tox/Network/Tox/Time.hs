@@ -2,7 +2,6 @@
 module Network.Tox.Time where
 
 import           Control.Applicative       ((<$>), (<*>))
-import           Data.Monoid               (Monoid, mappend, mempty)
 import qualified System.Clock              as Clock
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 

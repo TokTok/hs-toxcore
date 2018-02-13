@@ -9,17 +9,16 @@ module Network.Tox.Crypto.Keyed where
 import           Control.Applicative            (Applicative, pure, (<*>))
 import           Control.Monad                  (Monad)
 import           Control.Monad.Random           (RandT)
-import           Control.Monad.Reader           (ReaderT, mapReaderT)
-import           Control.Monad.RWS              (RWST, mapRWST)
-import           Control.Monad.State            (StateT, mapStateT)
+import           Control.Monad.Reader           (ReaderT)
+import           Control.Monad.RWS              (RWST)
+import           Control.Monad.State            (StateT)
 import           Control.Monad.Trans            (lift)
-import           Control.Monad.Writer           (WriterT, mapWriterT)
+import           Control.Monad.Writer           (WriterT)
 import           Data.Monoid                    (Monoid)
 
 import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
 import           Network.Tox.Crypto.Key         (CombinedKey, PublicKey,
                                                  SecretKey)
-import           Network.Tox.Time               (Timestamp)
 
 class (Monad m, Applicative m) => Keyed m where
   getCombinedKey :: SecretKey -> PublicKey -> m CombinedKey

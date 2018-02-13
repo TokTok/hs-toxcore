@@ -20,19 +20,16 @@ DHT Packet which is to be received by the addressee.
 {-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.DhtRequestPacket where
 
-import           Control.Applicative        ((<$>), (<*>))
-import           Data.Binary                (Binary, get, put)
-import           Data.MessagePack           (MessagePack)
-import           Data.Typeable              (Typeable)
-import           GHC.Generics               (Generic)
+import           Control.Applicative       ((<$>), (<*>))
+import           Data.Binary               (Binary, get, put)
+import           Data.MessagePack          (MessagePack)
+import           Data.Typeable             (Typeable)
+import           GHC.Generics              (Generic)
 
-import           Network.Tox.Crypto.Box     (PlainText (..))
-import           Network.Tox.Crypto.Key     (Nonce, PublicKey)
-import           Network.Tox.Crypto.KeyPair (KeyPair (..))
-import           Network.Tox.DHT.DhtPacket  (DhtPacket)
-import qualified Network.Tox.DHT.DhtPacket  as DhtPacket
+import           Network.Tox.Crypto.Key    (PublicKey)
+import           Network.Tox.DHT.DhtPacket (DhtPacket)
 
-import           Test.QuickCheck.Arbitrary  (Arbitrary, arbitrary)
+import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 
 
 

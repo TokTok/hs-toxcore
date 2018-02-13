@@ -10,8 +10,6 @@ module Network.Tox.Crypto.KeyedT where
 import           Control.Applicative                  (Applicative, (<$>))
 import           Control.Monad                        (Monad)
 import           Control.Monad.IO.Class               (MonadIO)
-import           Control.Monad.Reader                 (ReaderT, ask, local,
-                                                       runReaderT)
 import           Control.Monad.State                  (MonadState, StateT,
                                                        StateT (..), evalStateT,
                                                        gets, modify, runStateT,

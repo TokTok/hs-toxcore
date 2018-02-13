@@ -12,11 +12,11 @@ module Network.Tox.DHT.KBuckets where
 
 import           Control.Applicative           (Applicative, (<$>))
 import           Data.Binary                   (Binary)
-import           Data.Foldable                 (maximumBy, toList)
+import           Data.Foldable                 (toList)
 import           Data.List                     (sortBy)
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
-import           Data.Maybe                    (isJust, maybeToList)
+import           Data.Maybe                    (isJust)
 import           Data.Ord                      (comparing)
 import           Data.Traversable              (Traversable, mapAccumR,
                                                 traverse)

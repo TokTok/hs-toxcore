@@ -18,7 +18,6 @@ import           Network.Tox.DHT.Distance      (Distance)
 import           Network.Tox.DHT.KBuckets      (KBuckets)
 import qualified Network.Tox.DHT.KBuckets      as KBuckets
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
-import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 import           Network.Tox.Time              (Timestamp)
 
 class NodeList l where
@@ -35,7 +34,7 @@ class NodeList l where
 
   -- | 'closeNodes pub' returns the (pub',node) pairs of the Node List in
   -- increasing order of distance of pub' from pub.
-  closeNodes :: PublicKey -> l -> [ (Distance, NodeInfo) ]
+  closeNodes :: PublicKey -> l -> [(Distance, NodeInfo)]
 
   -- | copied from Data.Traversable.foldMapDefault
   foldMapClientLists :: Monoid m => (ClientList -> m) -> l -> m

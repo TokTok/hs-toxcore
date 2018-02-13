@@ -27,24 +27,22 @@ protocol never actually sends empty messages, so in reality the minimum size is
 {-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.DhtPacket where
 
-import           Control.Applicative            ((<$>), (<*>))
-import           Data.Binary                    (Binary, get, put)
-import           Data.Binary.Get                (getRemainingLazyByteString)
-import           Data.Binary.Put                (putByteString, putByteString,
-                                                 runPut)
-import qualified Data.ByteString.Lazy           as LazyByteString
-import           Data.MessagePack               (MessagePack)
-import           Data.Typeable                  (Typeable)
-import           GHC.Generics                   (Generic)
-import           Network.Tox.Crypto.Box         (CipherText, PlainText (..),
-                                                 unCipherText)
-import qualified Network.Tox.Crypto.Box         as Box
-import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
-import           Network.Tox.Crypto.Key         (Nonce, PublicKey)
-import           Network.Tox.Crypto.Keyed       (Keyed)
-import qualified Network.Tox.Crypto.Keyed       as Keyed
-import           Network.Tox.Crypto.KeyPair     (KeyPair (..))
-import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
+import           Control.Applicative        ((<$>), (<*>))
+import           Data.Binary                (Binary, get, put)
+import           Data.Binary.Get            (getRemainingLazyByteString)
+import           Data.Binary.Put            (putByteString, runPut)
+import qualified Data.ByteString.Lazy       as LazyByteString
+import           Data.MessagePack           (MessagePack)
+import           Data.Typeable              (Typeable)
+import           GHC.Generics               (Generic)
+import           Network.Tox.Crypto.Box     (CipherText, PlainText (..),
+                                             unCipherText)
+import qualified Network.Tox.Crypto.Box     as Box
+import           Network.Tox.Crypto.Key     (Nonce, PublicKey)
+import           Network.Tox.Crypto.Keyed   (Keyed)
+import qualified Network.Tox.Crypto.Keyed   as Keyed
+import           Network.Tox.Crypto.KeyPair (KeyPair (..))
+import           Test.QuickCheck.Arbitrary  (Arbitrary, arbitrary)
 
 
 

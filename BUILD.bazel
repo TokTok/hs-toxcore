@@ -1,3 +1,41 @@
+load("@io_tweag_rules_haskell//haskell:haskell.bzl", "haskell_library")
 load("//tools:project.bzl", "project")
 
 project("hs-toxcore")
+
+haskell_library(
+    name = "hs-toxcore",
+    srcs = glob(["src/tox/**/*.*hs"]),
+    compiler_flags = [
+        "-j4",
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-imports",
+    ],
+    prebuilt_dependencies = [
+        "base",
+        "binary",
+        "bytestring",
+        "containers",
+        "integer-gmp",
+        "transformers",
+    ],
+    src_strip_prefix = "src/tox",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hs-msgpack",
+        "//hs-msgpack-rpc",
+        "@haskell_MonadRandom//:MonadRandom",
+        "@haskell_QuickCheck//:QuickCheck",
+        "@haskell_base16_bytestring//:base16-bytestring",
+        "@haskell_binary_bits//:binary-bits",
+        "@haskell_clock//:clock",
+        "@haskell_entropy//:entropy",
+        "@haskell_iproute//:iproute",
+        "@haskell_lens_family//:lens-family",
+        "@haskell_mtl//:mtl",
+        "@haskell_network//:network",
+        "@haskell_random//:random",
+        "@haskell_saltine//:saltine",
+    ],
+)

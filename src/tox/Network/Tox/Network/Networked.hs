@@ -2,30 +2,23 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Trustworthy                #-}
 
--- | abstraction layer for network functionality.
+-- | Abstraction layer for network functionality.
+--
 -- The intention is to
 --   (i) separate the logic of the protocol from its binary encoding, and
 --   (ii) allow a simulated network in place of actual network IO.
 module Network.Tox.Network.Networked where
 
-import           Control.Applicative                  (Applicative, (<$>),
-                                                       (<*>))
-import           Control.Monad                        (guard, replicateM, void)
-import           Control.Monad.IO.Class               (liftIO)
+import           Control.Applicative                  (Applicative, (<$>))
 import           Control.Monad.Random                 (RandT)
-import           Control.Monad.Reader                 (ReaderT, ask, runReaderT)
+import           Control.Monad.Reader                 (ReaderT)
 import           Control.Monad.State                  (MonadState, StateT)
 import           Control.Monad.Trans.Class            (lift)
-import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
 import           Control.Monad.Writer                 (WriterT, execWriterT,
                                                        runWriterT, tell)
 import           Data.Binary                          (Binary)
-import           Data.Map                             (Map)
-import qualified Data.Map                             as Map
 import           Data.Monoid                          (Monoid)
-import           System.Random                        (Random, StdGen, randomIO)
 
-import           Network.Tox.DHT.DhtState             (DhtState)
 import           Network.Tox.Network.MonadRandomBytes (MonadRandomBytes)
 import           Network.Tox.NodeInfo.NodeInfo        (NodeInfo)
 import           Network.Tox.Protocol.Packet          (Packet (..))

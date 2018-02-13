@@ -13,39 +13,30 @@
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative                  (Applicative, pure, (*>),
-                                                       (<$), (<$>), (<*>))
+                                                       (<$>), (<*>))
 import           Control.Monad                        (guard, msum, replicateM,
                                                        unless, void, when)
 import           Control.Monad.Identity               (Identity, runIdentity)
-import           Control.Monad.IO.Class               (MonadIO, liftIO)
 import           Control.Monad.Random                 (RandT, evalRandT)
-import           Control.Monad.Reader                 (MonadReader, ReaderT,
-                                                       ask, runReaderT)
-import           Control.Monad.State                  (MonadState, State,
-                                                       StateT, evalStateT,
+import           Control.Monad.State                  (MonadState, StateT,
                                                        execStateT, get, gets,
-                                                       modify, put, runStateT,
-                                                       state)
+                                                       modify, put, runStateT)
 import           Control.Monad.Trans                  (lift)
 import           Control.Monad.Trans.Maybe            (MaybeT (..), runMaybeT)
-import           Control.Monad.Writer                 (MonadWriter, Writer,
-                                                       WriterT, execWriter,
-                                                       execWriterT, runWriter,
-                                                       tell)
+import           Control.Monad.Writer                 (MonadWriter, WriterT,
+                                                       execWriterT, tell)
 import           Data.Binary                          (Binary)
 import           Data.Foldable                        (for_)
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
 import           Data.Maybe                           (isNothing)
-import           Data.Traversable                     (for, traverse)
+import           Data.Traversable                     (traverse)
 import           Lens.Family2                         (Lens')
 import           Lens.Family2.State                   (zoom, (%%=), (%=))
-import           System.Random                        (StdGen, getStdGen,
-                                                       mkStdGen)
-import           Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary,
-                                                       shrink)
+import           System.Random                        (StdGen, mkStdGen)
+import           Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary)
 
-import           Network.Tox.Crypto.Key               (Nonce, PublicKey)
+import           Network.Tox.Crypto.Key               (PublicKey)
 import           Network.Tox.Crypto.Keyed             (Keyed)
 import           Network.Tox.Crypto.KeyedT            (KeyedT)
 import qualified Network.Tox.Crypto.KeyedT            as KeyedT
@@ -54,22 +45,18 @@ import           Network.Tox.DHT.ClientList           (ClientList)
 import qualified Network.Tox.DHT.ClientList           as ClientList
 import           Network.Tox.DHT.ClientNode           (ClientNode)
 import qualified Network.Tox.DHT.ClientNode           as ClientNode
-import           Network.Tox.DHT.DhtPacket            (DhtPacket (..))
 import qualified Network.Tox.DHT.DhtPacket            as DhtPacket
 import           Network.Tox.DHT.DhtRequestPacket     (DhtRequestPacket (..))
-import qualified Network.Tox.DHT.DhtRequestPacket     as DhtRequestPacket
 import           Network.Tox.DHT.DhtState             (DhtState)
 import qualified Network.Tox.DHT.DhtState             as DhtState
 import           Network.Tox.DHT.NodeList             (NodeList)
 import qualified Network.Tox.DHT.NodeList             as NodeList
 import           Network.Tox.DHT.NodesRequest         (NodesRequest (..))
 import           Network.Tox.DHT.NodesResponse        (NodesResponse (..))
-import           Network.Tox.DHT.PendingReplies       (PendingReplies)
 import qualified Network.Tox.DHT.PendingReplies       as PendingReplies
 import           Network.Tox.DHT.PingPacket           (PingPacket (..))
 import           Network.Tox.DHT.RpcPacket            (RpcPacket (..))
 import qualified Network.Tox.DHT.RpcPacket            as RpcPacket
-import           Network.Tox.DHT.Stamped              (Stamped)
 import qualified Network.Tox.DHT.Stamped              as Stamped
 import           Network.Tox.Network.MonadRandomBytes (MonadRandomBytes)
 import qualified Network.Tox.Network.MonadRandomBytes as MonadRandomBytes
