@@ -1,0 +1,3 @@
+load("//tools:project.bzl", "project")
+
+project("hs-toxcore")
