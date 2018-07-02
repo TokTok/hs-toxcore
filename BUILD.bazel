@@ -1,4 +1,4 @@
-load("@io_tweag_rules_haskell//haskell:haskell.bzl", "haskell_library")
+load("@io_tweag_rules_haskell//haskell:haskell.bzl", "haskell_library", "haskell_test")
 load("//tools:project.bzl", "project")
 
 project("hs-toxcore")
@@ -37,5 +37,30 @@ haskell_library(
         "@haskell_network//:network",
         "@haskell_random//:random",
         "@haskell_saltine//:saltine",
+    ],
+)
+
+haskell_test(
+    name = "test",
+    srcs = glob(["test/**/*.hs"]),
+    compiler_flags = [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-imports",
+    ],
+    main_file = "test/testsuite.hs",
+    prebuilt_dependencies = [
+        "base",
+        #"bytestring",
+    ],
+    src_strip_prefix = "test",
+    deps = [
+        ":hs-toxcore",
+        #"@haskell_QuickCheck//:QuickCheck",
+        #"@haskell_base16_bytestring//:base16-bytestring",
+        #"@haskell_bytestring_arbitrary//:bytestring-arbitrary",
+        #"@haskell_data_default_class//:data-default-class",
+        #"@haskell_hspec//:hspec",
+        #"@haskell_saltine//:saltine",
     ],
 )

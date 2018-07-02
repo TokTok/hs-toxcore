@@ -47,6 +47,7 @@ library
     , network
     , network-msgpack-rpc       >= 0.0.3
     , saltine
+    , semigroups
     , random
     , tagged
     , text

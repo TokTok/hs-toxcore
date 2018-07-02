@@ -44,7 +44,7 @@ language: generic
 script:
 - rm -f $HOME/.cabal && ln -s $HOME/.cabal-tools $HOME/.cabal
 - rm -f $HOME/.ghc && ln -s $HOME/.ghc-tools $HOME/.ghc
-- cabal install hpc-coveralls stylish-haskell hlint aeson-0.9.0.1
+- cabal install hpc-coveralls stylish-haskell hlint yaml-0.8.27 aeson-0.9.0.1
 - curl https://raw.githubusercontent.com/TokTok/toktok-stack/master/tools/stylish-haskell-lhs
   -o $HOME/.cabal/bin/stylish-haskell-lhs
 - chmod +x $HOME/.cabal/bin/stylish-haskell-lhs
@@ -53,14 +53,9 @@ script:
 - git diff --exit-code
 - rm -f $HOME/.cabal && ln -s $HOME/.cabal-build $HOME/.cabal
 - rm -f $HOME/.ghc && ln -s $HOME/.ghc-build $HOME/.ghc
-- cabal install --enable-tests --enable-benchmarks --only-dependencies ./ semdoc
-- if [ -n "semdoc" ]; then cabal install semdoc; fi
+- cabal install --enable-tests --enable-benchmarks --only-dependencies ./
+- if [ -n "" ]; then cabal install ; fi
 - cabal configure --enable-tests --enable-benchmarks --enable-library-coverage
-- cabal test
+- travis_wait cabal test
 - cabal check
-- git checkout $TRAVIS_BRANCH
-- semdoc src/tox/Network/Tox.lhs spec.old.md
-- "! git checkout -qf FETCH_HEAD || {\n  semdoc src/tox/Network/Tox.lhs spec.new.md\n
-  \ gem install gist\n  diff -u spec.old.md spec.new.md > spec.md.diff || gist spec.md.diff\n
-  \ gem install mdl\n  mdl -w -s .md-style.rb spec.new.md\n}\n"
 sudo: required
