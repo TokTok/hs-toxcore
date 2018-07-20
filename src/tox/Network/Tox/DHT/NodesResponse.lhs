@@ -37,7 +37,7 @@ import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
  ------------------------------------------------------------------------------}
 
 
-data NodesResponse = NodesResponse
+newtype NodesResponse = NodesResponse
   { foundNodes :: [NodeInfo]
   }
   deriving (Eq, Read, Show, Generic, Typeable)

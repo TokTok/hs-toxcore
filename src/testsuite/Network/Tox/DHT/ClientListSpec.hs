@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.ClientListSpec where
 

@@ -1,9 +1,8 @@
 \section{Distance}
 
 \begin{code}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MagicHash                  #-}
-{-# LANGUAGE Trustworthy                #-}
+{-# LANGUAGE MagicHash   #-}
+{-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.Distance where
 
 import           Control.Applicative       ((<$>))
@@ -90,7 +89,7 @@ rebaseDistance a b (Distance d) =
 
 
 instance Arbitrary Distance where
-  arbitrary = (Distance . abs) <$> arbitrary
+  arbitrary = Distance . abs <$> arbitrary
 \end{code}
 
 An implementation is not required to provide a Distance type, so it has no

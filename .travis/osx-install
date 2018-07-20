@@ -1,5 +1,0 @@
-#!/bin/sh
-
-brew install cabal-install
-cabal update
-cabal install happy

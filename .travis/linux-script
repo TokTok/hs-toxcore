@@ -1,4 +1,0 @@
-#!/bin/sh
-
-make
-git diff --exit-code --ignore-submodules

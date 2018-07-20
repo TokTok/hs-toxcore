@@ -30,7 +30,7 @@ import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
  ------------------------------------------------------------------------------}
 
 
-data NodesRequest = NodesRequest
+newtype NodesRequest = NodesRequest
   { requestedKey :: PublicKey
   }
   deriving (Eq, Read, Show, Generic, Typeable)

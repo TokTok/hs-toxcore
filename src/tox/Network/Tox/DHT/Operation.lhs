@@ -3,7 +3,6 @@
 \begin{code}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -12,8 +11,8 @@
 {-# LANGUAGE TypeSynonymInstances  #-}
 module Network.Tox.DHT.Operation where
 
-import           Control.Applicative                  (Applicative, pure, (*>),
-                                                       (<$>), (<*>))
+import           Control.Applicative                  (Applicative, pure, (<$>),
+                                                       (<*>))
 import           Control.Monad                        (guard, msum, replicateM,
                                                        unless, void, when)
 import           Control.Monad.Identity               (Identity, runIdentity)
@@ -27,6 +26,7 @@ import           Control.Monad.Writer                 (MonadWriter, WriterT,
                                                        execWriterT, tell)
 import           Data.Binary                          (Binary)
 import           Data.Foldable                        (for_)
+import           Data.Functor                         (($>))
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
 import           Data.Maybe                           (isNothing)
@@ -285,7 +285,7 @@ checkNodes = modifyM $ DhtState.traverseClientLists checkNodes'
         checkNode clientNode = Timed.askTime >>= \time ->
           if time Time.- lastCheck < checkPeriod
           then pure $ Just clientNode
-          else (tell [requestInfo] *>) . pure $
+          else (tell [requestInfo] $>) $
             if checkCount + 1 < maxChecks
             then Just $ clientNode
               { ClientNode.lastCheck = time
@@ -361,7 +361,7 @@ handleNodesRequest ::
 handleNodesRequest from (RpcPacket (NodesRequest key) requestId) = do
   ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
   when (ourPublicKey /= NodeInfo.publicKey from) $ do
-    nodes <- DhtState.takeClosestNodesTo responseMaxNodes key <$> get
+    nodes <- gets (DhtState.takeClosestNodesTo responseMaxNodes key)
     unless (null nodes) $ sendNodesResponse from requestId nodes
     sendPingRequestIfAppropriate from
 
