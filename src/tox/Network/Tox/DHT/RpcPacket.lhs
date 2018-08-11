@@ -34,7 +34,7 @@ instance MessagePack RequestId
 
 \end{code}
 
-\input{src/tox/Network/Tox/DHT/PendingReplies}
+\input{src/tox/Network/Tox/DHT/PendingReplies.lhs}
 
 DHT RPC Packets are encrypted and transported within DHT Packets.
 

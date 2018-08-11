@@ -10,7 +10,7 @@ format".
   \hline
   \texttt{1} bit     & Transport Protocol & UDP = 0, TCP = 1 \\
   \texttt{7} bit     & Address Family     & 2 = IPv4, 10 = IPv6 \\
-  \texttt{4 | 16}    & IP address         & 4 bytes for IPv4, 16 bytes for IPv6 \\
+  \texttt{4 $|$ 16}  & IP address         & 4 bytes for IPv4, 16 bytes for IPv6 \\
   \texttt{2}         & Port Number        & Port number \\
   \texttt{32}        & Public Key         & Node ID \\
 \end{tabular}
