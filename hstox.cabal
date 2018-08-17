@@ -2,12 +2,12 @@ name:                 hstox
 synopsis:             A Tox protocol implementation in Haskell
 version:              0.0.1
 cabal-version:        >= 1.10
-license:              AGPL-3
-license-file:         LICENSE.md
+license:              GPL-3
+license-file:         LICENSE
 build-type:           Simple
 author:               iphy
 maintainer:           iphy
-copyright:            © 2016 iphy
+copyright:            © 2016-2018 iphy
 homepage:             https://toktok.github.io
 category:             Network
 description:          A Tox protocol implementation in Haskell
