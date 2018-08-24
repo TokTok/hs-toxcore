@@ -1467,82 +1467,86 @@ should also be discarded.
 
 \chapter{Group}
 
-Group chats in Tox work by temporarily adding some peers (up to 4) present in
-the group chat as temporary \texttt{friend\_connection} friends, that are
-deleted when the group chat is exited.
+Group chats in Tox work by temporarily adding some peers present in the group
+chat as temporary \texttt{friend\_connection} friends, that are deleted when the
+group chat is exited.
 
-Each peer in the group chat is identified by their real long term public key
-however peers transmit their DHT public keys to each other via the group chat
-in order to speed up the connection by making it unnecessary for the peers to
-find each others DHT public keys with the onion which would happen if they
-would have added themselves as normal friends.
+Each peer in the group chat is identified by their real long term public key.
+Peers also transmit their DHT public keys to each other via the group chat in
+order to speed up the connection by making it unnecessary for the peers to find
+each other's DHT public keys with the onion, as would happen had they added each
+other as normal friends.
 
 The upside of using \texttt{friend\_connection} is that group chats do not have
 to deal with things like hole punching, peers only on TCP or other low level
 networking things.  The downside however is that every single peer knows each
-others real long term public key and DHT public key which means these group
+other's real long term public key and DHT public key, meaning that these group
 chats should only be used between friends.
 
-To connect to each other, two peers must have the other added to their list of
-friend connections.  This is not a problem if the group chat has an equal or
-smaller number of participants than 5 as each of the 5 peers will have the 4
-others added to their list of friend connections.  When there are more peers
-there must be a way to ensure that peers will manage to connect to other
-groupchat peers.
+Each peer adds a \texttt{friend\_connection} for each of up to 4 other peers in
+the group. If the group chat has 5 participants or fewer, each of the peers will
+therefore have each of the others added to their list of friend connections, and
+a peer wishing to send a message to the group may communicate it directly to the
+other peers. When there are more than 5 peers, messages are relayed along friend
+connections.
 
 Since the maximum number of peers per groupchat that will be connected to with
-friend connections is 4, if all peers in the groupchat are arranged in a
-perfect circle and each peer connects to the 2 peers that are the closest to
-the right of them and the 2 peers that are closest to the left of them, the
-peers should form a well connected circle of peers.
+friend connections is 4, if the peers in the groupchat are arranged in a circle
+and each peer connects to the 2 peers that are closest to the right of them and
+the 2 peers that are closest to the left of them, then the peers should form a
+well-connected circle of peers.
 
 Group chats in toxcore do this by subtracting the real long term public key of
-the peer with all the others in the group (our PK - other peer PK) and finding
-the two peers for which the result of this operation is the smallest.  The
-operation is then inversed (other peer PK - our PK) and this operation is done
-again with all the public keys of the peers in the group.  The 2 peers for
-which the result is again the smallest are picked.
+the peer with all the others in the group (our PK - other peer PK), using
+modular arithmetic, and finding the two peers for which the result of this
+operation is the smallest. The operation is then inversed (other peer PK - our
+PK) and this operation is done again with all the public keys of the peers in
+the group. The 2 peers for which the result is again the smallest are picked.
 
 This gives 4 peers that are then added as a friend connection and associated to
 the group.  If every peer in the group does this, they will form a circle of
 perfectly connected peers.
 
-Once the peers are connected to each other in a circle they relay each others
-messages.  Every time a peer leaves the group or a new peer joins each member
+Once the peers are connected to each other in a circle they relay each other's
+messages.  Every time a peer leaves the group or a new peer joins, each member
 of the chat will recalculate the peers they should connect to.
 
-To join a group chat the peer must first be invited to it by their friend.  To
+To join a group chat, a peer must first be invited to it by their friend.  To
 make a groupchat the peer will first create a groupchat and then invite people
-to this group chat.  Once their friends are in the group chat they can invite
-their other friends to the chat and so on.
+to this group chat.  Once their friends are in the group chat, those friends can
+invite their other friends to the chat, and so on.
 
-To create a group chat the peer will generate a random 32 byte id that will be
-used to uniquely identify this group chat.  32 bytes is enough so that when
-randomly generated with a secure random number generator every groupchat ever
-created will have a different id.  The goal of this 32 byte id is so that peers
-have a way of identifying each group chat so that they can prevent themselves
-from joining a groupchat twice for example.
+To create a group chat, a peer generates a random 32 byte id that is used to
+uniquely identify the group chat.  32 bytes is enough so that when randomly
+generated with a secure random number generator every groupchat ever created
+will have a different id.  The goal of this 32 byte id is so that peers have a
+way of identifying each group chat, so that they can prevent themselves from
+joining a groupchat twice for example.
 
 The groupchat will also have an unsigned 1 byte type.  This type indicates what
-kind of groupchat the groupchat is, the current types are:
+kind of groupchat the groupchat is. The current types are:
 
-0: text
-1: audio
+\begin{tabular}{l|l}
+  Type number       & Type \\
+  \hline
+  \texttt{0}        & text \\
+  \texttt{1}        & audio \\
+\end{tabular}
 
-Text groupchats are text only while audio indicates that the groupchat supports
+Text groupchats are text only, while audio indicates that the groupchat supports
 sending audio to it as well as text.
 
-The groupchat will also be identified by a unique unsigned 2 byte integer which
+The groupchat will also be identified by a unique unsigned 2 byte integer, which
 in toxcore corresponds to the index of the groupchat in the array it is being
 stored in.  Every groupchat in the current instance must have a different
 number.  This number is used by groupchat peers that are directly connected to
-us to tell us which packets are for which groupchat.  This is why every
-groupchat packet contains a groupchat number as part of them.  Putting a 32
-byte groupchat id in each packet would increase bandwidth waste by a lot which
-is the reason why groupchat numbers are used instead.
+us to tell us which packets are for which groupchat.  Every groupchat packet
+contains a 2 byte groupchat number.  Putting a 32 byte groupchat id in each
+packet would increase bandwidth waste by a lot, and this is the reason why
+groupchat numbers are used instead.
 
 Using the group number as the index of the array used to store the groupchat
-instances is recommended because this kind of access is usually most efficient
+instances is recommended, because this kind of access is usually most efficient
 and it ensures that each groupchat has a unique group number.
 
 When creating a new groupchat, the peer will add themselves as a groupchat peer
@@ -1561,10 +1565,7 @@ Invite packet:
   \texttt{33}        & Group chat identifier \\
 \end{tabular}
 
-A group chat identifier consists of a 1-byte type and a 32-byte ID
-concatenated.
-
-Response packet
+Response packet:
 
 \begin{tabular}{l|l}
   Length             & Contents \\
@@ -1576,57 +1577,66 @@ Response packet
   \texttt{33}        & Group chat identifier \\
 \end{tabular}
 
+A group chat identifier consists of a 1-byte type and a 32-byte id concatenated:
+
+\begin{tabular}{l|l}
+  Length             & Contents \\
+  \hline
+  \texttt{1}         & \texttt{uint8\_t} type \\
+  \texttt{32}        & \texttt{uint8\_t} groupchat id \\
+\end{tabular}
+
 To invite a friend to a group chat, an invite packet is sent to the friend.
 These packets are sent using Messenger (if you look at the Messenger packet id
 section, all the groupchat packet ids are in there).  Note that all numbers
-like all other numbers sent using Tox packets are sent in big endian format.
+here, like all numbers sent using Tox packets, are sent in big endian format.
 
 The group chat number is as explained above, the number used to uniquely
 identify the groupchat instance from all the other groupchat instances the peer
 has.  It is sent in the invite packet because it is needed by the friend in
 order to send back groupchat related packets.
 
-What follows is the 1 byte type with the 32 byte groupchat id appended to it.
+What follows is the 33 byte group chat identifier.
 
 To refuse the invite, the friend receiving it will simply ignore and discard
 it.
 
 To accept the invite, the friend will create their own groupchat instance with
-the 32 byte groupchat id and 1 byte type sent in the request and send a invite
-response packet back.  The friend will also add the one who sent the invite as
+the 1 byte type and 32 byte groupchat id sent in the request, and send an invite
+response packet back.  The friend will also add the peer who sent the invite as
 a temporary invited groupchat connection.
 
 The first group number in the response packet is the group number of the
-groupchat the invited friend just created.  The second group number is the
-group chat number that was sent in the invite request.  What follows is the 1
-byte type and 32 byte groupchat id that were sent in the invite request.
+groupchat the invited friend just created.  The second group number is the group
+number that was sent in the invite request.  What follows is the 33 byte group
+chat identifier which was sent in the invite request.
 
-When a peer receives an invite response packet they will check if the group id
-sent back corresponds to the group id of the groupchat with the group number
-also sent back.  If everything is ok, a new peer number will be generated for
+When a peer receives an invite response packet they will check if the group
+identifier sent back corresponds to the group identifier of the groupchat with
+the group number also sent back.  If so, a new peer number will be generated for
 the peer that sent the invite response packet.  Then the peer with their
-generated peer number, their long term public key and DHT public key will be
-added to the peer list of the groupchat.  A new peer packet will also be sent
-to tell everyone in the group chat about the new peer.  The peer will also be
-added as a temporary invited groupchat connection.
+generated peer number, their long term public key and their DHT public key will
+be added to the peer list of the groupchat.  A new peer message packet will also
+be sent to tell everyone in the group chat about the new peer.  The peer will
+also be added as a temporary invited groupchat connection.
 
 Peer numbers are used to uniquely identify each peer in the group chat.  They
 are used in groupchat message packets so that peers receiving them can know who
-or which groupchat peer sent them.  As groupchat packets are relayed, they must
-contain something that is used by others to identify the sender.  Since putting
-a 32 byte public key in each packet would be wasteful a 2 byte peer number is
-instead used.  Each peer in the groupchat has a unique peer number.  Toxcore
-generates each peer number randomly but makes sure newly generated peer numbers
-are not equal to current ones already used by other peers in the group chat.
-If two peers join the groupchat from two different endpoints there is a small
-possibility that both will be given the same peer number however this
-possibility is low enough in practice that is not an issue.
+or which groupchat peer sent them.  As groupchat message packets are relayed,
+they must contain something that is used by others to identify the sender. Since
+putting a 32 byte public key in each packet would be wasteful, a 2 byte peer
+number is used instead.  Each peer in the groupchat has a unique peer number.
+Toxcore generates each peer number randomly but makes sure newly generated peer
+numbers are not equal to current ones already used by other peers in the group
+chat. If two peers join the groupchat from two different endpoints there is a
+small possibility that both will be given the same peer number, but the
+probability of this occurring is low enough in practice that it is not an issue.
 
-Temporary invited groupchat connections are groupchat connections to the
-groupchat inviter used by groupchat peers to bootstrap themselves the
-groupchat.  They are the same thing as connections to groupchat peers via
-friend connections except that they are discarded after the peer is fully
-connected to the group chat.
+A groupchat connection is a connection to a groupchat peer via a friend
+connection. Temporary invited groupchat connections are groupchat connections to
+the groupchat inviter used by groupchat peers to bootstrap themselves the
+groupchat. Temporary invited groupchat connections are discarded after the peer
+is fully connected to the group chat.
 
 Peer online packet:
 
@@ -1653,18 +1663,17 @@ attempting to connect directly to each other.
 
 Groupchat connections are established when both peers who want to connect to
 each other either create a new friend connection to connect to each other or
-reuse an exiting friend connection that connects them together (if they are
+reuse an existing friend connection that connects them together (if they are
 friends or already are connected together because of another group chat).
 
 As soon as the connection to the other peer is opened, a peer online packet is
 sent to the peer.  The goal of the online packet is to tell the peer that we
 want to establish the groupchat connection with them and tell them the
 groupchat number of our groupchat instance.  The peer online packet contains
-the group number and the group type and 32 byte groupchat id.  The group number
-is the group number the peer has for the group with the group id sent in the
-packet.
+the group number and the 33 byte group chat identifier.  The group number is the
+group number the peer has for the group with the group id sent in the packet.
 
-When both sides send a online packet to the other peer, a connection is
+When both sides send an online packet to the other peer, a connection is
 established.
 
 When an online packet is received, the group number to communicate with the
@@ -1746,12 +1755,12 @@ Lossy Message packets:
   \texttt{1}         & \texttt{uint8\_t} (0xc7) \\
   \texttt{2}         & \texttt{uint16\_t} group number \\
   \texttt{2}         & \texttt{uint16\_t} peer number \\
-  \texttt{4}         & \texttt{uint16\_t} message number \\
+  \texttt{2}         & \texttt{uint16\_t} message number \\
   \texttt{1}         & \texttt{uint8\_t} with a value representing id of message \\
   variable           & Data \\
 \end{tabular}
 
-If a peer query packet is received, the receiver takes his list of peers and
+If a peer query packet is received, the receiver takes their list of peers and
 creates a peer response packet which is then sent to the other peer.  If there
 are too many peers in the group chat and the peer response packet would be
 larger than the maximum size of friend connection packets (1373 bytes), more
@@ -1761,7 +1770,7 @@ peers in the group chat and the title of the group chat right after joining.
 
 Peer response packets are straightforward and contain the information for each
 peer (peer number, real public key, DHT public key, name) appended to each
-other.  The title response is also straight forward.
+other.  The title response is also straightforward.
 
 Both the maximum length of groupchat peer names and the groupchat title is 128
 bytes.  This is the same maximum length as names in all of toxcore.
@@ -1770,7 +1779,7 @@ When a peer receives the peer response packet(s), they will add each of the
 received peers to their groupchat peer list, find the 4 closest peers to them
 and create groupchat connections to them as was explained previously.
 
-To find their peer number, the peer will find themselves in the list of
+To find their own peer number, the peer will find themselves in the list of
 received peers and use the peer number assigned to them as their own.
 
 Message packets are used to send messages to all peers in the groupchat.  To
@@ -1786,10 +1795,26 @@ number is used to know if a Message packet was already received and relayed to
 prevent packets from looping around the groupchat.  If the message number check
 says that the packet was already received, then the packet is discarded.  If it
 was not already received, a Message packet with the message is sent (relayed)
-to all current group connections (normal groupchat connections + temporary
-invited groupchat connections) except the one that it was received from.  The
-only thing that should change in the Message packet as it is relayed is the
-group number.
+to all current group connections (including temporary invited groupchat
+connections) except the one that it was received from.  The only thing that
+should change in the Message packet as it is relayed is the group number.
+
+Lossy message packets are used to send audio packets to others in audio group
+chats.  Lossy packets work the same way as normal relayed groupchat messages in
+that they are relayed to everyone in the group chat until everyone has them, but
+there are a few differences. Firstly, the message number is only a 2 byte
+integer. When receiving a lossy packet from a peer the receiving peer will first
+check if a message with that message number was already received from that peer.
+If it wasn't, the packet will be added to the list of received packets and then
+the packet will be passed to its handler and then sent to the 2 closest
+connected groupchat peers that are not the sender.  The reason for it to be 2
+instead of 4 (or 3 if we are not the original sender) as for lossless message
+packets is that it reduces bandwidth usage without lowering the quality of the
+received audio stream via lossy packets, at the cost of reduced robustness
+against connections failing. To check if a packet was already received, the last
+256 message numbers received from each peer are stored. If video was added
+meaning a much higher number of packets would be sent, this number would be
+increased.  If the packet number is in this list then it was received.
 
 \section{Message ids}
 
@@ -1869,38 +1894,6 @@ sent by anyone in the group chat.
 
 Chat and action messages are used by the group chat peers to send messages to
 others in the group chat.
-
-Lossy message packets are used to send audio packets to others in audio group
-chats.  Lossy packets work the same way as normal relayed groupchat messages in
-that they are relayed to everyone in the group chat until everyone has them.
-
-Some differences with them though is that first of all the message number is a
-2 byte integer.  If I were to improve the groupchats protocol I would make the
-message number for normal message packets 2 bytes.  1 byte means only 256
-packets can be received at the same time.  With the delays in groupchats and
-256 packets corresponding to less than a high quality video frame it would not
-work.  This is why 2 bytes was chosen.
-
-Note that this message number like all other numbers in the packet are in big
-endian format.
-
-When receiving a lossy packet the peer will first check if it was already
-received.  If it wasn't, the packet will be added to the list of received
-packets and then the packet will be passed to its handler and then sent to the
-2 closest connected groupchat peers that are not the sender.  The reason for it
-to be 2 instead of 4 (well 3 if we are not the original sender) for normal
-message packets is that it reduces bandwidth usage without lowering the quality
-of the received audio stream via lossy packets.  Message packets also are sent
-relatively rarely, enough so that changing it to 2 would have a minimal impact
-in bandwidth usage.
-
-To check if a packet was received, the last up to 65536 received packet numbers
-are stored, current groups store the last 256 packet numbers however that is
-because it is currently audio only.  If video was added meaning a much higher
-number of packets would be sent, this number would be increased.  If the packet
-number is in this list then it was received.
-
-This is how groupchats in Tox work.
 
 \input{src/tox/Network/Tox/Application/GroupChats.lhs}
 
