@@ -48,7 +48,10 @@ the reader with:
 
   \item \textbf{Privacy}: When Tox establishes a communication link, it aims to
     avoid leaking to any third party the identities of the parties involved
-    (i.e.\ their public keys).
+    (i.e. their public keys).
+
+    Furthermore, it aims to avoid allowing third parties to determine the IP
+    address of a given user.
 
   \item \textbf{Resilience:}
     \begin{itemize}
@@ -78,11 +81,11 @@ the reader with:
     Tor.
 
     By default, Tox tries to establish direct connections between peers; as a
-    consequence, they are aware of each other's IP address, and third parties
+    consequence, each is aware of the other's IP address, and third parties
     may be able to determine that a connection has been established between
-    these IP addresses. One of the reasons for this is that relaying real-time
-    multimedia conversations over anonymity networks is not feasible with the
-    current network infrastructure.
+    those IP addresses. One of the reasons for making direct connections is that
+    relaying real-time multimedia conversations over anonymity networks is not
+    feasible with the current network infrastructure.
 \end{itemize}
 
 \section{Threat model}
