@@ -3056,24 +3056,23 @@ decrypts it.
 
 Toxcore generates \texttt{ping\_id}s by taking a 32 byte sha hash of the current
 time, some secret bytes generated when the instance is created, the current
-time divided by a 20 second timeout, the public key of the requester and the
+time divided by a 300 second timeout, the public key of the requester and the
 source ip/port that the packet was received from.  Since the ip/port that the
 packet was received from is in the \texttt{ping\_id}, the announce packets being
 sent with a ping id must be sent using the same path as the packet that we
 received the \texttt{ping\_id} from or announcing will fail.
 
-The reason for this 20 second timeout in toxcore is that it gives a reasonable
-time (20 to 40 seconds) for a peer to announce himself while taking in count
-all the possible delays with some extra seconds.
+The reason for this 300 second timeout in toxcore is that it gives a reasonable
+time (300 to 600 seconds) for peers to announce themselves.
 
 Toxcore generates 2 different ping ids, the first is generated with the current
-time (divided by 20) and the second with the current time + 20 (divided by 20).
+time (divided by 300) and the second with the current time + 300 (divided by 300).
 The two ping ids are then compared to the ping ids in the received packets.
 The reason for doing this is that storing every ping id received might be
 expensive and leave us vulnerable to a DoS attack, this method makes sure that
 the other cannot generate \texttt{ping\_id}s and must ask for them.  The reason
 for the 2 \texttt{ping\_id}s is that we want to make sure that the timeout is at
-least 20 seconds and cannot be 0.
+least 300 seconds and cannot be 0.
 
 If one of the two ping ids is equal to the ping id in the announce request,
 the sendback data public key and the sendback data are stored in the
@@ -3093,7 +3092,7 @@ to a new packet (the response).
 
 Toxcore will look if the public key being searched is in the datastructure.  If
 it isn't it will copy the second generated \texttt{ping\_id} (the one generated
-with the current time plus 20 seconds) to the response, set the
+with the current time plus 300 seconds) to the response, set the
 \texttt{is\_stored} number to 0 and send the packet back.
 
 If the public key is in the datastructure, it will check whether the public key
@@ -3190,16 +3189,16 @@ For peers we are announcing ourselves to, if we are not announced to them
 toxcore tries every 3 seconds to announce ourselves to them until they return
 that we have announced ourselves to them, then initially toxcore sends an
 announce request packet every 15 seconds to see if we are still announced and
-reannounce ourselves at the same time.  The timeout of 15 seconds means a
-\texttt{ping\_id} received in the last packet will not have had time to expire
-(20 second minimum timeout) before it is resent 15 seconds later.  Toxcore sends
-every announce packet with the \texttt{ping\_id} previously received from that
-peer with the same path (if possible).  Toxcore use a timeout of 120 seconds
-rather than 15 seconds if we have been announcing to the peer for at least 90
-seconds, and the onion path we are are using for the peer has also been alive
-for at least 90 seconds, and we have not been waiting for at least 15 seconds
-for a response to a request sent to the peer, nor for at least 10 seconds for a
-response to a request sent via the path.
+reannounce ourselves at the same time.  Toxcore sends every announce packet
+with the \texttt{ping\_id} previously received from that peer with the same
+path (if possible).  Toxcore use a timeout of 120 seconds rather than 15
+seconds if we have been announcing to the peer for at least 90 seconds, and
+the onion path we are are using for the peer has also been alive for at least
+90 seconds, and we have not been waiting for at least 15 seconds for a
+response to a request sent to the peer, nor for at least 10 seconds for a
+response to a request sent via the path. The timeout of at most 120 seconds
+means a \texttt{ping\_id} received in the last packet will not have had time
+to expire (300 second minimum timeout) before it is resent 120 seconds later.
 
 For friends this is slightly different.  It is important to start searching for
 friends after we are fully announced.  Assuming a perfect network, we would
