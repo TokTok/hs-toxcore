@@ -1604,7 +1604,7 @@ it.
 To accept the invite, the friend will create their own groupchat instance with
 the 1 byte type and 32 byte groupchat id sent in the request, and send an invite
 response packet back.  The friend will also add the peer who sent the invite as
-a temporary invited groupchat connection.
+a groupchat connection, and mark the connection as introducing the friend.
 
 The first group number in the response packet is the group number of the
 groupchat the invited friend just created.  The second group number is the group
@@ -1618,7 +1618,8 @@ the peer that sent the invite response packet.  Then the peer with their
 generated peer number, their long term public key and their DHT public key will
 be added to the peer list of the groupchat.  A new peer message packet will also
 be sent to tell everyone in the group chat about the new peer.  The peer will
-also be added as a temporary invited groupchat connection.
+also be added as a groupchat connection, and the connection will be marked as
+introducing the peer.
 
 Peer numbers are used to uniquely identify each peer in the group chat.  They
 are used in groupchat message packets so that peers receiving them can know who
@@ -1632,12 +1633,6 @@ chat. If two peers join the groupchat from two different endpoints there is a
 small possibility that both will be given the same peer number, but the
 probability of this occurring is low enough in practice that it is not an issue.
 
-A groupchat connection is a connection to a groupchat peer via a friend
-connection. Temporary invited groupchat connections are groupchat connections to
-the groupchat inviter used by groupchat peers to bootstrap themselves the
-groupchat. Temporary invited groupchat connections are discarded after the peer
-is fully connected to the group chat.
-
 Peer online packet:
 
 \begin{tabular}{l|l}
@@ -1648,7 +1643,7 @@ Peer online packet:
   \texttt{33}        & Group chat identifier \\
 \end{tabular}
 
-Peer leave packet:
+Peer introduced packet:
 
 \begin{tabular}{l|l}
   Length             & Contents \\
@@ -1676,19 +1671,29 @@ group number the peer has for the group with the group id sent in the packet.
 When both sides send an online packet to the other peer, a connection is
 established.
 
-When an online packet is received, the group number to communicate with the
-group is saved.  If the connection to the peer is already established (an
-online packet has been already received) then the packet is dropped.  If there
-is no group connection to that peer being established, the packet is dropped.
-If this is the first group connection to that group we establish, a peer query
-packet is sent.  This is so we can get the list of peers from the group.
+When an online packet is received from a peer, if the connection to the peer
+is already established (an online packet has been already received), or if
+there is no group connection to that peer being established, the packet is
+dropped. Otherwise, the group number to communicate with the group via the
+peer is saved, the connection is considered established, and an online packet
+is sent back to the peer. A ping message is sent to the group. If this is the
+first group connection to that group we establish, or the connection is marked
+as introducing us, we send a peer query packet back to the peer.  This is so
+we can get the list of peers from the group. If the connection is marked as
+introducing the peer, we send a new peer message to the group announcing the
+peer, and a name message reannouncing our name.
 
-The peer leave packet is sent to the peer right before killing a group
-connection.  It is only used to tell the other side that the connection is dead
-if the friend connection is used for other uses than the group chat (another
-group chat, for a connection to a friend).  If not, then the other peer will
-see the friend connection go offline which will prompt them to stop using it
-and kill the group connection tied to it.
+A groupchat connection can be marked as introducing one or both of the peers it
+connects, to indicate that the connection should be maintained until that peer
+is well connected to the group. A peer maintains a groupchat connection to a
+second peer as long as the second peer is one of the four closest peers in the
+groupchat to the first, or the connection is marked as introducing a peer who
+still requires the connection. A peer requires a groupchat connection to a
+second peer which introduces the first peer until the first peer has more than
+4 groupchat connections and receives a message from the second peer via a
+different groupchat connection. The first peer then sends a peer introduced
+packet to the second peer to indicate that they no longer require the
+connection.
 
 Peer query packet:
 
@@ -1775,29 +1780,48 @@ other.  The title response is also straightforward.
 Both the maximum length of groupchat peer names and the groupchat title is 128
 bytes.  This is the same maximum length as names in all of toxcore.
 
-When a peer receives the peer response packet(s), they will add each of the
+When a peer receives a peer response packet, they will add each of the
 received peers to their groupchat peer list, find the 4 closest peers to them
-and create groupchat connections to them as was explained previously.
+and create groupchat connections to them as was explained previously. The DHT
+public key of an already known peer is updated to one given in the response
+packet if the peer is frozen, or if it has been frozen since its DHT public
+key was last updated.
 
-To find their own peer number, the peer will find themselves in the list of
-received peers and use the peer number assigned to them as their own.
+When a peer receives a title response packet, they update the title for the
+groupchat accordingly if the title has not already been set, or if since it
+was last set there has been a time at which all peers were frozen.
+
+If the peer does not yet know their own peer number, as is the case if they
+have just accepted an invitation, the peer will find themselves in the list of
+received peers and use the peer number assigned to them as their own. They are
+then able to send messages and invite other peers to the groupchat. They
+immediately send a name message to announce their name to the group.
 
 Message packets are used to send messages to all peers in the groupchat.  To
 send a message packet, a peer will first take their peer number and the message
 they want to send.  Each message packet sent will have a message number that is
 equal to the last message number sent + 1.  Like all other numbers (group chat
 number, peer number) in the packet, the message number in the packet will be in
-big endian format.  When a Message packet is received, the peer receiving it
-will take the message number in the packet and see if it is bigger than the one
-it has saved for the peer with peer number.  If this is the first Message
-packet being received for this peer then this check is omitted.  The message
-number is used to know if a Message packet was already received and relayed to
-prevent packets from looping around the groupchat.  If the message number check
-says that the packet was already received, then the packet is discarded.  If it
-was not already received, a Message packet with the message is sent (relayed)
-to all current group connections (including temporary invited groupchat
-connections) except the one that it was received from.  The only thing that
-should change in the Message packet as it is relayed is the group number.
+big endian format.
+
+When a Message packet is received, the peer receiving it will first check that
+the peer number of the sender is in their peer list. If not, the peer ignores
+the message but sends a peer query packet to the peer the packet was directly
+received from. That peer should have the message sender in their peer list,
+and so will send the sender's peer info back in a peer response.
+
+If the sender is in the receiver's peer list, the receiver now checks whether
+they have already seen a message with the same sender and message number. This
+is achieved by storing the 8 greatest message numbers received from a given
+sender peer number. If the message has lesser message number than any of those
+8, it is assumed to have been received. If the message has already been
+received according to this check, or if it is a name or title message and
+another message of the same type from the same sender with a greater message
+number has been received, then the packet is discarded. Otherwise, the
+message is processed as described below, and a Message packet with the message
+is sent (relayed) to all current group connections except the one that it was
+received from.  The only thing that should change in the Message packet as it
+is relayed is the group number.
 
 Lossy message packets are used to send audio packets to others in audio group
 chats.  Lossy packets work the same way as normal relayed groupchat messages in
@@ -1820,7 +1844,7 @@ increased.  If the packet number is in this list then it was received.
 
 \subsection{ping (0x00)}
 
-Sent approximately every 60 seconds by every peer.  Contains no data.
+Sent approximately every 20 seconds by every peer.  Contains no data.
 
 \subsection{\texttt{new\_peer} (0x10)}
 
@@ -1874,13 +1898,14 @@ Tell everyone about a new peer in the chat.
   variable           & Message (messagelen) \\
 \end{tabular}
 
-Ping messages must be sent every 60 seconds by every peer.  This is how other
+Ping messages are sent every 20 seconds by every peer.  This is how other
 peers know that the peers are still alive.
 
 When a new peer joins, the peer which invited the joining peer will send a new
 peer message to warn everyone that there is a new peer in the chat.  When a new
-peer message is received, the peer in the packet must be added to the peer
-list.
+peer message is received, the peer in the message must be added to the peer
+list if it is not there already, and its DHT public key must be set to that
+in the message.
 
 Kill peer messages are used to indicate that a peer has quit the group chat.
 It is sent by the one quitting the group chat right before they quit it.
@@ -1894,6 +1919,47 @@ sent by anyone in the group chat.
 
 Chat and action messages are used by the group chat peers to send messages to
 others in the group chat.
+
+\section{Timeouts and reconnection}
+
+Groupchat connections may go down, and this may lead to a peer becoming
+disconnected from the group or the group otherwise splitting into multiple
+connected components. To ensure the group becomes fully connected again once
+suitable connections are re-established, peers keep track of peers who are no
+longer visible in the group ("frozen" peers), and try to re-integrate them
+into the group via any suitable friend connections which may come to be
+available. The rejoin packet is used for this.
+
+Rejoin packet:
+
+\begin{tabular}{l|l}
+  Length             & Contents \\
+  \hline
+  \texttt{1}         & \texttt{uint8\_t} (0x64) \\
+  \texttt{33}        & Group chat identifier \\
+\end{tabular}
+
+A peer in a groupchat is considered to be active when a group message or
+rejoin packet is received from it, or a new peer message is received for it.
+A peer which remains inactive for 60 seconds is set as frozen; this means it
+is removed from the peer list and added to a separate list of frozen peers.
+Frozen peers are disregarded for all purposes except those discussed below.
+
+If a frozen peer becomes active, we unfreeze it, meaning that we move it from
+the frozen peers list to the peer list, and we send a name message to the
+group.
+
+Whenever we make a new friend connection to a peer, we check whether the
+public key of the peer is that of any frozen peer. If so, we send a rejoin
+packet to the peer along the friend connection, and create a groupchat
+connection to the peer, marked as introducing us, and send a peer online
+packet to the peer.
+
+If we receive a rejoin packet from a peer along a friend connection, then,
+after unfreezing the peer if it was frozen, we update the peer's DHT public
+key in the groupchat peer list to the key in the friend connection, and create
+a groupchat connection for the peer, marked as introducing the peer, and send
+a peer online packet to the peer.
 
 \input{src/tox/Network/Tox/Application/GroupChats.lhs}
 
