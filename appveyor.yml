@@ -1,20 +1,17 @@
+---
 cache:
-- '%APPDATA%\cabal'
-- '%APPDATA%\ghc'
+  - '%APPDATA%\cabal'
+  - '%APPDATA%\ghc'
 
 install:
-- choco install ghc --version 8.2.2
-- curl https://download.libsodium.org/libsodium/releases/libsodium-1.0.16-mingw.tar.gz | tar zx
-- refreshenv
+  - choco install ghc --version 8.2.2
+  - curl https://download.libsodium.org/libsodium/releases/libsodium-1.0.16-mingw.tar.gz | tar zx
+  - refreshenv
 
 build_script:
-- cabal update
-- cabal install alex happy
-- cabal install --enable-tests --enable-benchmarks --disable-documentation --only-dependencies --extra-include-dirs=%CD%\libsodium-win64\include --extra-lib-dirs=%CD%\libsodium-win64\lib
+  - cabal update
+  - cabal install alex happy
+  - cabal install --enable-tests --enable-benchmarks --disable-documentation --only-dependencies --extra-include-dirs=%CD%\libsodium-win64\include --extra-lib-dirs=%CD%\libsodium-win64\lib
 
 test_script:
-- cabal test || type dist\test\hstox-0.0.1-testsuite.log
-
-branches:
-  only:
-  - master
+  - cabal test || type dist\test\hstox-0.0.1-testsuite.log
