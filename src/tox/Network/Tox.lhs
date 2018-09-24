@@ -3324,7 +3324,12 @@ DHT public key packet:
 The packet will only be accepted if the \texttt{no\_replay} number is greater
 than the \texttt{no\_replay} number in the last packet received.
 
-The nodes sent in this packet have TCP so that the friend can connect to us.
+The nodes sent in the packet comprise 2 TCP relays to which we are
+connected (or fewer if there are not 2 available) and a number of DHT nodes
+from our Close List, with the total number of nodes sent being at most 4. The
+nodes chosen from the Close List are those closest in DHT distance to us. This 
+allows the friend to find us more easily in the DHT, or to connect to us via a 
+TCP relay.
 
 Why another round of encryption? We have to prove to the receiver that we own
 the long term public key we say we own when sending them our DHT public key.
