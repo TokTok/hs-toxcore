@@ -3285,7 +3285,11 @@ After this, toxcore sends requests once per 15 seconds initially, then
 uses linear backoff to increase the interval.  In detail, the interval used
 when searching for a given friend is at least 15 and at most 2400 seconds, and
 within these bounds is calculated as one quarter of the time since we began
-searching for the friend or some peer reported that the friend was announced.
+searching for the friend, or since the friend was last seen. For this purpose,
+a friend is considered to be seen when some peer reports that the friend is
+announced, or we receive a DHT Public Key packet from the friend, or we obtain
+a new DHT key for them from a group, or a friend connection for the friend
+goes offline.
 
 There are other ways this could be done and which would still work but, if
 making your own implementation, keep in mind that these are likely not the most
