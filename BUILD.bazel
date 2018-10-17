@@ -14,7 +14,7 @@ haskell_library(
         "-Wno-unused-imports",
     ],
     src_strip_prefix = "src/tox",
-    version = "0.0.1",
+    version = "0.0.2",
     visibility = ["//visibility:public"],
     deps = [
         "//hs-msgpack",
@@ -50,7 +50,7 @@ haskell_library(
         "-Wno-unused-imports",
     ],
     src_strip_prefix = "src/testsuite",
-    version = "0.0.1",
+    version = "0.0.2",
     deps = [
         ":hs-toxcore",
         "//hs-msgpack",
