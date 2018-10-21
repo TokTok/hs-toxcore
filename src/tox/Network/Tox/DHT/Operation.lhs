@@ -156,7 +156,7 @@ zoom_ l f = abstract $ zoom l f
 \subsection{DHT Initialisation}
 A new DHT node is initialised with a DHT State with a fresh random key pair, an
 empty close list, and a search list containing 2 empty search entries searching
-for randomly generated public keys.
+for the public keys of fresh random key pairs.
 
 \begin{code}
 
@@ -168,7 +168,7 @@ initDht = do
   dhtState <- DhtState.empty <$> Timed.askTime <*> MonadRandomBytes.newKeyPair
   time <- Timed.askTime
   (`execStateT` dhtState) $ replicateM initRandomSearches $ do
-    publicKey <- MonadRandomBytes.randomKey
+    publicKey <- KeyPair.publicKey <$> MonadRandomBytes.newKeyPair
     DhtState._dhtSearchList %=
       Map.insert publicKey (DhtState.emptySearchEntry time publicKey)
 
