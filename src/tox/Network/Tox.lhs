@@ -1866,6 +1866,14 @@ Tell everyone about a new peer in the chat.
   \texttt{2}         & \texttt{uint16\_t} Peer number \\
 \end{tabular}
 
+\subsection{\texttt{freeze\_peer} (0x12)}
+
+\begin{tabular}{l|l}
+  Length             & Contents \\
+  \hline
+  \texttt{2}         & \texttt{uint16\_t} Peer number \\
+\end{tabular}
+
 \subsection{Name change (0x30)}
 
 \begin{tabular}{l|l}
@@ -1907,8 +1915,10 @@ peer message is received, the peer in the message must be added to the peer
 list if it is not there already, and its DHT public key must be set to that
 in the message.
 
-Kill peer messages are used to indicate that a peer has quit the group chat.
-It is sent by the one quitting the group chat right before they quit it.
+Kill peer messages are used to indicate that a peer has quit the group chat
+permanently. Freeze peer messages are similar, but indicate that the quitting
+peer may later return to the group. Each is sent by the one quitting the group
+chat right before they quit it.
 
 Name change messages are used to change or set the name of the peer sending it.
 They are also sent by a joining peer right after receiving the list of peers in
@@ -1960,6 +1970,9 @@ after unfreezing the peer if it was frozen, we update the peer's DHT public
 key in the groupchat peer list to the key in the friend connection, and create
 a groupchat connection for the peer, marked as introducing the peer, and send
 a peer online packet to the peer.
+
+When a peer is added to the peer list, any existing peer in the peer list or
+frozen peers list with the same public key is first removed.
 
 \input{src/tox/Network/Tox/Application/GroupChats.lhs}
 
@@ -3331,8 +3344,8 @@ than the \texttt{no\_replay} number in the last packet received.
 The nodes sent in the packet comprise 2 TCP relays to which we are
 connected (or fewer if there are not 2 available) and a number of DHT nodes
 from our Close List, with the total number of nodes sent being at most 4. The
-nodes chosen from the Close List are those closest in DHT distance to us. This 
-allows the friend to find us more easily in the DHT, or to connect to us via a 
+nodes chosen from the Close List are those closest in DHT distance to us. This
+allows the friend to find us more easily in the DHT, or to connect to us via a
 TCP relay.
 
 Why another round of encryption? We have to prove to the receiver that we own
@@ -3480,6 +3493,7 @@ Section types:
   Status        & 0x06 \\
   TcpRelays     & 0x0A \\
   PathNodes     & 0x0B \\
+  Conferences   & 0x14 \\
   EOF           & 0xFF \\
 \end{tabular}
 
@@ -3639,9 +3653,52 @@ This section contains a list of path nodes used for onion routing.
 The structure of a path node is the same as \texttt{Node Info}. Note: this
 means that the integers stored in these nodes are stored in Big Endian as well.
 
+\subsection{Conferences (0x14)}
+
+This section contains a list of saved conferences.
+
+\begin{tabular}{l|l}
+  Length        & Contents \\
+  \hline
+  \texttt{?}    & List of conferences \\
+\end{tabular}
+
+Conference:
+
+\begin{tabular}{l|l}
+  Length        & Contents \\
+  \hline
+  \texttt{1}    & Groupchat type \\
+  \texttt{32}   & Groupchat id \\
+  \texttt{4}    & Message number \\
+  \texttt{2}    & Lossy message number \\
+  \texttt{2}    & Peer number \\
+  \texttt{4}    & Number of peers \\
+  \texttt{1}    & Title length \\
+  \texttt{?}    & Title \\
+  \texttt{?}    & List of peers \\
+\end{tabular}
+
+All peers other than the saver are saved, including frozen peers. On reload,
+they all start as frozen.
+
+Peer:
+
+\begin{tabular}{l|l}
+  Length        & Contents \\
+  \hline
+  \texttt{32}   & Long term public key \\
+  \texttt{32}   & DHT public key \\
+  \texttt{16}   & Peer number \\
+  \texttt{64}   & Last active timestamp \\
+  \texttt{1}    & Name length \\
+  \texttt{?}    & Name \\
+\end{tabular}
+
+
 \subsection{EOF (0xFF)}
 
 This section indicates the end of the state file. This section doesn't have any
-content and thus it's length is 0.
+content and thus its length is 0.
 
 \input{src/tox/Network/Tox/Testing.lhs}
