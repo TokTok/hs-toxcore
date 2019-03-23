@@ -1,5 +1,6 @@
 load("@ai_formation_hazel//:hazel.bzl", "hazel_library")
 load("@io_tweag_rules_haskell//haskell:haskell.bzl", "haskell_library", "haskell_test")
+load("//third_party/haskell/hspec-discover:build_defs.bzl", "hspec_library")
 load("//tools/project:build_defs.bzl", "project")
 
 project()
@@ -40,9 +41,8 @@ haskell_library(
     ],
 )
 
-haskell_library(
+hspec_library(
     name = "testsuite",
-    srcs = glob(["src/testsuite/**/*.*hs"]),
     compiler_flags = [
         "-j4",
         "-Wall",
