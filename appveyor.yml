@@ -5,7 +5,7 @@ cache:
 
 install:
   - choco install ghc --version 8.2.2
-  - curl https://download.libsodium.org/libsodium/releases/libsodium-1.0.16-mingw.tar.gz | tar zx
+  - curl https://download.libsodium.org/libsodium/releases/libsodium-1.0.17-mingw.tar.gz | tar zx
   - refreshenv
 
 build_script:
