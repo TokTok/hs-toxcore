@@ -3667,13 +3667,13 @@ Conference:
 \begin{tabular}{l|l}
   Length        & Contents \\
   \hline
-  \texttt{1}    & Groupchat type \\
+  \texttt{1}    & \texttt{uint8\_t} Groupchat type \\
   \texttt{32}   & Groupchat id \\
-  \texttt{4}    & Message number \\
-  \texttt{2}    & Lossy message number \\
-  \texttt{2}    & Peer number \\
-  \texttt{4}    & Number of peers \\
-  \texttt{1}    & Title length \\
+  \texttt{4}    & \texttt{uint32\_t} Message number \\
+  \texttt{2}    & \texttt{uint16\_t} Lossy message number \\
+  \texttt{2}    & \texttt{uint16\_t} Peer number \\
+  \texttt{4}    & \texttt{uint32\_t} Number of peers \\
+  \texttt{1}    & \texttt{uint8\_t} Title length \\
   \texttt{?}    & Title \\
   \texttt{?}    & List of peers \\
 \end{tabular}
@@ -3688,9 +3688,9 @@ Peer:
   \hline
   \texttt{32}   & Long term public key \\
   \texttt{32}   & DHT public key \\
-  \texttt{16}   & Peer number \\
-  \texttt{64}   & Last active timestamp \\
-  \texttt{1}    & Name length \\
+  \texttt{2}    & \texttt{uint16\_t} Peer number \\
+  \texttt{8}    & \texttt{uint64\_t} Last active timestamp \\
+  \texttt{1}    & \texttt{uint8\_t} Name length \\
   \texttt{?}    & Name \\
 \end{tabular}
 
