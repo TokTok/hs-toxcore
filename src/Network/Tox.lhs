@@ -1820,8 +1820,9 @@ another message of the same type from the same sender with a greater message
 number has been received, then the packet is discarded. Otherwise, the
 message is processed as described below, and a Message packet with the message
 is sent (relayed) to all current group connections except the one that it was
-received from.  The only thing that should change in the Message packet as it
-is relayed is the group number.
+received from, and also to that one if that peer is the original sender of the
+message. The only thing that should change in the Message packet as it is
+relayed is the group number.
 
 Lossy message packets are used to send audio packets to others in audio group
 chats.  Lossy packets work the same way as normal relayed groupchat messages in
