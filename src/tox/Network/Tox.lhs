@@ -3569,8 +3569,7 @@ sent a friend request to or a peer we've accepted a friend request from.
 
 Friend:
 
-Some of the integers in this structure are stored in Big Endian. This is
-denoted with "(BE)".
+The integers in this structure are stored in Big Endian format.
 
 \begin{tabular}{l|l}
   Length        & Contents \\
@@ -3579,12 +3578,12 @@ denoted with "(BE)".
   \texttt{32}   & Long term public key \\
   \texttt{1024} & Friend request message as a byte string \\
   \texttt{1}    & PADDING \\
-  \texttt{2}    & \texttt{uint16\_t} Size of the friend request message (BE) \\
+  \texttt{2}    & \texttt{uint16\_t} Size of the friend request message \\
   \texttt{128}  & Name as a byte string \\
-  \texttt{2}    & \texttt{uint16\_t} Size of the name (BE) \\
+  \texttt{2}    & \texttt{uint16\_t} Size of the name \\
   \texttt{1007} & Status message as a byte string \\
   \texttt{1}    & PADDING \\
-  \texttt{2}    & \texttt{uint16\_t} Size of the status message (BE) \\
+  \texttt{2}    & \texttt{uint16\_t} Size of the status message \\
   \texttt{1}    & \texttt{uint8\_t} User status (see also: \texttt{USERSTATUS}) \\
   \texttt{3}    & PADDING \\
   \texttt{4}    & \texttt{uint32\_t} Nospam (only used for sending a friend request) \\
