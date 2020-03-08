@@ -1,28 +1,6 @@
 ---
 packages: [.]
-resolver: lts-6.27
+resolver: lts-14.27
 extra-deps:
-  - QuickCheck-2.11.3
-  - base-orphans-0.5.4
-  - binary-conduit-1.2.5
-  - conduit-extra-1.2.3.2
-  - cpphs-1.20.8
-  - data-msgpack-0.0.12
-  - data-msgpack-types-0.0.2
-  - exceptions-0.10.0
-  - hspec-2.4.8
-  - hspec-core-2.4.8
-  - hspec-discover-2.4.8
-  - hspec-expectations-0.8.2
-  - integer-logarithms-1.0.2.1
-  - mmorph-1.1.2
-  - network-2.7.0.2
-  - network-msgpack-rpc-0.0.5
-  - parsec-3.1.13.0
-  - primitive-0.6.4.0
-  - quickcheck-io-0.2.0
-  - saltine-0.1.0.1
-  - scientific-0.3.6.2
-  - typed-process-0.2.2.0
-  - unliftio-core-0.1.1.0
-  - vector-0.12.0.1
+  - data-default-instances-base-0.1.0.1@sha256:985a13d7103e45a65f06f277b735ef025636014f0d29dd6de998bc7628e09be9,509
+  - network-msgpack-rpc-0.0.6

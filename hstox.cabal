@@ -44,7 +44,7 @@ library
     , lens-family
     , MonadRandom
     , mtl
-    , network
+    , network                   < 3
     , network-msgpack-rpc       >= 0.0.5
     , saltine
     , semigroups

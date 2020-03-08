@@ -6,6 +6,7 @@
 
 /.cabal-sandbox
 /.stack-work
+/stack.yaml.lock
 /cabal.config
 /cabal.sandbox.config
 
