@@ -7,7 +7,7 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Control.Monad                 (unless, when)
-import           Data.List                     (sort, sortBy)
+import           Data.List                     (sort, sortOn)
 import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
 import           Data.Proxy                    (Proxy (..))
@@ -135,4 +135,4 @@ spec = do
           nodes             = reverse $ NodeList.foldNodes (flip (:)) [] kBuckets
           nodeDistance node = Distance.xorDistance (KBuckets.baseKey kBuckets) (NodeInfo.publicKey node)
         in
-          nodes `shouldBe` sortBy (comparing nodeDistance) nodes
+          nodes `shouldBe` sortOn nodeDistance nodes

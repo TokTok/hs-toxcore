@@ -3,8 +3,8 @@
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE Trustworthy                #-}
+{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE UndecidableInstances       #-}
-
 module Network.Tox.Crypto.KeyedT where
 
 import           Control.Applicative                  (Applicative, (<$>))
@@ -41,7 +41,7 @@ evalKeyedT :: Monad m => KeyedT m a -> KeyRing -> m a
 evalKeyedT (KeyedT m) = evalStateT m
 
 instance (MonadState s m, Applicative m) => MonadState s (KeyedT m) where
-  state f = KeyedT . StateT $ \s -> flip (,) s <$> state f
+  state f = KeyedT . StateT $ \s -> (, s) <$> state f
 
 instance (Monad m, Applicative m) => Keyed (KeyedT m) where
   getCombinedKey secretKey publicKey =

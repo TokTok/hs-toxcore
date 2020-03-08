@@ -1,6 +1,5 @@
 \begin{code}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Safe           #-}
+{-# LANGUAGE Safe #-}
 module Network.Tox.DHT.ClientNode where
 
 import           Control.Applicative           ((<$>), (<*>))

@@ -16,7 +16,6 @@ DHT Packet which is to be received by the addressee.
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE Safe               #-}
 module Network.Tox.DHT.DhtRequestPacket where
 

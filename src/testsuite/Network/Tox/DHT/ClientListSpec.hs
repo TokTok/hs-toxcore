@@ -5,7 +5,7 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Control.Monad                 (unless, when)
-import           Data.List                     (sort, sortBy)
+import           Data.List                     (sort, sortOn)
 import qualified Data.Map                      as Map
 import           Data.Ord                      (comparing)
 import           Data.Proxy                    (Proxy (..))
@@ -59,7 +59,7 @@ spec = do
           allNodes          = (nodeInfo:) $ ClientList.nodeInfos clientList
           keptNodes         = ClientList.nodeInfos $ ClientList.addNode time nodeInfo clientList
           nodeDistance node = Distance.xorDistance (ClientList.baseKey clientList) (NodeInfo.publicKey node)
-          sortNodes         = sortBy $ comparing nodeDistance
+          sortNodes         = sortOn nodeDistance
         in
         take (ClientList.maxSize clientList) (sortNodes allNodes) `shouldBe` sortNodes keptNodes
 
@@ -69,6 +69,6 @@ spec = do
         let
           nodes             = reverse $ ClientList.foldNodes (flip (:)) [] clientList
           nodeDistance node = Distance.xorDistance (ClientList.baseKey clientList) (NodeInfo.publicKey node)
-          sortNodes         = sortBy (comparing nodeDistance)
+          sortNodes         = sortOn nodeDistance
         in
         nodes `shouldBe` sortNodes nodes

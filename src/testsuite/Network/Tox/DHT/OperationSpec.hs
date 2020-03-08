@@ -74,7 +74,7 @@ spec = do
               NodeInfo.publicKey nodeInfo /= publicKey
         in
         when nodeAddedToSearch $
-          randomRequests `shouldSatisfy` not . all (not . requestIsForSearch)
+          randomRequests `shouldSatisfy` any requestIsForSearch
 
   describe "checkNodes" $
     it "generates a Nodes Request to a newly added node after checkPeriod" $

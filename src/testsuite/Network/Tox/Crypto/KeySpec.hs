@@ -67,7 +67,7 @@ spec = do
         actual = readMaybe "\"0100000000000000000000000000000000000000000000000000000000000010\""
         Just expected = Sodium.decode $ ByteString.pack [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x10]
       in
-      actual `shouldBe` (Just $ Key expected)
+      actual `shouldBe` Just (Key expected)
 
     it "decodes empty string to Nothing" $ do
       let actual = readMaybe ""

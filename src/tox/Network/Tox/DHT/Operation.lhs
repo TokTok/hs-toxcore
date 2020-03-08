@@ -8,7 +8,6 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeSynonymInstances  #-}
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative                  (Applicative, pure, (<$>),
@@ -459,12 +458,12 @@ DHT request packets are used for DHT public key packets (see
 \begin{code}
 
 handleDhtRequestPacket :: DhtNodeMonad m => NodeInfo -> DhtRequestPacket -> m ()
-handleDhtRequestPacket _from packet@(DhtRequestPacket addresseePublicKey dhtPacket) = do
+handleDhtRequestPacket _from packet@DhtRequestPacket{ addresseePublicKey, dhtPacket } = do
   keyPair <- gets DhtState.dhtKeyPair
   if addresseePublicKey == KeyPair.publicKey keyPair
   then void . runMaybeT $ msum
-    [ (MaybeT $ DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleNatPingPacket
-    , (MaybeT $ DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleDhtPKPacket
+    [ MaybeT (DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleNatPingPacket
+    , MaybeT (DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleDhtPKPacket
     ]
   else void . runMaybeT $ do
     node :: NodeInfo <- MaybeT $
