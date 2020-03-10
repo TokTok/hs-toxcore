@@ -900,8 +900,8 @@ the server and the nonce:
   \texttt{24}        & Base nonce \\
 \end{tabular}
 
-The base nonce is the one TCP client wants the TCP server to use to encrypt the
-packets sent to the TCP client.
+The base nonce is the one TCP client wants the TCP server to use to decrypt the
+packets received from the TCP client.
 
 The first 32 bytes are the public key (DHT public key) that the TCP client is
 announcing itself to the server with.  The next 24 bytes are a nonce which the
@@ -909,8 +909,8 @@ TCP client uses along with the secret key associated with the public key in the
 first 32 bytes of the packet to encrypt the rest of this 'packet'.  The
 encrypted part of this packet contains a temporary public key that will be used
 for encryption during the connection and will be discarded after.  It also
-contains a base nonce which will be used later for encrypting packets sent to
-the TCP client.
+contains a base nonce which will be used later for decrypting packets received
+from the TCP client.
 
 If the server decrypts successfully the encrypted data in the handshake packet
 and responds with the following handshake response of length 96 bytes:
@@ -932,8 +932,8 @@ of the client and the nonce:
   \texttt{24}        & Base nonce \\
 \end{tabular}
 
-The base nonce is the one the TCP server wants the TCP client to use to encrypt
-the packets sent to the TCP server.
+The base nonce is the one the TCP server wants the TCP client to use to decrypt
+the packets received from the TCP server.
 
 The client already knows the long term public key of the server so it is
 omitted in the response, instead only a nonce is present in the unencrypted
