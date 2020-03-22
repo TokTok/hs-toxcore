@@ -10,8 +10,6 @@ haskell_library(
     srcs = glob(["src/tox/**/*.*hs"]),
     compiler_flags = [
         "-j4",
-        "-Wall",
-        "-Werror",
         "-Wno-unused-imports",
     ],
     src_strip_prefix = "src/tox",
@@ -45,8 +43,6 @@ hspec_library(
     name = "testsuite",
     compiler_flags = [
         "-j4",
-        "-Wall",
-        "-Werror",
         "-Wno-unused-imports",
     ],
     src_strip_prefix = "src/testsuite",
@@ -72,11 +68,7 @@ hspec_library(
 haskell_test(
     name = "test",
     srcs = glob(["test/**/*.*hs"]),
-    compiler_flags = [
-        "-Wall",
-        "-Werror",
-        "-Wno-unused-imports",
-    ],
+    compiler_flags = ["-Wno-unused-imports"],
     src_strip_prefix = "test",
     deps = [
         ":hs-toxcore",
