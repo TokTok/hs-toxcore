@@ -31,7 +31,7 @@ import           GHC.Generics              (Generic)
 import qualified Network.Socket            as Socket (HostAddress, HostAddress6)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
-import           Text.Read                 (readPrec)
+import           Text.Read                 (readMaybe, readPrec)
 
 
 {-------------------------------------------------------------------------------
@@ -51,14 +51,17 @@ instance MessagePack HostAddress
 
 
 instance Show HostAddress where
-  show (IPv4 addr) = show $ IP.fromHostAddress  addr
-  show (IPv6 addr) = show $ IP.fromHostAddress6 addr
+  show (IPv4 addr) = show . show . IP.fromHostAddress  $ addr
+  show (IPv6 addr) = show . show . IP.fromHostAddress6 $ addr
 
 
 instance Read HostAddress where
-  readPrec = (<$> readPrec) $ \case
-    IP.IPv4 ipv4 -> IPv4 $ IP.toHostAddress  ipv4
-    IP.IPv6 ipv6 -> IPv6 $ IP.toHostAddress6 ipv6
+  readPrec = do
+    str <- readPrec
+    case readMaybe str of
+      Nothing             -> fail "HostAddress"
+      Just (IP.IPv4 ipv4) -> return . IPv4 . IP.toHostAddress  $ ipv4
+      Just (IP.IPv6 ipv6) -> return . IPv6 . IP.toHostAddress6 $ ipv6
 
 
 getHostAddressGetter :: Bits.BitGet (Bytes.Get HostAddress)

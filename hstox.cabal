@@ -92,6 +92,12 @@ library
       Network.Tox.Protocol
       Network.Tox.Protocol.Packet
       Network.Tox.Protocol.PacketKind
+      Network.Tox.SaveData
+      Network.Tox.SaveData.Conferences
+      Network.Tox.SaveData.DHT
+      Network.Tox.SaveData.Friend
+      Network.Tox.SaveData.Nodes
+      Network.Tox.SaveData.Util
       Network.Tox.Testing
       Network.Tox.Time
       Network.Tox.Timed
@@ -131,6 +137,7 @@ library
         Network.Tox.Protocol.PacketKindSpec
         Network.Tox.Protocol.PacketSpec
         Network.Tox.ProtocolSpec
+        Network.Tox.SaveDataSpec
         Network.Tox.RPCTest
     exposed-modules:
         ToxTestSuite
@@ -161,6 +168,24 @@ executable tox-spectest
     , hstox
     , process
   main-is: tox-spectest.hs
+  if flag(library-only)
+    buildable: False
+
+executable toxsave-convert
+  default-language: Haskell2010
+  hs-source-dirs:
+      tools
+  ghc-options:
+      -Wall
+      -fno-warn-unused-imports
+  build-depends:
+      base < 5
+    , binary
+    , bytestring
+    , groom
+    , hstox
+    , text
+  main-is: toxsave-convert.hs
   if flag(library-only)
     buildable: False
 

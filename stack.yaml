@@ -3,4 +3,4 @@ packages: [.]
 resolver: lts-14.27
 extra-deps:
   - data-default-instances-base-0.1.0.1@sha256:985a13d7103e45a65f06f277b735ef025636014f0d29dd6de998bc7628e09be9,509
-  - network-msgpack-rpc-0.0.6
+  - network-msgpack-rpc-0.0.6@sha256:18f6afbd50a81359740c451dedc55365b214fc8284e11ce0ec4e26832db0cb4a,2428

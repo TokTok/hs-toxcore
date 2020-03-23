@@ -1,14 +1,24 @@
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE Trustworthy         #-}
-module Network.Tox.EncodingSpec where
+module Network.Tox.EncodingSpec
+    ( spec
+    , binarySpec
+    , binaryGetPutSpec
+    , bitEncodingSpec
+    , readShowSpec
+    , rpcSpec
+    , expectDecoded
+    , expectDecoderFail
+    ) where
 
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.MessagePack           (MessagePack)
 import           Network.MessagePack.Client (Client)
 import qualified Network.Tox.RPCTest        as RPC
 import           Test.Hspec
-import           Test.QuickCheck            (Arbitrary, property)
+import           Test.QuickCheck            (Arbitrary)
+import qualified Test.QuickCheck            as QC
 
 import           Data.Binary                (Binary)
 import qualified Data.Binary                as Binary (get, put)
@@ -31,6 +41,14 @@ import           Network.Tox.Encoding       (BitEncoding, bitGet, bitPut)
 spec :: Spec
 spec =
   rpcSpec (Proxy :: Proxy Word64)
+
+
+-- | Limit the number of tests we do with the encoders/decoders.
+--
+-- These are fairly expensive, and running very large tests for them is probably
+-- not very valuable.
+property :: QC.Testable prop => prop -> QC.Property
+property = QC.withMaxSuccess 50 . QC.property
 
 
 expectDecoded :: (Binary a, Eq a, Show a) => [Word8] -> a -> Expectation
@@ -77,7 +95,7 @@ binaryGetPutSpec name getA putA =
         in
         finish $ Binary.pushChunk (Binary.runGetIncremental getA) $ ByteString.pack bytes
 
-    it "handles empty input" $
+    it "should have a non-nullable packet grammar" $
       let
         bytes = []
         decoder = Binary.runGetIncremental getA
