@@ -1565,7 +1565,7 @@ Invite packet:
   \texttt{33}        & Group chat identifier \\
 \end{tabular}
 
-Response packet:
+Accept Invite packet:
 
 \begin{tabular}{l|l}
   Length             & Contents \\
@@ -1575,6 +1575,19 @@ Response packet:
   \texttt{2}         & \texttt{uint16\_t} group number (local) \\
   \texttt{2}         & \texttt{uint16\_t} group number to join \\
   \texttt{33}        & Group chat identifier \\
+\end{tabular}
+
+Member Information packet:
+
+\begin{tabular}{l|l}
+  Length             & Contents \\
+  \hline
+  \texttt{1}         & \texttt{uint8\_t} (0x60) \\
+  \texttt{1}         & \texttt{uint8\_t} (0x02) \\
+  \texttt{2}         & \texttt{uint16\_t} group number (local) \\
+  \texttt{2}         & \texttt{uint16\_t} group number to join \\
+  \texttt{33}        & Group chat identifier \\
+  \texttt{2}         & \texttt{uint16\_t} peer number \\
 \end{tabular}
 
 A group chat identifier consists of a 1-byte type and a 32-byte id concatenated:
@@ -1603,23 +1616,35 @@ it.
 
 To accept the invite, the friend will create their own groupchat instance with
 the 1 byte type and 32 byte groupchat id sent in the request, and send an invite
-response packet back.  The friend will also add the peer who sent the invite as
+accept packet back.  The friend will also add the peer who sent the invite as
 a groupchat connection, and mark the connection as introducing the friend.
 
-The first group number in the response packet is the group number of the
-groupchat the invited friend just created.  The second group number is the group
-number that was sent in the invite request.  What follows is the 33 byte group
-chat identifier which was sent in the invite request.
+If the friend being invited is already in the group, they will respond with a
+member information packet, add the peer who sent the invite as a groupchat
+connection, and mark the connection as introducing both the friend and the
+peer who sent the invite.
 
-When a peer receives an invite response packet they will check if the group
+The first group number in the invite accept packet is the group number of the
+groupchat the invited friend just created.  The second group number is the
+group number that was sent in the invite request.  What follows is the 33 byte
+group chat identifier which was sent in the invite request. The member
+information packet is the same, but includes also the current peer number of
+the invited friend.
+
+When a peer receives an invite accept packet they will check if the group
 identifier sent back corresponds to the group identifier of the groupchat with
 the group number also sent back.  If so, a new peer number will be generated for
-the peer that sent the invite response packet.  Then the peer with their
+the peer that sent the invite accept packet.  Then the peer with their
 generated peer number, their long term public key and their DHT public key will
 be added to the peer list of the groupchat.  A new peer message packet will also
 be sent to tell everyone in the group chat about the new peer.  The peer will
 also be added as a groupchat connection, and the connection will be marked as
 introducing the peer.
+
+When a peer receives a member information packet they proceed as with an
+invite accept packet, but use the peer number in the packet rather than
+generating a new one, and mark the new connection as also introducing the peer
+receiving the member information packet.
 
 Peer numbers are used to uniquely identify each peer in the group chat.  They
 are used in groupchat message packets so that peers receiving them can know who
