@@ -286,22 +286,34 @@ List of Messenger packets:
 
 \section{\texttt{ONLINE}}
 
-length: 1 byte
+length: 1 byte or 65 bytes
 
 \begin{tabular}{l|l}
   Length             & Contents \\
   \hline
   \texttt{1}         & \texttt{uint8\_t} (0x18) \\
+  \texttt{[0, 64]}   & \texttt{uint64\_t} TOX_CAPABILITIES flags \\
+\end{tabular}
+
+\begin{tabular}{l|l}
+  TOX_CAPABILITIES Flag Bit & Description \\
+  \hline
+  0      & \texttt{TOX_CAPABILITY_BASIC indicating older clients without capabilties Flags} \\
+  1 << 1      & \texttt{TOX_CAPABILITY_CAPABILITIES clients which have capailties Flags functionality} \\
+  1 << 63     & \texttt{TOX_CAPABILITY_NEXT_IMPLEMENTATION indicated to ignore these Flags and use the next implementation of capabilities (not known yet)} \\
 \end{tabular}
 
 Sent to a friend when a connection is established to tell them to mark us as
-online in their friends list.  This packet and the OFFLINE packet are necessary
+online in their friends list.  Both packets must be sent, first the 65 byte packet
+with TOX_CAPABILITIES flags, and then the 1 byte packet.
+This packets and the OFFLINE packet are necessary
 as \texttt{friend\_connections} can be established with non-friends who are part
-of a groupchat.  The two packets are used to differentiate between these peers,
+of a groupchat.  These packets are used to differentiate between these peers,
 connected to the user through groupchats, and actual friends who ought to be
 marked as online in the friendlist.
 
-On receiving this packet, Messenger will show the peer as being online.
+On receiving the first packet, Messenger will set the capabilties flags for
+this friend.  On receiving the second packet, Messenger will show the peer as being online.
 
 \section{\texttt{OFFLINE}}
 
