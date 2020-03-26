@@ -1,14 +1,14 @@
-name:                 hstox
+name:                 toxcore
 synopsis:             A Tox protocol implementation in Haskell
-version:              0.0.2
+version:              0.2.11
 cabal-version:        >= 1.10
 license:              GPL-3
 license-file:         LICENSE
 build-type:           Simple
 author:               iphy
 maintainer:           iphy
-copyright:            © 2016-2018 iphy
-homepage:             https://toktok.github.io
+copyright:            © 2016-2020 The TokTok Team
+homepage:             https://toktok.ltd
 category:             Network
 description:          A Tox protocol implementation in Haskell
 
@@ -23,35 +23,10 @@ flag library-only
 library
   default-language: Haskell2010
   hs-source-dirs:
-      src/tox
+      src
   ghc-options:
       -Wall
       -fno-warn-unused-imports
-  build-depends:
-      base < 5
-    , QuickCheck                >= 2.9.1
-    , base16-bytestring
-    , binary
-    , binary-bits
-    , bytestring
-    , clock                     >= 0.3
-    , containers
-    , data-msgpack              >= 0.0.12
-    , data-msgpack-types        >= 0.0.2
-    , entropy
-    , integer-gmp
-    , iproute
-    , lens-family
-    , MonadRandom
-    , mtl
-    , network                   < 3
-    , network-msgpack-rpc       >= 0.0.5
-    , saltine
-    , semigroups
-    , random
-    , tagged
-    , text
-    , transformers
   exposed-modules:
       Network.Tox
       Network.Tox.Application.GroupChats
@@ -102,74 +77,27 @@ library
       Network.Tox.Time
       Network.Tox.Timed
       Network.Tox.TimedT
-  if !flag(library-only)
-    hs-source-dirs:
-        src/testsuite
-    build-depends:
-        hspec
-    other-modules:
-        Network.Tox.Crypto.BoxSpec
-        Network.Tox.Crypto.CombinedKeySpec
-        Network.Tox.Crypto.KeyPairSpec
-        Network.Tox.Crypto.KeySpec
-        Network.Tox.Crypto.NonceSpec
-        Network.Tox.CryptoSpec
-        Network.Tox.DHT.ClientListSpec
-        Network.Tox.DHT.DhtPacketSpec
-        Network.Tox.DHT.DhtRequestPacketSpec
-        Network.Tox.DHT.DhtStateSpec
-        Network.Tox.DHT.DistanceSpec
-        Network.Tox.DHT.KBucketsSpec
-        Network.Tox.DHT.NodesRequestSpec
-        Network.Tox.DHT.NodesResponseSpec
-        Network.Tox.DHT.OperationSpec
-        Network.Tox.DHT.PendingRepliesSpec
-        Network.Tox.DHT.PingPacketSpec
-        Network.Tox.DHT.RpcPacketSpec
-        Network.Tox.DHTSpec
-        Network.Tox.EncodingSpec
-        Network.Tox.NodeInfo.HostAddressSpec
-        Network.Tox.NodeInfo.NodeInfoSpec
-        Network.Tox.NodeInfo.PortNumberSpec
-        Network.Tox.NodeInfo.SocketAddressSpec
-        Network.Tox.NodeInfoSpec
-        Network.Tox.NodeInfo.TransportProtocolSpec
-        Network.Tox.Protocol.PacketKindSpec
-        Network.Tox.Protocol.PacketSpec
-        Network.Tox.ProtocolSpec
-        Network.Tox.SaveDataSpec
-        Network.Tox.RPCTest
-    exposed-modules:
-        ToxTestSuite
-
-executable tox-refsut
-  default-language: Haskell2010
-  hs-source-dirs:
-      src
-  ghc-options:
-      -Wall
-      -fno-warn-unused-imports
   build-depends:
       base < 5
-    , hstox
-  main-is: tox-refsut.hs
-  if flag(library-only)
-    buildable: False
-
-executable tox-spectest
-  default-language: Haskell2010
-  hs-source-dirs:
-      src
-  ghc-options:
-      -Wall
-      -fno-warn-unused-imports
-  build-depends:
-      base < 5
-    , hstox
-    , process
-  main-is: tox-spectest.hs
-  if flag(library-only)
-    buildable: False
+    , QuickCheck                >= 2.9.1
+    , base16-bytestring
+    , binary
+    , binary-bits
+    , bytestring
+    , clock                     >= 0.3
+    , containers
+    , entropy
+    , integer-gmp
+    , iproute
+    , lens-family
+    , MonadRandom
+    , msgpack-binary            >= 0.0.12
+    , msgpack-rpc-conduit       >= 0.0.5
+    , mtl
+    , network                   < 3
+    , saltine
+    , random
+    , transformers
 
 executable toxsave-convert
   default-language: Haskell2010
@@ -178,16 +106,16 @@ executable toxsave-convert
   ghc-options:
       -Wall
       -fno-warn-unused-imports
+  main-is: toxsave-convert.hs
+  if flag(library-only)
+    buildable: False
   build-depends:
       base < 5
     , binary
     , bytestring
     , groom
-    , hstox
     , text
-  main-is: toxsave-convert.hs
-  if flag(library-only)
-    buildable: False
+    , toxcore
 
 test-suite testsuite
   default-language: Haskell2010
@@ -197,8 +125,52 @@ test-suite testsuite
   ghc-options:
       -Wall
       -fno-warn-unused-imports
+  main-is: testsuite.hs
+  other-modules:
+      Data.Result
+      Network.Tox.Crypto.BoxSpec
+      Network.Tox.Crypto.CombinedKeySpec
+      Network.Tox.Crypto.KeyPairSpec
+      Network.Tox.Crypto.KeySpec
+      Network.Tox.Crypto.NonceSpec
+      Network.Tox.CryptoSpec
+      Network.Tox.DHT.ClientListSpec
+      Network.Tox.DHT.DhtPacketSpec
+      Network.Tox.DHT.DhtRequestPacketSpec
+      Network.Tox.DHT.DhtStateSpec
+      Network.Tox.DHT.DistanceSpec
+      Network.Tox.DHT.KBucketsSpec
+      Network.Tox.DHT.NodesRequestSpec
+      Network.Tox.DHT.NodesResponseSpec
+      Network.Tox.DHT.OperationSpec
+      Network.Tox.DHT.PendingRepliesSpec
+      Network.Tox.DHT.PingPacketSpec
+      Network.Tox.DHT.RpcPacketSpec
+      Network.Tox.DHTSpec
+      Network.Tox.EncodingSpec
+      Network.Tox.NodeInfo.HostAddressSpec
+      Network.Tox.NodeInfo.NodeInfoSpec
+      Network.Tox.NodeInfo.PortNumberSpec
+      Network.Tox.NodeInfo.SocketAddressSpec
+      Network.Tox.NodeInfoSpec
+      Network.Tox.NodeInfo.TransportProtocolSpec
+      Network.Tox.Protocol.PacketKindSpec
+      Network.Tox.Protocol.PacketSpec
+      Network.Tox.ProtocolSpec
+      Network.Tox.SaveDataSpec
   build-depends:
       base < 5
+    , QuickCheck
     , async
-    , hstox
-  main-is: testsuite.hs
+    , binary
+    , binary-bits
+    , bytestring
+    , containers
+    , hspec
+    , msgpack-binary
+    , msgpack-rpc-conduit
+    , msgpack-types
+    , mtl
+    , saltine
+    , text
+    , toxcore

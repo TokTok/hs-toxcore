@@ -2,8 +2,7 @@
 module Network.Tox.Crypto.NonceSpec where
 
 import           Control.Monad.IO.Class   (liftIO)
-import           Network.MessagePack.Rpc  (rpc)
-import           Network.Tox.RPCTest      (equivProp1, runTest)
+import           Network.MessagePack.Rpc  (local)
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -13,9 +12,9 @@ import qualified Network.Tox.Crypto.Nonce as Nonce
 spec :: Spec
 spec = do
   describe "newNonce" $
-    it "generates a different nonce on subsequent calls to newNonce" $ runTest $ do
-      nonce1 <- rpc Nonce.newNonceR
-      nonce2 <- rpc Nonce.newNonceR
+    it "generates a different nonce on subsequent calls to newNonce" $ do
+      nonce1 <- local Nonce.newNonceR
+      nonce2 <- local Nonce.newNonceR
       liftIO $ nonce1 `shouldNotBe` nonce2
 
   describe "nudge" $
@@ -24,33 +23,31 @@ spec = do
         Nonce.nudge nonce `shouldNotBe` nonce
 
   describe "increment" $ do
-    equivProp1 Nonce.increment (rpc Nonce.incrementR)
-
     it "generates a different nonce for arbitrary nonces" $
-      property $ \nonce -> runTest $ do
-        incremented <- rpc Nonce.incrementR nonce
-        liftIO $ incremented `shouldNotBe` nonce
+      property $ \nonce -> do
+        let incremented = local Nonce.incrementR nonce
+        incremented `shouldNotBe` nonce
 
-    it "increments a 0 nonce to 1" $ runTest $ do
+    it "increments a 0 nonce to 1" $ do
       let nonce = read "\"000000000000000000000000000000000000000000000000\""
       let nonce' = read "\"000000000000000000000000000000000000000000000001\""
-      incremented <- rpc Nonce.incrementR nonce
-      liftIO $ incremented `shouldBe` nonce'
+      let incremented = local Nonce.incrementR nonce
+      incremented `shouldBe` nonce'
 
-    it "increments a max nonce to 0" $ runTest $ do
+    it "increments a max nonce to 0" $ do
       let nonce = read "\"ffffffffffffffffffffffffffffffffffffffffffffffff\""
       let nonce' = read "\"000000000000000000000000000000000000000000000000\""
-      incremented <- rpc Nonce.incrementR nonce
-      liftIO $ incremented `shouldBe` nonce'
+      let incremented = local Nonce.incrementR nonce
+      incremented `shouldBe` nonce'
 
-    it "increments a max-1 nonce to max" $ runTest $ do
+    it "increments a max-1 nonce to max" $ do
       let nonce = read "\"fffffffffffffffffffffffffffffffffffffffffffffffe\""
       let nonce' = read "\"ffffffffffffffffffffffffffffffffffffffffffffffff\""
-      incremented <- rpc Nonce.incrementR nonce
-      liftIO $ incremented `shouldBe` nonce'
+      let incremented = local Nonce.incrementR nonce
+      incremented `shouldBe` nonce'
 
-    it "increments a little endian max-1 nonce to little endian 255" $ runTest $ do
+    it "increments a little endian max-1 nonce to little endian 255" $ do
       let nonce = read "\"feffffffffffffffffffffffffffffffffffffffffffffff\""
       let nonce' = read "\"ff0000000000000000000000000000000000000000000000\""
-      incremented <- rpc Nonce.incrementR nonce
-      liftIO $ incremented `shouldBe` nonce'
+      let incremented = local Nonce.incrementR nonce
+      incremented `shouldBe` nonce'

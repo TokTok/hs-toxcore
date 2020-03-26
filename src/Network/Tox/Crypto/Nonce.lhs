@@ -31,10 +31,10 @@ import           Network.Tox.Crypto.Key
 newNonce :: IO Nonce
 newNonce = Key <$> Sodium.newNonce
 
-newNonceR :: Rpc.RpcIO (Rpc.Returns Nonce)
+newNonceR :: Rpc.Rpc (Rpc.ReturnsM IO Nonce)
 newNonceR =
-  Rpc.stubsIO "Nonce.newNonce"
-    (Ret "nonce")
+  Rpc.stubs "Nonce.newNonce"
+    (RetM "nonce")
     newNonce
 
 

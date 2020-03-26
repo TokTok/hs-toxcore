@@ -5,18 +5,18 @@ module Network.Tox.Crypto.KeySpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import qualified Crypto.Saltine.Class          as Sodium
-import           Data.Binary                   (Binary)
-import           Data.ByteString               (ByteString)
-import qualified Data.ByteString               as ByteString
-import qualified Data.MessagePack.Types.Result as R
-import           Data.Proxy                    (Proxy (..))
-import           Data.Typeable                 (Typeable)
-import qualified Network.Tox.Binary            as Binary
-import           Network.Tox.Crypto.Key        (Key (..))
-import qualified Network.Tox.Crypto.Key        as Key
+import qualified Crypto.Saltine.Class     as Sodium
+import           Data.Binary              (Binary)
+import           Data.ByteString          (ByteString)
+import qualified Data.ByteString          as ByteString
+import           Data.Proxy               (Proxy (..))
+import qualified Data.Result              as R
+import           Data.Typeable            (Typeable)
+import qualified Network.Tox.Binary       as Binary
+import           Network.Tox.Crypto.Key   (Key (..))
+import qualified Network.Tox.Crypto.Key   as Key
 import           Network.Tox.EncodingSpec
-import qualified Text.Read                     as Read
+import qualified Text.Read                as Read
 
 
 readMaybe :: String -> Maybe Key.PublicKey

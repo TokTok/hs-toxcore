@@ -56,10 +56,10 @@ newKeyPair = do
   (sk, pk) <- Sodium.newKeypair
   return $ KeyPair (Key sk) (Key pk)
 
-newKeyPairR :: Rpc.RpcIO (Rpc.Returns KeyPair)
+newKeyPairR :: Rpc.Rpc (Rpc.ReturnsM IO KeyPair)
 newKeyPairR =
-  Rpc.stubsIO "KeyPair.newKeyPair"
-    (Ret "keyPair")
+  Rpc.stubs "KeyPair.newKeyPair"
+    (RetM "keyPair")
     newKeyPair
 
 

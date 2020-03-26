@@ -1,23 +1,23 @@
 load("@ai_formation_hazel//tools:mangling.bzl", "hazel_library")
-load("@rules_haskell//haskell:defs.bzl", "haskell_library", "haskell_test")
-load("//third_party/haskell/hspec-discover:build_defs.bzl", "hspec_library")
+load("@rules_haskell//haskell:defs.bzl", "haskell_library")
+load("//third_party/haskell/hspec-discover:build_defs.bzl", "hspec_test")
 load("//tools/project:build_defs.bzl", "project")
 
 project()
 
 haskell_library(
     name = "hs-toxcore",
-    srcs = glob(["src/tox/**/*.*hs"]),
+    srcs = glob(["src/**/*.*hs"]),
     compiler_flags = [
         "-j4",
         "-Wno-unused-imports",
     ],
-    src_strip_prefix = "src/tox",
-    version = "0.0.2",
+    src_strip_prefix = "src",
+    version = "0.2.11",
     visibility = ["//visibility:public"],
     deps = [
-        "//hs-msgpack",
-        "//hs-msgpack-rpc",
+        "//hs-msgpack-binary",
+        "//hs-msgpack-rpc-conduit",
         hazel_library("MonadRandom"),
         hazel_library("QuickCheck"),
         hazel_library("base"),
@@ -39,20 +39,20 @@ haskell_library(
     ],
 )
 
-hspec_library(
+hspec_test(
     name = "testsuite",
+    size = "small",
     compiler_flags = [
         "-j4",
         "-Wno-unused-imports",
     ],
-    src_strip_prefix = "src/testsuite",
-    version = "0.0.2",
     deps = [
         ":hs-toxcore",
-        "//hs-msgpack",
-        "//hs-msgpack-rpc",
+        "//hs-msgpack-binary",
+        "//hs-msgpack-rpc-conduit",
         "//hs-msgpack-types",
         hazel_library("QuickCheck"),
+        hazel_library("async"),
         hazel_library("base"),
         hazel_library("binary"),
         hazel_library("binary-bits"),
@@ -62,18 +62,5 @@ hspec_library(
         hazel_library("mtl"),
         hazel_library("saltine"),
         hazel_library("text"),
-    ],
-)
-
-haskell_test(
-    name = "test",
-    srcs = glob(["test/**/*.*hs"]),
-    compiler_flags = ["-Wno-unused-imports"],
-    src_strip_prefix = "test",
-    deps = [
-        ":hs-toxcore",
-        ":testsuite",
-        hazel_library("async"),
-        hazel_library("base"),
     ],
 )

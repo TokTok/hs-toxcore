@@ -15,7 +15,6 @@ module Network.Tox.EncodingSpec
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.MessagePack           (MessagePack)
 import           Network.MessagePack.Client (Client)
-import qualified Network.Tox.RPCTest        as RPC
 import           Test.Hspec
 import           Test.QuickCheck            (Arbitrary)
 import qualified Test.QuickCheck            as QC
@@ -133,29 +132,15 @@ readShowSpec (Proxy :: Proxy a) =
         output `shouldBe` expected
 
 
-rpcSpec :: (Arbitrary a, Eq a, Show a, Typeable a, Binary a, MessagePack a) => Proxy a -> Spec
+rpcSpec
+    :: (Arbitrary a, Eq a, Show a, Typeable a, Binary a, MessagePack a)
+    => Proxy a
+    -> Spec
 rpcSpec (Proxy :: Proxy a) =
-  let
-    encodeAC = Binary.encodeC :: a -> Client ByteString.ByteString
-    decodeAC = Binary.decodeC :: ByteString.ByteString -> Client (Maybe a)
-    encodeA  = Binary.encode  :: a -> ByteString.ByteString
-    decodeA  = Binary.decode  :: ByteString.ByteString -> Maybe a
-  in
+    describe "MessagePack" $
+        it "encodes and decodes correctly" $ property $ \x ->
+            decodeA (encodeA x) `shouldBe` Just x
 
-  describe "MessagePack" $ do
-    it "encodes and decodes correctly" $
-      property $ \expected -> RPC.runTest $ do
-        encoded <- encodeAC expected
-        decoded <- decodeAC encoded
-        liftIO $ decoded `shouldBe` Just expected
-
-    it "encodes arbitrary input correctly" $
-      property $ \expected -> RPC.runTest $ do
-        encoded <- encodeAC expected
-        liftIO $ encoded `shouldBe` encodeA expected
-
-    it "decodes arbitrary input correctly" $
-      property $ \bytes -> RPC.runTest $ do
-        let bs = ByteString.pack bytes
-        decoded <- decodeAC bs
-        liftIO $ decoded `shouldBe` decodeA bs
+  where
+    encodeA = Binary.encode :: a -> ByteString.ByteString
+    decodeA = Binary.decode :: ByteString.ByteString -> Maybe a
