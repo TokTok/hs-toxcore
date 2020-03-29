@@ -186,7 +186,7 @@ from a state file. Only NospamKeys is required.
   \texttt{32}   & Long term secret key \\
 \end{tabular}
 
-\input{src/tox/Network/Tox/SaveData/DHT.lhs}
+\input{src/Network/Tox/SaveData/DHT.lhs}
 
 \subsection{Friends (0x03)}
 
@@ -199,7 +199,7 @@ sent a friend request to or a peer we've accepted a friend request from.
   \texttt{?}    & List of friends \\
 \end{tabular}
 
-\input{src/tox/Network/Tox/SaveData/Friend.lhs}
+\input{src/Network/Tox/SaveData/Friend.lhs}
 
 \subsection{Name (0x04)}
 
@@ -251,7 +251,7 @@ This section contains a list of path nodes used for onion routing.
 The structure of a path node is the same as \texttt{Node Info}. Note: this
 means that the integers stored in these nodes are stored in Big Endian as well.
 
-\input{src/tox/Network/Tox/SaveData/Conferences.lhs}
+\input{src/Network/Tox/SaveData/Conferences.lhs}
 
 \subsection{EOF (0xFF)}
 

@@ -26,3 +26,5 @@ script:
   - git diff --exit-code
   - stack --no-terminal test --coverage --extra-include-dirs=$HOME/.local/include --extra-lib-dirs=$HOME/.local/lib
   - shc toxcore testsuite
+  - (cd .. && git clone --depth=1 https://github.com/TokTok/spec)
+  - make doc

@@ -442,7 +442,7 @@ sendPingRequestIfAppropriate from = do
 
 \end{code}
 
-\input{src/tox/Network/Tox/DHT/DhtRequestPacket.lhs}
+\input{src/Network/Tox/DHT/DhtRequestPacket.lhs}
 \subsection{Handling DHT Request packets}
 
 A DHT node that receives a DHT request packet checks whether the addressee

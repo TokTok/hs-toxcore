@@ -6,7 +6,7 @@ endif
 endif
 
 doc: $(DOCS)
-../spec/spec.md: src/tox/Network/Tox.lhs $(shell find src -name "*.lhs") ../spec/pandoc.mk ../spec/.md-style.rb Makefile
+../spec/spec.md: src/Network/Tox.lhs $(shell find src -name "*.lhs") ../spec/pandoc.mk ../spec/.md-style.rb Makefile
 	echo '% The Tox Reference' > $@
 	echo '' >> $@
 	pandoc $< $(PANDOC_ARGS)							\

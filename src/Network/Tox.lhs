@@ -140,10 +140,10 @@ has exactly one human-readable representation, and a mapping exists from the
 human-readable representation to the control character.  Therefore, the use of
 Unicode Control Characters (U+240x) is not permitted without additional marker.
 
-\input{src/tox/Network/Tox/Crypto.lhs}
-\input{src/tox/Network/Tox/NodeInfo.lhs}
-\input{src/tox/Network/Tox/Protocol.lhs}
-\input{src/tox/Network/Tox/DHT.lhs}
+\input{src/Network/Tox/Crypto.lhs}
+\input{src/Network/Tox/NodeInfo.lhs}
+\input{src/Network/Tox/Protocol.lhs}
+\input{src/Network/Tox/DHT.lhs}
 
 \chapter{LAN discovery}
 
@@ -1974,7 +1974,7 @@ a peer online packet to the peer.
 When a peer is added to the peer list, any existing peer in the peer list or
 frozen peers list with the same public key is first removed.
 
-\input{src/tox/Network/Tox/Application/GroupChats.lhs}
+\input{src/Network/Tox/Application/GroupChats.lhs}
 
 \chapter{Net crypto}
 
@@ -3446,5 +3446,5 @@ data that was stored and it is removed from the array.
 Ping array is used in many places in toxcore to efficiently keep track of sent
 packets.
 
-\input{src/tox/Network/Tox/SaveData.lhs}
-\input{src/tox/Network/Tox/Testing.lhs}
+\input{src/Network/Tox/SaveData.lhs}
+\input{src/Network/Tox/Testing.lhs}

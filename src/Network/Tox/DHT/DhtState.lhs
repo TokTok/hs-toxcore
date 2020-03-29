@@ -201,7 +201,7 @@ containsSearchKey searchKey =
 
 \end{code}
 
-\input{src/tox/Network/Tox/DHT/NodeList.lhs}
+\input{src/Network/Tox/DHT/NodeList.lhs}
 
 The iteration order over the DHT state is to first process the Close List
 k-buckets, then the Search List entry Client Lists. Each of these follows the
