@@ -1,5 +1,6 @@
 # Build products.
 /dist
+/dist-newstyle
 /*.tix
 /.*.pid
 /.*.stamp
@@ -12,6 +13,13 @@
 
 # Generated.
 /tox-spec.md
+
+# Cross-compilation temporary source directories.
+/comonad-*
+/distributive-*
+/entropy-*
+/network-*
+/cabal.project
 
 # Temporary files.
 *~
