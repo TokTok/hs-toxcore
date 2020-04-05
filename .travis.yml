@@ -3,28 +3,35 @@ language: generic
 dist: xenial
 os: linux
 
+env:
+  global:
+    # HACKAGE_USERNAME=[secure]
+    - secure: "FNrzJ0afxBN39d6bS/OhkPhGPbgG/KD2GJ8EjZqU45U3SJjU5UFWts6BM14UBAmgFkRUn4r4891H5TjMW5AMRXyyvqac1l9QsB/7mA0rkwlkqq4QurBZwdB5JgYQsmOlLeSmNRXvA+BF82lC4SRdRqi/rTnDEle1/8PnVnPRczL5w4sHUgcUlU+RzNiq76DtG9yGLl/m+qdkLM8cJlqXH4rZg+FB1PCpjcKeJEbpGIlTP+PfaiYwRv4PCQprljblG1xANZhUy0RJg2nw+yVK1+EGy2RhItgn2Q4lcTt+SK10r3HQRTUG9f09j2KZrtkTDju6NQwn2L9LJYThNd4pJm2PHt5bsOgsWgNvXCU/kEL6sCfTDpw7pBiLQPpWq8oeAylYE4LIDngoAn2VPbEkN7j3KE481EmME2J5JnBDVoVE8jiJt5HZRafmkYfenGt0qRn7S5kU9hXOBLixwp9s47a+s31jr9hsC75+0kMxZQQTTguCnoXxT1LsIM+MUA+NKtD/gwBh9DuWfeybdrUV/lTSBI0wm4aKoVmpIxKjOS3ANy5igntUIyUWSxvrUGbzRhwgdhp/AqtcpyRifEqkaEXGX2zZKDxYaZ5Hx/FzATS+sNO+4n4R+wIm1BICzDVVXl5R+ia+aU5SZnDGGNZRP87/5us5wqXLb5sRVN2uZG4="
+    # HACKAGE_PASSWORD=[secure]
+    - secure: "rVm6o0oehKXNFf/bq4ie2YSb7YVGe0MfkEuYCwlLPFLW6ZK+w2OlpCLKuLXpFfH0sZBSTdHAFlBy1kMse9jWGKOs7ry6drA7uEDmDkmGhxgi3OprUDn1EPgTRKPSt0CG06AM1TmK2JUAtwjenQnGi5NlMETT6S/8DDGXM4wbIVYUv4U8iuHhrV++O+z+vRJgLSMYpZhEwyHfBTyzP7GsmQ7U08to5/+I9u4IMn3mWcBFeovmPNoKhoLsKFW9ogVgyPMj0A7oJ8uSSlrEJW0/n4FJnWL4KMJD8XLylht1If0Q2JM6QaYFwGPyKPG9KhG0Ao9fIa/PxC+h71g9JHL8x9wLWLKUWZ/DWu0PSGfnUIxrr361nSTYVHzNFSElWo1A20d1D7qwtqxkJydjD8LAbXjC37jFprOE2RLqzJNtbecXUGy5CfshrMQt+ou5qw6b9BwLirk3BzIuoxLJfk08O1BbKU8Z2Cjc6nhZhhBJaButiXnQnOEfkMxqB5HxLw7Y6G2umeLHv35Fg8XAvgU3OZF7/iwZlOM+Q/FEmJ+AAxFdokzB7VW/L8TJLKexTF8r4yovSvfb4VkG9vzcIgzUIZxIebLmBAOqyzn4C0mHnMry6FkgLhIrvDbMroRA4bsWW95ofXNSoIWO8KKw5f365IjIJ9okG+O0D6R6jCPl1pw="
+
 cache:
+  timeout: 600
   directories:
     - $HOME/.local
     - $HOME/.stack
 
-before_install:
-  - export PATH=$HOME/.local/bin:$PATH
-  - travis_retry curl -L https://github.com/TokTok/hs-tools/releases/download/v0.6/hs-tools-v0.6.tar.gz | tar xz -C $HOME
-
-install:
-  # Where to find libraries.
-  - export LD_LIBRARY_PATH=$HOME/.local/lib
-  - export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig
-  # libsodium
-  - git clone --depth=1 --branch=stable https://github.com/jedisct1/libsodium
-  - test -f $HOME/.local/lib/libsodium.so || (cd libsodium && ./configure --prefix=$HOME/.local && make install -j$(nproc))
-
 script:
-  - hlint .
-  - stylish-haskell-lhs -i .
-  - git diff --exit-code
-  - stack --no-terminal test --coverage --extra-include-dirs=$HOME/.local/include --extra-lib-dirs=$HOME/.local/lib
-  - shc toxcore testsuite
-  - (cd .. && git clone --depth=1 https://github.com/TokTok/spec)
-  - make doc
+  - bash <(travis_retry curl -s https://raw.githubusercontent.com/TokTok/hs-tools/master/bin/travis-haskell) script
+  - eval $(travis-haskell env)
+
+deploy:
+  provider: releases
+  token:
+    secure: "DmBYKIA4PIGMKL0+y2P1Oowst5b8EyNTnwXcKL510hcFi0lm/NS0JOHx3PAAoxXj9DBW8XMEgZ0gA+olcBIq8jNqryq8QiXYVRoyRnwvXDev03qshvbBJU1IfGV2lnz5ced+D9LbOG64suf4aLg+74s4RtK1a+jwsTLm6nD51tfvTeb3nVI5d8c2CjLRXJ5CWioPhkQOp3rNY6iXxHIrIBrVvUV4bZWbpmLcFweeWqsNb72G+5buyIwSrAWxqh7oCK1mxElmJDoYqVeEW3INdhIEZU0w0GRvSMlh0zhH3nfpZLmFK+hpaZ3K8WP4dsCQfg+KcRSeYNq16OuEAr7bRBWHnE3DYvosB6Hprqj4akuoYS/aNWSS1yk32bNLcZE9d24KBbfaeKp4AJ1VWCjWyMEW4oKKtuJz3yVGKhvuJu9X3IbSnQWtPtRYkMl4itMQ5Dk/lp4BaFX9MGMa3fSkpvj0TGC3JG94nPEIaj6sHjmZq99AFAMMWCmTj/xecvvKnt8vdGYd4/eumY8fkSkEb02QTqyRJ039kD7ErSgmiDoBOVPz+WYN38oygea9VAkErwMsM9o7Sn18b+ZTckxype4AA25gcBp7diykI2YOUA797v7yqaxBLCxB5OW4huePXbm2NLMib0BtWnKQDkt38s9S/j11sfK9S7TX47JHpOs="
+  file: $PACKAGE-$VERSION.tar.gz
+  skip_cleanup: true
+  on:
+    repo: TokTok/hs-toxcore
+    tags: true
+
+after_deploy: travis-haskell deploy
+
+# Only build pull requests and releases, don't build master on pushes,
+# except through api or cron.
+if: type IN (pull_request, api, cron) OR tag IS present
