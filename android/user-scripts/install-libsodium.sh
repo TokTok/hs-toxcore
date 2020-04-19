@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "$HOME/ghc-build/set-env.sh"
+source "$HOME/ghc-build/set-env-android.sh"
 ####################################################################################################
 
 if [ -f "$NDK_ADDON_PREFIX/lib/libsodium.a" ]; then

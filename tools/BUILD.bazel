@@ -1,0 +1,14 @@
+load("@ai_formation_hazel//tools:mangling.bzl", "hazel_library")
+load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
+
+haskell_binary(
+    name = "toxsave-convert",
+    srcs = ["toxsave-convert.hs"],
+    deps = [
+        "//hs-toxcore",
+        hazel_library("base"),
+        hazel_library("binary"),
+        hazel_library("bytestring"),
+        hazel_library("groom"),
+    ],
+)

@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# TODO(iphydf): Undo this once ghc-android Docker images are updated.
+# shellcheck disable=SC2016
+sed -i -e 's@^\. set-env.sh@. $HOME/ghc-build/set-env.sh@' "$HOME/ghc-build/set-env-android.sh"
+
 export THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$HOME/ghc-build/set-env.sh"; cd -
+. "$HOME/ghc-build/set-env-android.sh"; cd -
 set -x
 
 "$NDK_TARGET-cabal" update

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "$HOME/ghc-build/set-env.sh"; cd -
+source "$HOME/ghc-build/set-env-android.sh"; cd -
 ####################################################################################################
 
 rm -rf "$@"
