@@ -1,0 +1,22 @@
+---
+_extends: template
+
+repository:
+  name: hs-toxcore
+  description: Haskell Tox protocol implementation
+  homepage: https://toktok.ltd/spec
+  topics: haskell, toxcore, network, p2p
+  has_issues: true
+
+branches:
+  - name: "master"
+    protection:
+      required_status_checks:
+        contexts:
+          - Codacy/PR Quality Review
+          - Travis CI - Pull Request
+          - WIP
+          - build_android
+          - code-review/reviewable
+          - coverage/coveralls
+          - license/cla
