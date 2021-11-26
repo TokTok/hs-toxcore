@@ -80,7 +80,7 @@ library
   build-depends:
       base < 5
     , QuickCheck                >= 2.9.1
-    , base16-bytestring
+    , base16-bytestring         < 1
     , binary
     , binary-bits
     , bytestring
@@ -96,7 +96,7 @@ library
     , mtl
     , network                   < 3
     , saltine
-    , random
+    , random                    < 1.2
     , transformers
 
 executable toxsave-convert

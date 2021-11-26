@@ -1,5 +1,5 @@
 ---
-_extends: template
+_extends: .github
 
 repository:
   name: hs-toxcore
@@ -13,10 +13,7 @@ branches:
     protection:
       required_status_checks:
         contexts:
-          - Codacy/PR Quality Review
-          - Travis CI - Pull Request
-          - WIP
           - build_android
+          - cirrus-ci
+          - Codacy Static Code Analysis
           - code-review/reviewable
-          - coverage/coveralls
-          - license/cla
