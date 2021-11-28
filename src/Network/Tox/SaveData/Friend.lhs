@@ -1,6 +1,7 @@
 \begin{code}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE StrictData        #-}
 module Network.Tox.SaveData.Friend where
 
 import           Data.Binary               (Binary (..))

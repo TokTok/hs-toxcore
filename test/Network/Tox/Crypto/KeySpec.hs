@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StrictData          #-}
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.KeySpec where
 
@@ -23,7 +24,7 @@ readMaybe :: String -> Maybe Key.PublicKey
 readMaybe = Read.readMaybe
 
 
-decodeM :: Monad m => ByteString -> m Key.PublicKey
+decodeM :: MonadFail m => ByteString -> m Key.PublicKey
 decodeM = Key.decode
 
 

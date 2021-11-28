@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE Safe              #-}
+{-# LANGUAGE StrictData        #-}
 module Data.Result
     ( Result (..)
     ) where
@@ -31,7 +32,6 @@ instance Alternative Result where
 
 instance Monad Result where
     return = Success
-    fail = Failure
 
     Success x   >>= f = f x
     Failure msg >>= _ = Failure msg

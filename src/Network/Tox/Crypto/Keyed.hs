@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Safe                  #-}
+{-# LANGUAGE StrictData            #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 -- | Monad class for caching of combined keys
