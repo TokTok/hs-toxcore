@@ -31,17 +31,17 @@ module Data.Binary.Bits.Put
           )
           where
 
+import           Data.Binary.Builder (Builder)
 import qualified Data.Binary.Builder as B
-import Data.Binary.Builder ( Builder )
-import qualified Data.Binary.Put as Put
-import Data.Binary.Put ( Put )
+import           Data.Binary.Put     (Put)
+import qualified Data.Binary.Put     as Put
 
-import Data.ByteString
+import           Data.ByteString
 
-import Control.Applicative
-import Data.Bits
-import Data.Monoid
-import Data.Word
+import           Control.Applicative
+import           Data.Bits
+import           Data.Monoid
+import           Data.Word
 
 data BitPut a = BitPut { run :: (S -> PairS a) }
 

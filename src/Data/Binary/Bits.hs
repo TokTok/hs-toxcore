@@ -15,10 +15,10 @@
 
 module Data.Binary.Bits where
 
-import Data.Binary.Bits.Get
-import Data.Binary.Bits.Put
+import           Data.Binary.Bits.Get
+import           Data.Binary.Bits.Put
 
-import Data.Word
+import           Data.Word
 
 class BinaryBit a where
   putBits :: Int -> a -> BitPut ()
