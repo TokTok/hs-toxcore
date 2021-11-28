@@ -28,6 +28,9 @@ library
       -Wall
       -fno-warn-unused-imports
   exposed-modules:
+      Data.Binary.Bits
+      Data.Binary.Bits.Get
+      Data.Binary.Bits.Put
       Network.Tox
       Network.Tox.Application.GroupChats
       Network.Tox.Binary
@@ -81,7 +84,6 @@ library
     , QuickCheck                >= 2.9.1
     , base16-bytestring         < 1
     , binary
-    , binary-bits
     , bytestring
     , clock                     >= 0.3
     , containers
@@ -92,8 +94,8 @@ library
     , MonadRandom
     , msgpack-binary            >= 0.0.12
     , mtl
-    , network                   < 3
-    , saltine
+    , network
+    , saltine                   < 0.2
     , random                    < 1.2
     , transformers
 
@@ -156,12 +158,13 @@ test-suite testsuite
       Network.Tox.Protocol.PacketSpec
       Network.Tox.ProtocolSpec
       Network.Tox.SaveDataSpec
+  build-tool-depends:
+      hspec-discover:hspec-discover
   build-depends:
       base < 5
     , QuickCheck
     , async
     , binary
-    , binary-bits
     , bytestring
     , containers
     , hspec

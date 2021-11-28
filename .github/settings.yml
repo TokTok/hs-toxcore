@@ -13,7 +13,11 @@ branches:
     protection:
       required_status_checks:
         contexts:
-          - build_android
-          - cirrus-ci
-          - Codacy Static Code Analysis
-          - code-review/reviewable
+          - "android-aarch64"
+          - "android-arm"
+          - "android-i686"
+          - "android-x86_64"
+          - "build"
+          - "cirrus-ci"
+          - "Codacy Static Code Analysis"
+          - "code-review/reviewable"

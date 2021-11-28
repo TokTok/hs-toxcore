@@ -1,17 +1,3 @@
-diff -ru a/cbits/HsNet.c b/cbits/HsNet.c
---- a/cbits/HsNet.c	2001-09-09 01:46:40.000000000 +0000
-+++ b/cbits/HsNet.c	2020-04-04 15:47:33.570600659 +0000
-@@ -6,3 +6,10 @@
- 
- #define INLINE
- #include "HsNet.h"
-+
-+#ifdef htonl
-+uint32_t (htonl)(uint32_t x) { return htonl(x); }
-+uint16_t (htons)(uint16_t x) { return htons(x); }
-+uint32_t (ntohl)(uint32_t x) { return ntohl(x); }
-+uint16_t (ntohs)(uint16_t x) { return ntohs(x); }
-+#endif
 diff -ru a/config.sub b/config.sub
 --- a/config.sub	2001-09-09 01:46:40.000000000 +0000
 +++ b/config.sub	2020-04-04 17:19:31.184929268 +0000
@@ -26,15 +12,3 @@ diff -ru a/config.sub b/config.sub
    android-linux)
      os=-linux-android
      basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`-unknown
-diff -ru a/Network/Socket/Types.hsc b/Network/Socket/Types.hsc
---- a/Network/Socket/Types.hsc	2001-09-09 01:46:40.000000000 +0000
-+++ b/Network/Socket/Types.hsc	2020-04-04 15:47:33.570600659 +0000
-@@ -1085,7 +1085,7 @@
- 
- instance Storable In6Addr where
-     sizeOf _    = #const sizeof(struct in6_addr)
--    alignment _ = #alignment struct in6_addr
-+    alignment _ = #const __alignof__(struct in6_addr)
- 
-     peek p = do
-         a <- peek32 p 0

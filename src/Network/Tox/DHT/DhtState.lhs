@@ -6,6 +6,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE Safe                  #-}
+{-# LANGUAGE StrictData            #-}
 module Network.Tox.DHT.DhtState where
 
 import           Control.Applicative            (Applicative, Const (..),

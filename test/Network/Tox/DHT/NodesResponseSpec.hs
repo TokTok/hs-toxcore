@@ -1,3 +1,4 @@
+{-# LANGUAGE StrictData  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.NodesResponseSpec where
 

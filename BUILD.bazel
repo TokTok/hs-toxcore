@@ -3,7 +3,7 @@ load("@rules_haskell//haskell:defs.bzl", "haskell_library")
 load("//third_party/haskell/hspec-discover:build_defs.bzl", "hspec_test")
 load("//tools/project:build_defs.bzl", "project")
 
-project()
+project(custom_cirrus = True)
 
 haskell_library(
     name = "hs-toxcore",
@@ -22,7 +22,6 @@ haskell_library(
         hazel_library("base"),
         hazel_library("base16-bytestring"),
         hazel_library("binary"),
-        hazel_library("binary-bits"),
         hazel_library("bytestring"),
         hazel_library("clock"),
         hazel_library("containers"),
@@ -53,7 +52,6 @@ hspec_test(
         hazel_library("async"),
         hazel_library("base"),
         hazel_library("binary"),
-        hazel_library("binary-bits"),
         hazel_library("bytestring"),
         hazel_library("containers"),
         hazel_library("hspec"),

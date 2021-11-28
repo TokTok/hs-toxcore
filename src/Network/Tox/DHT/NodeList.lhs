@@ -2,6 +2,7 @@ The Close List and the Search Entries are termed the \texttt{Node Lists} of
 the DHT State.
 
 \begin{code}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.DHT.NodeList where
 
 import           Control.Applicative           (Applicative, Const (..),
