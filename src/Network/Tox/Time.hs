@@ -1,4 +1,5 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.Time where
 
 import           Control.Applicative       ((<$>), (<*>))

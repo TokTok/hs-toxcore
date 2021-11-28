@@ -1,6 +1,7 @@
 \subsection{DHT (0x02)}
 
 \begin{code}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.SaveData.DHT (DHT) where
 
 import           Control.Arrow              (second)

@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData      #-}
 module Network.Tox.SaveData
     ( SaveData (..)
     , Section (..)

@@ -1,7 +1,8 @@
 \chapter{DHT}
 
 \begin{code}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.DHT where
 \end{code}
 

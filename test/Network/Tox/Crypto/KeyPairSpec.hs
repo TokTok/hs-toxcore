@@ -1,3 +1,4 @@
+{-# LANGUAGE StrictData  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.KeyPairSpec where
 

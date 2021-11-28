@@ -27,6 +27,10 @@ library
   ghc-options:
       -Wall
       -fno-warn-unused-imports
+  other-modules:
+      Data.Binary.Bits
+      Data.Binary.Bits.Get
+      Data.Binary.Bits.Put
   exposed-modules:
       Network.Tox
       Network.Tox.Application.GroupChats
@@ -81,7 +85,6 @@ library
     , QuickCheck                >= 2.9.1
     , base16-bytestring         < 1
     , binary
-    , binary-bits
     , bytestring
     , clock                     >= 0.3
     , containers
@@ -92,7 +95,7 @@ library
     , MonadRandom
     , msgpack-binary            >= 0.0.12
     , mtl
-    , network                   < 3
+    , network
     , saltine
     , random                    < 1.2
     , transformers
@@ -161,7 +164,6 @@ test-suite testsuite
     , QuickCheck
     , async
     , binary
-    , binary-bits
     , bytestring
     , containers
     , hspec

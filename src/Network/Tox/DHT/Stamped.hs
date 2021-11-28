@@ -1,4 +1,5 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.DHT.Stamped where
 
 import qualified Data.Foldable    as F

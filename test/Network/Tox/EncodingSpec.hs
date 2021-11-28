@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StrictData          #-}
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.EncodingSpec
     ( spec

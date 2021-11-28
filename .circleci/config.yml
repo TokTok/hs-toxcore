@@ -15,7 +15,7 @@ jobs:
   aarch64:
     working_directory: ~/work
     docker:
-      - image: toktoknet/ghc-android:8.6.5.aarch64
+      - image: toktoknet/ghc-android:8.10.3.aarch64
 
     steps:
       - checkout
@@ -30,7 +30,7 @@ jobs:
   arm:
     working_directory: ~/work
     docker:
-      - image: toktoknet/ghc-android:8.6.5.arm
+      - image: toktoknet/ghc-android:8.10.3.arm
 
     steps:
       - checkout
@@ -45,7 +45,7 @@ jobs:
   i686:
     working_directory: ~/work
     docker:
-      - image: toktoknet/ghc-android:8.6.5.i686
+      - image: toktoknet/ghc-android:8.10.3.i686
 
     steps:
       - checkout
@@ -60,7 +60,7 @@ jobs:
   x86_64:
     working_directory: ~/work
     docker:
-      - image: toktoknet/ghc-android:8.6.5.x86_64
+      - image: toktoknet/ghc-android:8.10.3.x86_64
 
     steps:
       - checkout

@@ -7,6 +7,7 @@ lifetime of a k-buckets instance.
 \begin{code}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.KBuckets where
 

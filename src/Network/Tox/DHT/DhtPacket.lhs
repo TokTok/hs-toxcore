@@ -25,6 +25,7 @@ protocol never actually sends empty messages, so in reality the minimum size is
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE Safe               #-}
+{-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.DhtPacket where
 
 import           Control.Applicative        ((<$>), (<*>))

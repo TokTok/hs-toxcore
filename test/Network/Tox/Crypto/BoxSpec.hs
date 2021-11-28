@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StrictData          #-}
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.BoxSpec where
 

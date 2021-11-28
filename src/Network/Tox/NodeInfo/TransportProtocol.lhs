@@ -14,6 +14,7 @@ The human-readable representation for UDP is \texttt{UDP} and for TCP is
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE StrictData         #-}
 {-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.TransportProtocol where
 

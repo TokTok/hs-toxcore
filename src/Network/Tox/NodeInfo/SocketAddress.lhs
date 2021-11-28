@@ -7,6 +7,7 @@ any internet host.
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE StrictData         #-}
 {-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.SocketAddress where
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE StrictData #-}
 module Network.Tox.SaveData.Util where
 
 import           Control.Monad   (when)

@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE Trustworthy                #-}
 
 -- | Abstraction layer for network functionality.

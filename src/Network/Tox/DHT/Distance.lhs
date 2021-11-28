@@ -2,6 +2,7 @@
 
 \begin{code}
 {-# LANGUAGE MagicHash   #-}
+{-# LANGUAGE StrictData  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.Distance where
 

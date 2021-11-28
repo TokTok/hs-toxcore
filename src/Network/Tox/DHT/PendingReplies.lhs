@@ -6,7 +6,8 @@ which was sent sufficiently recently, according to a time limit which depends on
 the service.
 
 \begin{code}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.DHT.PendingReplies where
 
 import qualified Network.Tox.DHT.RpcPacket     as RpcPacket

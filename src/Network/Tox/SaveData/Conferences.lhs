@@ -5,6 +5,7 @@ This section contains a list of saved conferences.
 \begin{code}
 {-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData      #-}
 module Network.Tox.SaveData.Conferences where
 
 import           Data.Binary               (Binary (..))

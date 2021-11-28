@@ -1,9 +1,9 @@
 ---
 cirrus-ci_task:
   container:
-    image: toxchat/toktok-stack:0.0.11
+    image: toxchat/toktok-stack:0.0.17
     cpu: 2
-    memory: 4G
+    memory: 6G
   configure_script:
     - /src/workspace/tools/inject-repo hs-toxcore
   test_all_script:
