@@ -1,3 +1,4 @@
+{-# LANGUAGE StrictData  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.NodeInfo.HostAddressSpec where
 

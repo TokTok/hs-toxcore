@@ -1,5 +1,6 @@
 \begin{code}
 {-# LANGUAGE LambdaCase  #-}
+{-# LANGUAGE StrictData  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.DistanceSpec where
 
