@@ -13,7 +13,9 @@ branches:
     protection:
       required_status_checks:
         contexts:
-          - build_android
-          - cirrus-ci
-          - Codacy Static Code Analysis
-          - code-review/reviewable
+          # TODO(iphydf): Upgrade the android image to ghc 8.10.3.
+          #- "build_android"
+          - "build"
+          - "cirrus-ci"
+          - "Codacy Static Code Analysis"
+          - "code-review/reviewable"

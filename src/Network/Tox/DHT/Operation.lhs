@@ -8,6 +8,7 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE Safe                  #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE StrictData            #-}
 module Network.Tox.DHT.Operation where
 
 import           Control.Applicative                  (Applicative, pure, (<$>),
@@ -36,10 +37,10 @@ import           System.Random                        (StdGen, mkStdGen)
 import           Test.QuickCheck.Arbitrary            (Arbitrary, arbitrary)
 
 import           Network.Tox.Crypto.Key               (PublicKey)
+import qualified Network.Tox.Crypto.KeyPair           as KeyPair
 import           Network.Tox.Crypto.Keyed             (Keyed)
 import           Network.Tox.Crypto.KeyedT            (KeyedT)
 import qualified Network.Tox.Crypto.KeyedT            as KeyedT
-import qualified Network.Tox.Crypto.KeyPair           as KeyPair
 import           Network.Tox.DHT.ClientList           (ClientList)
 import qualified Network.Tox.DHT.ClientList           as ClientList
 import           Network.Tox.DHT.ClientNode           (ClientNode)
@@ -586,4 +587,3 @@ instance Arbitrary ArbStdGen
   where arbitrary = ArbStdGen . mkStdGen <$> arbitrary
 
 \end{code}
-

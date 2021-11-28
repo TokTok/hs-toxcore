@@ -7,6 +7,7 @@ bit unsigned integer (2 bytes).
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.NodeInfo.PortNumber where
 

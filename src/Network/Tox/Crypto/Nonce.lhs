@@ -15,6 +15,7 @@ together.
 
 \begin{code}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StrictData        #-}
 {-# LANGUAGE Trustworthy       #-}
 module Network.Tox.Crypto.Nonce where
 

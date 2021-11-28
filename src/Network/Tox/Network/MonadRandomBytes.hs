@@ -1,12 +1,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StrictData          #-}
 {-# LANGUAGE Trustworthy         #-}
 
 module Network.Tox.Network.MonadRandomBytes where
 
 import           Control.Applicative        (Applicative, (<$>))
+import           Control.Monad.RWS          (RWST)
 import           Control.Monad.Random       (RandT, getRandoms)
 import           Control.Monad.Reader       (ReaderT)
-import           Control.Monad.RWS          (RWST)
 import           Control.Monad.State        (StateT)
 import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Writer       (WriterT)
@@ -102,4 +103,3 @@ uniform as = (as!!) <$> randomInt (length as)
 uniformSafe :: MonadRandomBytes m => [a] -> m (Maybe a)
 uniformSafe [] = return Nothing
 uniformSafe as = Just <$> uniform as
-

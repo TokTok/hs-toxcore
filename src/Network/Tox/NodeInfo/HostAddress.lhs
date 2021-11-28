@@ -13,6 +13,7 @@ packed byte is the protocol and the next 7 bits are the address family.
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE StrictData         #-}
 {-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.HostAddress where
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE StrictData #-}
 module Network.Tox.SaveData.Util where
 
 import           Control.Monad   (when)
@@ -35,4 +36,3 @@ putSectionHeader sectionMagic len ty = do
     Put.putWord32le len
     Put.putWord16le ty
     Put.putWord16le sectionMagic
-
