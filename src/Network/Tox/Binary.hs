@@ -156,7 +156,7 @@ decodeS = Server.method "Binary.decode"
       "RpcPacket Word64"  -> go RpcPacket
       "SocketAddress"     -> go SocketAddress
       "TransportProtocol" -> go TransportProtocol
-      tycon               -> fail $ "unknown type: " ++ tycon
+      tycon               -> error $ "unknown type: " ++ tycon
 
     go f = return . fmap (knownTypeToObject . f) . Encoding.decode
 
@@ -204,6 +204,6 @@ encodeS = Server.method "Binary.encode"
       "RpcPacket Word64"  -> go RpcPacket
       "SocketAddress"     -> go SocketAddress
       "TransportProtocol" -> go TransportProtocol
-      tycon               -> fail $ "unknown type: " ++ tycon
+      tycon               -> error $ "unknown type: " ++ tycon
 
     go f = fmap (knownTypeEncode . f) . fromObject

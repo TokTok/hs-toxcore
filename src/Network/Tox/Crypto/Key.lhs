@@ -111,7 +111,7 @@ keyToInteger =
         . Sodium.encode
 
 
-decode :: (CryptoNumber a, Monad m) => ByteString.ByteString -> m (Key a)
+decode :: (CryptoNumber a, MonadFail m) => ByteString.ByteString -> m (Key a)
 decode bytes =
   case Sodium.decode bytes of
     Just key -> return $ Key key
@@ -148,5 +148,7 @@ instance CryptoNumber a => MessagePack (Key a) where
 instance CryptoNumber a => Arbitrary (Key a) where
   arbitrary = do
     bytes <- fmap ByteString.pack $ Arbitrary.vector $ encodedByteSize (Proxy :: Proxy a)
-    decode bytes
+    case Sodium.decode bytes of
+      Just key -> return $ Key key
+      Nothing  -> error "unable to decode ByteString to Key"
 \end{code}

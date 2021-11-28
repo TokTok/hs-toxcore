@@ -24,7 +24,7 @@ encode =
   LazyByteString.toStrict . runPut . put
 
 
-decode :: (Monad m, Binary a) => ByteString -> m a
+decode :: (MonadFail m, Binary a) => ByteString -> m a
 decode bytes =
   finish $ pushChunk (runGetIncremental get) bytes
   where

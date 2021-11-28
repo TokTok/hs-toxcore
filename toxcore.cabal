@@ -82,7 +82,6 @@ library
     , QuickCheck                >= 2.9.1
     , base16-bytestring         < 1
     , binary
-    , binary-bits
     , bytestring
     , clock                     >= 0.3
     , containers
@@ -163,7 +162,6 @@ test-suite testsuite
     , QuickCheck
     , async
     , binary
-    , binary-bits
     , bytestring
     , containers
     , hspec

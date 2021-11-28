@@ -75,7 +75,7 @@ instance Read PlainText where
 newtype CipherText = CipherText { unCipherText :: ByteString }
   deriving (Eq, Typeable)
 
-cipherText :: Monad m => ByteString -> m CipherText
+cipherText :: MonadFail m => ByteString -> m CipherText
 cipherText bs
   | ByteString.length bs >= ByteSizes.boxMac = return $ CipherText bs
   | otherwise                                = fail "ciphertext is too short"
@@ -102,7 +102,7 @@ encode =
   PlainText . LazyByteString.toStrict . runPut . put
 
 
-decode :: (Monad m, Binary a) => PlainText -> m a
+decode :: (MonadFail m, Binary a) => PlainText -> m a
 decode (PlainText bytes) =
   finish $ pushChunk (runGetIncremental get) bytes
   where
