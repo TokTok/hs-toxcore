@@ -36,6 +36,7 @@ parentheses, e.g. \href{#ping-request-0x00}{Ping Request (0x00)}.
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
 {-# LANGUAGE Safe               #-}
+{-# LANGUAGE StrictData         #-}
 module Network.Tox.Protocol.PacketKind where
 
 import           Control.Arrow             ((&&&))

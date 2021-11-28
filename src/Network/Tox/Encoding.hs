@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase  #-}
+{-# LANGUAGE StrictData  #-}
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Encoding where
 
@@ -24,7 +25,7 @@ encode =
   LazyByteString.toStrict . runPut . put
 
 
-decode :: (Monad m, Binary a) => ByteString -> m a
+decode :: (MonadFail m, Binary a) => ByteString -> m a
 decode bytes =
   finish $ pushChunk (runGetIncremental get) bytes
   where

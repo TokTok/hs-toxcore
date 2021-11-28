@@ -7,6 +7,7 @@ lifetime of a k-buckets instance.
 \begin{code}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.KBuckets where
 
@@ -47,7 +48,7 @@ A k-buckets is a map from small integers \texttt{0 <= n < 256} to Client Lists
 of maximum size $k$. Each Client List is called a (k-)bucket. A k-buckets is
 equipped with a base key, and each bucket has this key as its base key.
 \texttt{k} is called the bucket size.  The default bucket size is 8.
-A large bucket size was chosen to increase the speed at which peers are found.  
+A large bucket size was chosen to increase the speed at which peers are found.
 
 \begin{code}
 

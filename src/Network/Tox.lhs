@@ -1,7 +1,8 @@
 \chapter{Introduction}
 
 \begin{code}
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe       #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox where
 \end{code}
 
