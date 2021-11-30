@@ -7,7 +7,6 @@ import           Control.Monad.IO.Class         (liftIO)
 import qualified Data.ByteString                as ByteString
 import           Data.Proxy                     (Proxy (..))
 import qualified Data.Result                    as R
-import           Network.MessagePack.Rpc        (local)
 import           Test.Hspec
 import           Test.QuickCheck
 
@@ -41,36 +40,36 @@ spec = do
   describe "encrypt" $
     it "encrypts data with a random keypair" $
       property $ \nonce plainText -> do
-        KeyPair sk pk <- local KeyPair.newKeyPairR
-        let combinedKey = local CombinedKey.precomputeR sk pk
-        let cipherText = local Box.encryptR combinedKey nonce plainText
+        KeyPair sk pk <- KeyPair.newKeyPair
+        let combinedKey = CombinedKey.precompute sk pk
+        let cipherText = Box.encrypt combinedKey nonce plainText
         let decryptedText = Box.decrypt combinedKey nonce cipherText
         decryptedText `shouldBe` Just plainText
 
   describe "decrypt" $ do
     it "decrypts data encrypted with 'encrypt'" $
       property $ \combinedKey nonce plainText -> do
-        let cipherText = local Box.encryptR combinedKey nonce plainText
-        let decryptedText = local Box.decryptR combinedKey nonce cipherText
+        let cipherText = Box.encrypt combinedKey nonce plainText
+        let decryptedText = Box.decrypt combinedKey nonce cipherText
         decryptedText `shouldBe` Just plainText
 
     it "decrypts encrypted data with a random keypair" $
       property $ \nonce plainText -> do
-        KeyPair sk pk <- local KeyPair.newKeyPairR
-        let combinedKey = local CombinedKey.precomputeR sk pk
+        KeyPair sk pk <- KeyPair.newKeyPair
+        let combinedKey = CombinedKey.precompute sk pk
         let cipherText = Box.encrypt combinedKey nonce plainText
-        let decryptedText = local Box.decryptR combinedKey nonce cipherText
+        let decryptedText = Box.decrypt combinedKey nonce cipherText
         decryptedText `shouldBe` Just plainText
 
   it "supports communication with asymmetric keys" $
     property $ \nonce plainText -> do
-      KeyPair sk1 pk1 <- local KeyPair.newKeyPairR
-      KeyPair sk2 pk2 <- local KeyPair.newKeyPairR
+      KeyPair sk1 pk1 <- KeyPair.newKeyPair
+      KeyPair sk2 pk2 <- KeyPair.newKeyPair
 
-      let key1 = local CombinedKey.precomputeR sk1 pk2
+      let key1 = CombinedKey.precompute sk1 pk2
       let key2 = CombinedKey.precompute sk2 pk1
       key1 `shouldBe` key2
 
-      let cipherText = local Box.encryptR key1 nonce plainText
+      let cipherText = Box.encrypt key1 nonce plainText
       let decryptedText = Box.decrypt key2 nonce cipherText
       decryptedText `shouldBe` Just plainText

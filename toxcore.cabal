@@ -73,7 +73,6 @@ library
       Network.Tox.SaveData.Friend
       Network.Tox.SaveData.Nodes
       Network.Tox.SaveData.Util
-      Network.Tox.Testing
       Network.Tox.Time
       Network.Tox.Timed
       Network.Tox.TimedT
@@ -92,7 +91,6 @@ library
     , lens-family
     , MonadRandom
     , msgpack-binary            >= 0.0.12
-    , msgpack-rpc-conduit       >= 0.0.5
     , mtl
     , network                   < 3
     , saltine
@@ -168,7 +166,6 @@ test-suite testsuite
     , containers
     , hspec
     , msgpack-binary
-    , msgpack-rpc-conduit
     , msgpack-types
     , mtl
     , saltine

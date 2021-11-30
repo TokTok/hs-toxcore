@@ -17,7 +17,6 @@ haskell_library(
     visibility = ["//visibility:public"],
     deps = [
         "//hs-msgpack-binary",
-        "//hs-msgpack-rpc-conduit",
         hazel_library("MonadRandom"),
         hazel_library("QuickCheck"),
         hazel_library("base"),
@@ -49,7 +48,6 @@ hspec_test(
     deps = [
         ":hs-toxcore",
         "//hs-msgpack-binary",
-        "//hs-msgpack-rpc-conduit",
         "//hs-msgpack-types",
         hazel_library("QuickCheck"),
         hazel_library("async"),

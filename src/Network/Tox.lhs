@@ -3473,4 +3473,3 @@ Ping array is used in many places in toxcore to efficiently keep track of sent
 packets.
 
 \input{src/Network/Tox/SaveData.lhs}
-\input{src/Network/Tox/Testing.lhs}
