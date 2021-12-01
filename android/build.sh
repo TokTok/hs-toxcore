@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HOME/ghc-build/set-env-android.sh"
 cd -
 set -x
