@@ -103,4 +103,3 @@ uniform as = (as!!) <$> randomInt (length as)
 uniformSafe :: MonadRandomBytes m => [a] -> m (Maybe a)
 uniformSafe [] = return Nothing
 uniformSafe as = Just <$> uniform as
-
