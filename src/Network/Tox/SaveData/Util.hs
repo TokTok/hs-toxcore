@@ -36,4 +36,3 @@ putSectionHeader sectionMagic len ty = do
     Put.putWord32le len
     Put.putWord16le ty
     Put.putWord16le sectionMagic
-

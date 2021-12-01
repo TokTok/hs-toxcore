@@ -587,4 +587,3 @@ instance Arbitrary ArbStdGen
   where arbitrary = ArbStdGen . mkStdGen <$> arbitrary
 
 \end{code}
-
