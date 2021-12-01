@@ -25,7 +25,7 @@ autoreconf -i
   --with-build-cc="$BUILD_GCC" \
   --enable-static \
   --disable-shared
-make $MAKEFLAGS
+make "$MAKEFLAGS"
 make install
 popd
 
