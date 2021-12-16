@@ -14,9 +14,8 @@ the system as non friends could tie some people's DHT keys and long term keys
 together.
 
 \begin{code}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE StrictData        #-}
-{-# LANGUAGE Trustworthy       #-}
+{-# LANGUAGE StrictData  #-}
+{-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.Nonce where
 
 import           Control.Applicative     ((<$>))

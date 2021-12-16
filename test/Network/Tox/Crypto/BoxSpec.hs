@@ -43,23 +43,23 @@ spec = do
       property $ \nonce plainText -> do
         KeyPair sk pk <- KeyPair.newKeyPair
         let combinedKey = CombinedKey.precompute sk pk
-        let cipherText = Box.encrypt combinedKey nonce plainText
-        let decryptedText = Box.decrypt combinedKey nonce cipherText
+            cipherText = Box.encrypt combinedKey nonce plainText
+            decryptedText = Box.decrypt combinedKey nonce cipherText
         decryptedText `shouldBe` Just plainText
 
   describe "decrypt" $ do
     it "decrypts data encrypted with 'encrypt'" $
       property $ \combinedKey nonce plainText -> do
         let cipherText = Box.encrypt combinedKey nonce plainText
-        let decryptedText = Box.decrypt combinedKey nonce cipherText
+            decryptedText = Box.decrypt combinedKey nonce cipherText
         decryptedText `shouldBe` Just plainText
 
     it "decrypts encrypted data with a random keypair" $
       property $ \nonce plainText -> do
         KeyPair sk pk <- KeyPair.newKeyPair
         let combinedKey = CombinedKey.precompute sk pk
-        let cipherText = Box.encrypt combinedKey nonce plainText
-        let decryptedText = Box.decrypt combinedKey nonce cipherText
+            cipherText = Box.encrypt combinedKey nonce plainText
+            decryptedText = Box.decrypt combinedKey nonce cipherText
         decryptedText `shouldBe` Just plainText
 
   it "supports communication with asymmetric keys" $
@@ -68,9 +68,9 @@ spec = do
       KeyPair sk2 pk2 <- KeyPair.newKeyPair
 
       let key1 = CombinedKey.precompute sk1 pk2
-      let key2 = CombinedKey.precompute sk2 pk1
+          key2 = CombinedKey.precompute sk2 pk1
       key1 `shouldBe` key2
 
       let cipherText = Box.encrypt key1 nonce plainText
-      let decryptedText = Box.decrypt key2 nonce cipherText
+          decryptedText = Box.decrypt key2 nonce cipherText
       decryptedText `shouldBe` Just plainText

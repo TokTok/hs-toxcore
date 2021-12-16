@@ -105,7 +105,7 @@ import           Data.Word
 
 import           Prelude                  as P
 
-#if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
+#if !defined(__HADDOCK__)
 import           GHC.Base
 import           GHC.Word
 #endif
@@ -166,10 +166,10 @@ data S = S {-# UNPACK #-} !ByteString -- Input
 data Block a = Block Int (S -> a)
 
 instance Functor Block where
-  fmap f (Block i p) = Block i (\s -> f (p s))
+  fmap f (Block i p) = Block i (f . p)
 
 instance Applicative Block where
-  pure a = Block 0 (\_ -> a)
+  pure a = Block 0 (const a)
   (Block i p) <*> (Block j q) = Block (i+j) (\s -> p s $ q (incS i s))
   (Block i _)  *> (Block j q) = Block (i+j) (q . incS i)
   (Block i p) <*  (Block j _) = Block (i+j) p
@@ -182,31 +182,31 @@ block :: Block a -> BitGet a
 block (Block i p) = do
   ensureBits i
   s <- getState
-  putState $! (incS i s)
+  putState $! incS i s
   return $! p s
 
 incS :: Int -> S -> S
 incS o (S bs n) =
   let !o' = (n+o)
       !d = o' `shiftR` 3
-      !n' = o' .&. make_mask 3
+      !n' = o' .&. makeMask 3
   in S (unsafeDrop d bs) n'
 
--- | make_mask 3 = 00000111
-make_mask :: (Bits a, Num a) => Int -> a
-make_mask n = (1 `shiftL` fromIntegral n) - 1
-{-# SPECIALIZE make_mask :: Int -> Int #-}
-{-# SPECIALIZE make_mask :: Int -> Word #-}
-{-# SPECIALIZE make_mask :: Int -> Word8 #-}
-{-# SPECIALIZE make_mask :: Int -> Word16 #-}
-{-# SPECIALIZE make_mask :: Int -> Word32 #-}
-{-# SPECIALIZE make_mask :: Int -> Word64 #-}
+-- | makeMask 3 = 00000111
+makeMask :: (Bits a, Num a) => Int -> a
+makeMask n = (1 `shiftL` fromIntegral n) - 1
+{-# SPECIALIZE makeMask :: Int -> Int #-}
+{-# SPECIALIZE makeMask :: Int -> Word #-}
+{-# SPECIALIZE makeMask :: Int -> Word8 #-}
+{-# SPECIALIZE makeMask :: Int -> Word16 #-}
+{-# SPECIALIZE makeMask :: Int -> Word32 #-}
+{-# SPECIALIZE makeMask :: Int -> Word64 #-}
 
-bit_offset :: Int -> Int
-bit_offset n = make_mask 3 .&. n
+bitOffset :: Int -> Int
+bitOffset n = makeMask 3 .&. n
 
-byte_offset :: Int -> Int
-byte_offset n = n `shiftR` 3
+byteOffset :: Int -> Int
+byteOffset n = n `shiftR` 3
 
 readBool :: S -> Bool
 readBool (S bs n) = testBit (unsafeHead bs) (7-n)
@@ -220,15 +220,15 @@ readWord8 n (S bs o)
   -- all bits are in the same byte
   -- we just need to shift and mask them right
   | n <= 8 - o = let w = unsafeHead bs
-                     m = make_mask n
+                     m = makeMask n
                      w' = (w `shiftr_w8` (8 - o - n)) .&. m
                  in w'
 
   -- the bits are in two different bytes
   -- make a word16 using both bytes, and then shift and mask
   | n <= 8 = let w = (fromIntegral (unsafeHead bs) `shiftl_w16` 8) .|.
-                     (fromIntegral (unsafeIndex bs 1))
-                 m = make_mask n
+                     fromIntegral (unsafeIndex bs 1)
+                 m = makeMask n
                  w' = (w `shiftr_w16` (16 - o - n)) .&. m
              in fromIntegral w'
 
@@ -302,22 +302,22 @@ readWithoutOffset :: (Bits a, Num a)
 readWithoutOffset (S bs o) shifterL shifterR n
   | o /= 0 = error "readWithoutOffset: there is an offset"
 
-  | bit_offset n == 0 && byte_offset n <= 4 =
-              let segs = byte_offset n
+  | bitOffset n == 0 && byteOffset n <= 4 =
+              let segs = byteOffset n
                   bn 0 = fromIntegral (unsafeHead bs)
                   bn n = (bn (n-1) `shifterL` 8) .|. fromIntegral (unsafeIndex bs n)
 
               in bn (segs-1)
 
-  | n <= 64 = let segs = byte_offset n
-                  o' = bit_offset (n - 8 + o)
+  | n <= 64 = let segs = byteOffset n
+                  o' = bitOffset (n - 8 + o)
 
                   bn 0 = fromIntegral (unsafeHead bs)
                   bn n = (bn (n-1) `shifterL` 8) .|. fromIntegral (unsafeIndex bs n)
 
                   msegs = bn (segs-1) `shifterL` o'
 
-                  last = (fromIntegral (unsafeIndex bs segs)) `shifterR` (8 - o')
+                  last = fromIntegral (unsafeIndex bs segs) `shifterR` (8 - o')
 
                   w = msegs .|. last
               in w
@@ -327,18 +327,18 @@ readWithOffset :: (Bits a, Num a)
 readWithOffset (S bs o) shifterL shifterR n
   | n <= 64 = let bits_in_msb = 8 - o
                   (n',top) = (n - bits_in_msb
-                             , (fromIntegral (unsafeHead bs) .&. make_mask bits_in_msb) `shifterL` n')
+                             , (fromIntegral (unsafeHead bs) .&. makeMask bits_in_msb) `shifterL` n')
 
-                  segs = byte_offset n'
+                  segs = byteOffset n'
 
                   bn 0 = 0
                   bn n = (bn (n-1) `shifterL` 8) .|. fromIntegral (unsafeIndex bs n)
 
-                  o' = bit_offset n'
+                  o' = bitOffset n'
 
                   mseg = bn segs `shifterL` o'
 
-                  last | o' > 0 = (fromIntegral (unsafeIndex bs (segs + 1))) `shifterR` (8 - o')
+                  last | o' > 0 = fromIntegral (unsafeIndex bs (segs + 1)) `shifterR` (8 - o')
                        | otherwise = 0
 
                   w = top .|. mseg .|. last
@@ -361,7 +361,7 @@ instance Functor BitGet where
   fmap f m = m >>= \a -> return (f a)
 
 instance Applicative BitGet where
-  pure x = return x
+  pure = return
   fm <*> m = fm >>= \f -> m >>= \v -> return (f v)
 
 -- | Run a 'BitGet' within the Binary packages 'Get' monad. If a byte has
@@ -369,7 +369,7 @@ instance Applicative BitGet where
 runBitGet :: BitGet a -> Get a
 runBitGet bg = do
   s <- mkInitState
-  ((S str' n),a) <- runState bg s
+  (S str' n,a) <- runState bg s
   putBackState str' n
   return a
 
@@ -468,7 +468,7 @@ word64be n = Block n (readWord64be n)
 -- | Read @n@ bytes as a 'ByteString'.
 byteString :: Int -> Block ByteString
 byteString n | n > 0 = Block (n*8) (readByteString n)
-             | otherwise = Block 0 (\_ -> B.empty)
+             | otherwise = Block 0 (const B.empty)
 
 ------------------------------------------------------------------------
 -- Unchecked shifts, from the package binary
@@ -477,7 +477,7 @@ shiftl_w16 :: Word16 -> Int -> Word16
 shiftl_w32 :: Word32 -> Int -> Word32
 shiftl_w64 :: Word64 -> Int -> Word64
 
-#if defined(__GLASGOW_HASKELL__) && !defined(__HADDOCK__)
+#if !defined(__HADDOCK__)
 shiftl_w8  (W8#  w) (I# i) = W8# (w `uncheckedShiftL#`   i)
 shiftl_w16 (W16# w) (I# i) = W16# (w `uncheckedShiftL#`   i)
 shiftl_w32 (W32# w) (I# i) = W32# (w `uncheckedShiftL#`   i)

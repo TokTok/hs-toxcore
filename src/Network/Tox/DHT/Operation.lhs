@@ -581,7 +581,7 @@ initTestDhtState seed time =
 
 -- | wrap StdGen so the Arbitrary instance isn't an orphan
 newtype ArbStdGen = ArbStdGen { unwrapArbStdGen :: StdGen }
-  deriving (Read, Show)
+  deriving (Show)
 
 instance Arbitrary ArbStdGen
   where arbitrary = ArbStdGen . mkStdGen <$> arbitrary

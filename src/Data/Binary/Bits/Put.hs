@@ -43,7 +43,7 @@ import           Data.Bits
 import           Data.Monoid
 import           Data.Word
 
-data BitPut a = BitPut { run :: (S -> PairS a) }
+newtype BitPut a = BitPut { run :: S -> PairS a }
 
 data PairS a = PairS a {-# UNPACK #-} !S
 
@@ -53,20 +53,20 @@ data S = S !Builder !Word8 !Int
 putBool :: Bool -> BitPut ()
 putBool b = putWord8 1 (if b then 0xff else 0x00)
 
--- | make_mask 3 = 00000111
-make_mask :: (Bits a, Num a) => Int -> a
-make_mask n = (1 `shiftL` fromIntegral n) - 1
-{-# SPECIALIZE make_mask :: Int -> Int #-}
-{-# SPECIALIZE make_mask :: Int -> Word #-}
-{-# SPECIALIZE make_mask :: Int -> Word8 #-}
-{-# SPECIALIZE make_mask :: Int -> Word16 #-}
-{-# SPECIALIZE make_mask :: Int -> Word32 #-}
-{-# SPECIALIZE make_mask :: Int -> Word64 #-}
+-- | makeMask 3 = 00000111
+makeMask :: (Bits a, Num a) => Int -> a
+makeMask n = (1 `shiftL` fromIntegral n) - 1
+{-# SPECIALIZE makeMask :: Int -> Int #-}
+{-# SPECIALIZE makeMask :: Int -> Word #-}
+{-# SPECIALIZE makeMask :: Int -> Word8 #-}
+{-# SPECIALIZE makeMask :: Int -> Word16 #-}
+{-# SPECIALIZE makeMask :: Int -> Word32 #-}
+{-# SPECIALIZE makeMask :: Int -> Word64 #-}
 
 -- | Put the @n@ lower bits of a 'Word8'.
 putWord8 :: Int -> Word8 -> BitPut ()
 putWord8 n w = BitPut $ \s -> PairS () $
-  let w' = make_mask n .&. w in
+  let w' = makeMask n .&. w in
   case s of
                 -- a whole word8, no offset
     (S b t o) | n == 8 && o == 0 -> flush $ S b w n
@@ -85,7 +85,7 @@ putWord16be n w
   | n <= 8 = putWord8 n (fromIntegral w)
   | otherwise =
       BitPut $ \s -> PairS () $
-        let w' = make_mask n .&. w in
+        let w' = makeMask n .&. w in
         case s of
           -- as n>=9, it's too big to fit into one single byte
           -- it'll either use 2 or 3 bytes
@@ -94,14 +94,14 @@ putWord16be n w
                         let o' = o + n - 8
                             b' = t .|. fromIntegral (w' `shiftR` o')
                             t' = fromIntegral (w `shiftL` (8-o'))
-                        in (S (b `mappend` B.singleton b') t' o')
+                        in S (b `mappend` B.singleton b') t' o'
                                    -- 3 bytes required
                     | otherwise -> flush $
                         let o'  = o + n - 16
                             b'  = t .|. fromIntegral (w' `shiftR` (o' + 8))
                             b'' = fromIntegral ((w `shiftR` o') .&. 0xff)
                             t'  = fromIntegral (w `shiftL` (8-o'))
-                        in (S (b `mappend` B.singleton b' `mappend` B.singleton b'') t' o')
+                        in S (b `mappend` B.singleton b' `mappend` B.singleton b'') t' o'
 
 -- | Put the @n@ lower bits of a 'Word32'.
 putWord32be :: Int -> Word32 -> BitPut ()
@@ -133,9 +133,9 @@ putByteString bs = do
 -- before 'Put' executes to ensure byte alignment.
 joinPut :: Put -> BitPut ()
 joinPut m = BitPut $ \s0 -> PairS () $
-  let (S b0 _ _) = flushIncomplete s0
+  let S b0 _ _ = flushIncomplete s0
       b = Put.execPut m
-  in (S (b0`mappend`b) 0 0)
+  in S (b0`mappend`b) 0 0
 
 flush :: S -> S
 flush s@(S b w o)
@@ -146,7 +146,7 @@ flush s@(S b w o)
 flushIncomplete :: S -> S
 flushIncomplete s@(S b w o)
   | o == 0 = s
-  | otherwise = (S (b `mappend` B.singleton w) 0 0)
+  | otherwise = S (b `mappend` B.singleton w) 0 0
 
 -- | Run the 'BitPut' monad inside 'Put'.
 runBitPut :: BitPut () -> Put.Put
@@ -161,8 +161,8 @@ instance Functor BitPut where
     in PairS (f x) s'
 
 instance Applicative BitPut where
-  pure a = BitPut (\s -> PairS a s)
-  (BitPut f) <*> (BitPut g) = BitPut $ \s ->
+  pure a = BitPut (PairS a)
+  BitPut f <*> BitPut g = BitPut $ \s ->
     let PairS a s' = f s
         PairS b s'' = g s'
     in PairS (a b) s''
