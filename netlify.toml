@@ -1,3 +1,11 @@
 [build]
-command = "gem install --no-document jekyll guard-livereload && git clone --depth=1 https://github.com/TokTok/website && ln -s $PWD website/hs-toxcore && make -C website toktok-site"
+command = """\
+  git clone --depth=1 https://github.com/TokTok/website && \
+  mkdir website/hs-toxcore && \
+  mv .git res src test website/hs-toxcore && \
+  cd website && \
+  make spec && \
+  gem install --no-document jekyll guard-livereload && \
+  make toktok-site \
+  """
 publish = "website/toktok-site"
