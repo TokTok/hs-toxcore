@@ -39,15 +39,15 @@ There are four distinct roles which are hierarchical in nature (higher roles
 have all the privileges of lower roles).
 
 \begin{itemize}
-  \item \textbf{Founder} - The group's creator. May set the role of all other
+  \item \textbf{\verb'Founder'} - The group's creator. May set the role of all other
   peers to anything except founder. May modify the shared state (password,
   privacy state, topic lock, peer limit).
-  \item \textbf{Moderator} - Promoted by the founder. May kick peers below this
+  \item \textbf{\verb'Moderator'} - Promoted by the founder. May kick peers below this
   role, as well as set peers with the user role to observer, and vice versa.
   May also set the topic when the topic lock is enabled.
-  \item \textbf{User} - Default non-founder role. May communicate with other
+  \item \textbf{\verb'User'} - Default non-founder role. May communicate with other
   peers normally. May set the topic when the topic lock is disabled.
-  \item \textbf{Observer} - Demoted by moderators and the founder. May observe
+  \item \textbf{\verb'Observer'} - Demoted by moderators and the founder. May observe
   the group and ignore peers; may not communicate with other peers or with the
   group.
 \end{itemize}
@@ -118,8 +118,8 @@ group these keypairs will be lost forever.
 
 This encryption keypair is not used for any encryption operations except
 for the initial handshake when connecting to another peer. For usage
-details on the signature key, see the \href{Moderation}{Moderation}
-section.
+details on the signature key, see the
+\href{#moderation}{\texttt{Moderation}} section.
 
 \subsection{Session keypair/shared symmetric key}
 
@@ -143,7 +143,7 @@ types of data-based cryptography attacks.
 
 The group founder generates two additional permanent keypairs when the
 group is created: an encryption keypair, and a signature keypair. The
-public signature key is considered the \textbf{Chat ID} and is used as
+public signature key is considered the \textbf{\verb'Chat ID'} and is used as
 the group's permanent identifier, allowing other peers to join public
 groups via the DHT. Every peer in the group holds a copy of the group's
 public encryption key along with the public signature key/Chat ID.
@@ -152,7 +152,8 @@ The group secret keys are similar to the permanent keypairs in that they
 will persist across client restarts, but will be lost forever if the
 founder exits the group. This is particularly important as
 administration related functionality will not work without these keys.
-See the \href{Founders}{Founders} section for usage details.
+
+See the \href{#founders}{\texttt{Founders}} section for usage details.
 
 \section{Founders}
 
@@ -170,8 +171,8 @@ set of admin privileges, including:
 
 \subsection{Shared state}
 
-Groups contain a data structure called the \textbf{shared state} which
-is given to every peer who joins the group. Within this structure
+Groups contain a data structure called the \textbf{\verb'shared state'}
+which is given to every peer who joins the group. Within this structure
 resides all data pertaining to the group that may only be modified by
 the group founder. This includes the group name, the group type, the
 peer limit, the topic lock, and the password. The shared state holds a
@@ -197,8 +198,7 @@ version is not older than the current version.
 The founder has the ability to promote other peers to the moderator
 role. Moderators have all the privileges of normal users. In addition,
 they have the power to kick peers whose role is below moderator, as well
-as set their roles to anything below moderator (see the
-\href{Group_roles}{Group roles} section). Moderators may also modify
+as set their roles to anything below moderator. Moderators may also modify
 the group topic when it is locked. Moderators have no power over one
 another; only the founder can kick or change the role of a moderator.
 
@@ -211,9 +211,9 @@ be able to reconnect to the group with the same identity.
 
 \subsection{Moderator list}
 
-Each peer holds a copy of the \textbf{moderator list}, which is an array
-of public signature keys of peers who currently have the moderator role
-(including those who are offline). A hash (sha256) of this list called
+Each peer holds a copy of the \textbf{\verb'moderator list'}, which is
+an array of public signature keys of peers who currently have the moderator
+role (including those who are offline). A hash (sha256) of this list called
 the \textbf{\verb'mod_list_hash'} is stored in the shared state, which is
 itself signed by the founder using the group secret signature key. This
 allows the moderator list to be shared between untrusted peers, even in
@@ -229,8 +229,8 @@ list and verifies that it is identical to the \verb'mod_list_hash'.
 
 \subsection{Sanctions list}
 
-Each peer holds a copy of the \textbf{sanctions list}. This list is
-comprised of peers who have been demoted to the observer role.
+Each peer holds a copy of the \textbf{\verb'sanctions list'}. This list
+is comprised of peers who have been demoted to the observer role.
 
 Entries contain the public key of the sanctioned peer, a timestamp of
 the time the entry was made, the public signature key of the peer who
@@ -346,9 +346,9 @@ when a peer explicitly forces a TCP connection.
 \section{DHT Announcements}
 
 Public groupchats leverage the Tox DHT network in order to allow for
-groups that can be joined by anyone who possesses the Chat ID. Group
-announcements have the same underlying functionality as normal Tox
-friend announcements (including onion routing).
+groups that can be joined by anyone who possesses the
+\textbf{\verb'Chat ID'}. Group announcements have the same underlying
+functionality as normal Tox friend announcements (including onion routing).
 
 \begin{code}
 module Network.Tox.Application.GroupChats where

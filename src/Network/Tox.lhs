@@ -2003,6 +2003,8 @@ frozen peers list with the same public key is first removed.
 
 \input{src/Network/Tox/Application/GroupChats.lhs}
 
+\input{src/Network/Tox/Application/GroupChatsPackets.lhs}
+
 \chapter{Net crypto}
 
 The Tox transport protocol is what Tox uses to establish and send data securely
