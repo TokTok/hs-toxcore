@@ -539,7 +539,7 @@ A shared state packet payload is structured as follows:
   \texttt{2}               & Group Password Length \\
   \texttt{32}              & Group Password \\
   \texttt{32}              & Moderator List Hash (Sha256) \\
-  \texttt{1}               & Topic Lock State \\
+  \texttt{4}               & Topic Lock State \\
 \end{tabular}
 
 This packet contains information about the group shared state. Sent to
