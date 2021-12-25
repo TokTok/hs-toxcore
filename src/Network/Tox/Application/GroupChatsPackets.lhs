@@ -1,8 +1,8 @@
 \chapter{DHT Group Chats Packet Protocols}
 
 All packet fields are considered mandatory unless flagged as \textbf{\verb'[optional]'}.
-The minimum size of a lossless packet is 86 bytes, and a lossy packet 78 bytes.
-The maximum size of a packet is 1400 bytes.
+The minimum size of an encrypted packet is 83 bytes for lossless and 75
+bytes for lossy. The maximum size of an encrypted packet is 1400 bytes.
 
 \section{Full Packet Structure}
 
@@ -12,8 +12,8 @@ The maximum size of a packet is 1400 bytes.
   Length             & Contents \\
   \hline
   \texttt{1}         & Packet Kind \\
-  \texttt{4}         & Public Key Hash \\
-  \texttt{32}        & Public Encryption Key \\
+  \texttt{32}        & Sender's Public Encryption Key \\
+  \texttt{32}        & Receiver's Public Encryption Key \textbf{\verb'[optional]'} \\
   \texttt{24}        & Nonce \\
 \end{tabular}
 
@@ -45,17 +45,15 @@ are:
   \textbf{\verb'NET_PACKET_GC_LOSSY'}     & 0x5c \\
 \end{tabular}
 
-The \textbf{\verb'Public Key Hash'} is a
-\href{https://en.wikipedia.org/wiki/Jenkins_hash_function#one_at_a_time}{Jenkins One At A Time Hash}
-of the recipient's permanent public encryption key for
-\textbf{\verb'HANDSHAKE_REQUEST'} and \textbf{\verb'HANDSHAKE_RESPONSE'}
-packets, or their public session key for all other packet types. This
-hash is used to identify the group that a message is intended for. Hash
-collitions with other groups must be handled upon creation of any key
-used as a group identifier.
+The sender's public encryption key is used to identify the peer who sent
+the packet, as well as to identify the group instance for which the packet
+is intended for all \textbf{\verb'NET_PACKET_GC_LOSSLESS'}
+and \textbf{\verb'NET_PACKET_GC_LOSSY'} packets. It is also used to establish
+a secure connection with the sender during the handshake protocol.
 
-The sender's \textbf{\verb'Public Encryption Key'} is used to identify the
-peer who sent the packet, and the \textbf{\verb'nonce'} is used for decryption.
+The receiver's public encryption key is only sent in
+\textbf{\verb'NET_PACKET_GC_HANDSHAKE'} packets, and is used to identify
+the group instance for which the packet is intended.
 
 The encrypted header for lossless and lossy packets contains between 0
 and 8 bytes of empty padding. The \textbf{\verb'Group Packet Identifier'}
