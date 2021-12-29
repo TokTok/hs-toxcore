@@ -77,7 +77,6 @@ Handshake packet payloads are structured as follows:
   \texttt{32}           & Public Session Key \\
   \texttt{32}           & Public Signature Key \\
   \texttt{1}            & Request Type \\
-  \texttt{1}            & Join Type \\
   variable              & 1 Packed TCP Relay \\
 \end{tabular}
 \hline
@@ -108,17 +107,6 @@ respond with a \textbf{\verb'INVITE_REQUEST'} packet. If the request type is a
 peer info exchange, the receiving peer must respond with a
 \textbf{\verb'PEER_INFO_RESPONSE'} packet followed immediately by a
 \textbf{\verb'PEER_INFO_REQUEST'} packet.
-
-The \textbf{\verb'Join_Type'} indicates whether the initiator of a handshake
-is joining via the public DHT or a private friend invite, and is defined
-as an enumerator beginning at zero as follows:
-
-\begin{tabular}{l|l}
-  Type                     & ID \\
-  \hline
-  \textbf{\verb'PUBLIC'}   & 0x00 \\
-  \textbf{\verb'PRIVATE'}  & 0x01 \\
-\end{tabular}
 
 The packed TCP relay contains a TCP relay that the sender may be
 connected through by the receiver.
