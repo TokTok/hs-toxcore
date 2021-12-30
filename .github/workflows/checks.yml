@@ -1,0 +1,9 @@
+name: checks
+
+on:
+  pull_request_target:
+    branches: [master]
+
+jobs:
+  checks:
+    uses: TokTok/ci-tools/.github/workflows/check-release.yml@master

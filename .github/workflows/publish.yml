@@ -1,0 +1,11 @@
+name: publish
+
+on:
+  push:
+    branches: [master]
+  release:
+    types: [released]
+
+jobs:
+  publish:
+    uses: TokTok/ci-tools/.github/workflows/haskell-publish.yml@master
