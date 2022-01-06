@@ -339,14 +339,18 @@ integers along with their ping packets: Their peer count\footnote{We
 use a "real" peer count, which is the number of confirmed peers in the
 peerlist (that is, peers who you have successfully handshaked and
 exchanged peer info with).}, a checksum of their peer list, their shared
-state version, their sanctions credentials version, their sanctions
-credentials checksum, their topic version, and their topic checksum.
-If a peer receives a ping in which any of the versions are greater than
-their own, or if their peer list checksum does not match and their peer
-count is not greater than the peer count received, this indicates that
-they may be out of sync with the rest of the group. In this case they
-will send a sync request to the respective peer, with the appropriate
-sync flags set to indicate what group information they need.
+state version, their sanctions credentials version, their peer roles
+checksum\footnote{The peer roles checksum is calculated as follows:
+Make an unsigned 16-bit sum of each confirmed peer's role plus the
+first byte of their respective public key, then add to this an unsigned
+16-bit sum of the sanctions credentials hash.}, their topic version,
+and their topic checksum. If a peer receives a ping in which any of the
+versions are greater than their own, or if their peer list checksum does
+not match and their peer count is not greater than the peer count
+received, this indicates that they may be out of sync with the rest of
+the group. In this case they will send a sync request to the respective
+peer, with the appropriate sync flags set to indicate what group
+information they need.
 
 In certain scenarios a peer may receive a topic version or sanctions
 credentials version that is equal to their own, but with a different

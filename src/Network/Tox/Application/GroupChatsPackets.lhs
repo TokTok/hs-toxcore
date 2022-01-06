@@ -123,7 +123,7 @@ A ping packet payload is structured as follows:
   \texttt{2}            & Confirmed Peer Count \\
   \texttt{4}            & Shared State Version \\
   \texttt{4}            & Sanctions Credentials Version \\
-  \texttt{2}            & Sanctions Credentials Checksum \\
+  \texttt{2}            & Peer Roles Checksum \\
   \texttt{4}            & Topic Version \\
   \texttt{2}            & Topic Checksum \\
   Variable              & Packed IP Address and Port \\
@@ -393,7 +393,6 @@ A peer info response packet payload is structured as follows:
   \texttt{2}             & Name Length \\
   \texttt{128}           & Name \\
   \texttt{1}             & Status \\
-  \texttt{1}             & Role \\
 \end{tabular}
 
 This packet supplies information about ourselves to a peer. It is sent
