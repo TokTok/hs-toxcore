@@ -517,7 +517,7 @@ A shared state packet payload is structured as follows:
   \texttt{64}              & Shared State Signature \\
   \texttt{4}               & Shared State Version \\
   \texttt{64}              & Founder Extended Public Key \\
-  \texttt{4}               & Peer Limit \\
+  \texttt{2}               & Peer Limit \\
   \texttt{2}               & Group Name Length \\
   \texttt{48}              & Group Name \\
   \texttt{1}               & Privacy State \\
