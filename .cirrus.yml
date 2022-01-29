@@ -1,5 +1,5 @@
 ---
-bazel-release_task:
+bazel-opt_task:
   container:
     image: toxchat/toktok-stack:0.0.31-release
     cpu: 2
@@ -9,5 +9,4 @@ bazel-release_task:
   test_all_script:
     - cd /src/workspace && bazel test -k
         --remote_http_cache=http://$CIRRUS_HTTP_CACHE_HOST
-        --config=release
         //hs-toxcore/...

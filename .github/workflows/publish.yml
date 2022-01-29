@@ -9,3 +9,5 @@ on:
 jobs:
   publish:
     uses: TokTok/ci-tools/.github/workflows/haskell-publish.yml@master
+    secrets:
+      API_TOKEN_HACKAGE: ${{ secrets.API_TOKEN_HACKAGE }}
