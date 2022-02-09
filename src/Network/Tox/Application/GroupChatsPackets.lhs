@@ -525,6 +525,7 @@ A shared state packet payload is structured as follows:
   \texttt{32}              & Group Password \\
   \texttt{32}              & Moderator List Hash (Sha256) \\
   \texttt{4}               & Topic Lock State \\
+  \texttt{1}               & Voice State \\
 \end{tabular}
 
 This packet contains information about the group shared state. Sent to

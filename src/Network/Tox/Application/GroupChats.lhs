@@ -19,7 +19,7 @@ tox.h header file.
   \item Persistence across client restarts
   \item Ability to set peer limits
   \item Group roles (founder, moderators, users, observers)
-  \item Moderation (kicking, silencing)
+  \item Moderation (kicking, silencing, controlling which roles may speak)
   \item Permanent group names (set on creation)
   \item Topics (permission to modify is set by founder)
   \item Password protection
@@ -27,7 +27,7 @@ tox.h header file.
   state syncing)
   \item Identity separation from the Tox ID
   \item Ability to ignore peers
-  \item Unique nicknames which can be set on a per-group basis
+  \item Nicknames can be set on a per-group basis
   \item Peer statuses (online, away, busy) which can be set on a per-group basis
   \item Sending group name in invites
   \item Ability to disconnect from group and join later with the same credentials
@@ -74,6 +74,20 @@ information (mentioned in the Public section) is present in the DHT; the
 DHT is not used for any purpose at all. If a public group is set to
 private, all DHT information related to the group will expire within a
 few minutes.
+
+\section{Voice state}
+
+The voice state, which may only be set by the founder, determines which
+group roles have permission to speak. There are three voice states:
+
+\begin{itemize}
+  \item \textbf{\verb'Founder'} - Only the founder may speak.
+  \item \textbf{\verb'Moderator'} - The founder and moderators may speak.
+  \item \textbf{\verb'All'} - Everyone except observers may speak.
+\end{itemize}
+
+The voice state does not affect topic setting or private messages, and is
+set to \textbf{\verb'All'} by default.
 
 \section{Cryptography}
 
@@ -167,6 +181,7 @@ set of admin privileges, including:
   \item Setting the group's privacy state
   \item Setting group passwords
   \item Toggling the topic lock
+  \item Setting the voice state
 \end{itemize}
 
 \subsection{Shared state}
@@ -175,10 +190,10 @@ Groups contain a data structure called the \textbf{\verb'shared state'}
 which is given to every peer who joins the group. Within this structure
 resides all data pertaining to the group that may only be modified by
 the group founder. This includes the group name, the group type, the
-peer limit, the topic lock, and the password. The shared state holds a
-copy of the group founder's public encryption and signature keys, which
-is how other peers in the group are able to verify the identity of the
-group founder. It also contains a hash of the moderator list.
+peer limit, the topic lock, the password, and the voice state. The shared
+state holds a copy of the group founder's public encryption and signature
+keys, which is how other peers in the group are able to verify the identity
+of the group founder. It also contains a hash of the moderator list.
 
 The shared state is signed by the founder using the group secret
 signature key. As the founder is the only peer who holds this secret
