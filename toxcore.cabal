@@ -1,6 +1,6 @@
 name:                 toxcore
 synopsis:             A Tox protocol implementation in Haskell
-version:              0.2.11
+version:              0.2.12
 cabal-version:        >= 1.10
 license:              GPL-3
 license-file:         LICENSE

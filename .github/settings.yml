@@ -18,5 +18,4 @@ branches:
           - "android-i686"
           - "android-x86_64"
           - "bazel-opt"
-          - "build / cabal"
           - "build / stack"
