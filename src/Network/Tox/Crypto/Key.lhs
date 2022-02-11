@@ -129,10 +129,14 @@ instance CryptoNumber a => Binary (Key a) where
 
 
 instance CryptoNumber a => Show (Key a) where
-  show (Key key) = show $ Base16.encode $ Sodium.encode key
+  show = show . Base16.encode . Sodium.encode . unKey
 
 instance CryptoNumber a => Read (Key a) where
-  readPrec = fst . Base16.decode <$> readPrec >>= decode
+  readPrec = do
+    text <- readPrec
+    case Base16.decode text of
+      Left err -> fail err
+      Right ok -> decode ok
 
 instance CryptoNumber a => MessagePack (Key a) where
   toObject = toObject . Sodium.encode
