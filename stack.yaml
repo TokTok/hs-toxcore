@@ -2,7 +2,6 @@
 packages: [.]
 resolver: lts-18.18
 extra-deps:
-  - base16-bytestring-0.1.1.7@sha256:0021256a9628971c08da95cb8f4d0d72192f3bb8a7b30b55c080562d17c43dd3,2231
   - msgpack-binary-0.0.14@sha256:46c3cf9090ad07d45c79cb74a94c05548ce9f2b5e9d78a497de80ceb5bf55014,2383
   - msgpack-rpc-conduit-0.0.6@sha256:c099a6f50985256a53e2bb573905f448b0163ec8d0e0e4cc044f586e1ee8da20,2372
   - msgpack-types-0.0.4@sha256:3b045ea90ba9ba62de9538aa7e7915d1356e2cc34ebdb02f4472ee5b981bcab7,1940

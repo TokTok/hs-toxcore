@@ -82,7 +82,7 @@ library
   build-depends:
       base < 5
     , QuickCheck                >= 2.9.1
-    , base16-bytestring         < 1
+    , base16-bytestring         >= 1
     , binary
     , bytestring
     , clock                     >= 0.3

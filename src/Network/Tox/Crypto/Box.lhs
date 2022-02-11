@@ -68,7 +68,11 @@ instance Show PlainText where
   show = show . Base16.encode . unPlainText
 
 instance Read PlainText where
-  readPrec = PlainText . fst . Base16.decode <$> readPrec
+  readPrec = do
+    text <- readPrec
+    case Base16.decode text of
+      Left err -> fail err
+      Right ok -> return $ PlainText ok
 
 
 newtype CipherText = CipherText { unCipherText :: ByteString }
@@ -93,7 +97,11 @@ instance Show CipherText where
   show = show . Base16.encode . unCipherText
 
 instance Read CipherText where
-  readPrec = fst . Base16.decode <$> readPrec >>= cipherText
+  readPrec = do
+    text <- readPrec
+    case Base16.decode text of
+      Left err -> fail err
+      Right ok -> cipherText ok
 
 
 encode :: Binary a => a -> PlainText

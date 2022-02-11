@@ -26,7 +26,7 @@ import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 
 makeInputKey :: Int -> Char -> PublicKey
 makeInputKey pos digit =
-  read $ "\"" ++ map (const '0') [0 .. pos - 1] ++ digit : map (const '0') [pos .. 63] ++ "\""
+  read $ "\"" ++ map (const '0') [0 .. pos - 1] ++ digit : map (const '0') [pos .. 62] ++ "\""
 
 
 getAllBuckets :: KBuckets -> [[NodeInfo]]
