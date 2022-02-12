@@ -3,6 +3,7 @@
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -20,6 +21,7 @@ module Network.Tox.Crypto.Box
   ) where
 
 import           Control.Applicative               ((<$>), (<*>))
+import           Control.Monad.Validate            (MonadValidate (..))
 import qualified Crypto.Saltine.Core.Box           as Sodium (boxAfterNM,
                                                               boxOpenAfterNM)
 import qualified Crypto.Saltine.Internal.ByteSizes as ByteSizes
@@ -31,7 +33,7 @@ import           Data.ByteString                   (ByteString)
 import qualified Data.ByteString                   as ByteString
 import qualified Data.ByteString.Base16            as Base16
 import qualified Data.ByteString.Lazy              as LazyByteString
-import           Data.MessagePack                  (MessagePack (..))
+import           Data.MessagePack                  (MessagePack (..), DecodeError)
 import           Data.Typeable                     (Typeable)
 import           GHC.Generics                      (Generic)
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
@@ -78,19 +80,19 @@ instance Read PlainText where
 newtype CipherText = CipherText { unCipherText :: ByteString }
   deriving (Eq, Typeable)
 
-cipherText :: MonadFail m => ByteString -> m CipherText
+cipherText :: MonadValidate DecodeError m => ByteString -> m CipherText
 cipherText bs
   | ByteString.length bs >= ByteSizes.boxMac = return $ CipherText bs
-  | otherwise                                = fail "ciphertext is too short"
+  | otherwise                                = refute "ciphertext is too short"
 
 instance Binary CipherText where
   put = put . unCipherText
   get = get >>= cipherText
 
 instance MessagePack CipherText where
-  toObject = toObject . unCipherText
-  fromObject x = do
-    bs <- fromObject x
+  toObject cfg = toObject cfg . unCipherText
+  fromObjectWith cfg x = do
+    bs <- fromObjectWith cfg x
     cipherText bs
 
 instance Show CipherText where

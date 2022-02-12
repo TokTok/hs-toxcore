@@ -81,6 +81,7 @@ library
       Network.Tox.TimedT
   build-depends:
       base < 5
+    , MonadRandom
     , QuickCheck                >= 2.9.1
     , base16-bytestring         >= 1
     , binary
@@ -91,7 +92,7 @@ library
     , integer-gmp
     , iproute
     , lens-family
-    , MonadRandom
+    , monad-validate
     , msgpack-binary            >= 0.0.12
     , mtl
     , network
@@ -161,15 +162,16 @@ test-suite testsuite
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
-      base < 5
+      base                      < 5
     , QuickCheck
     , async
     , binary
     , bytestring
     , containers
     , hspec
+    , monad-validate
     , msgpack-binary
-    , msgpack-types
+    , msgpack-types             >= 0.2 && < 0.3
     , mtl
     , saltine
     , text

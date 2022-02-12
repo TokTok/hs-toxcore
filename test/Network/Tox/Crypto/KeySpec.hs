@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StrictData          #-}
 {-# LANGUAGE Trustworthy         #-}
@@ -6,10 +7,12 @@ module Network.Tox.Crypto.KeySpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
+import           Control.Monad.Validate   (MonadValidate, runValidate)
 import qualified Crypto.Saltine.Class     as Sodium
 import           Data.Binary              (Binary)
 import           Data.ByteString          (ByteString)
 import qualified Data.ByteString          as ByteString
+import           Data.MessagePack         (DecodeError, errorMessages)
 import           Data.Proxy               (Proxy (..))
 import qualified Data.Result              as R
 import           Data.Typeable            (Typeable)
@@ -24,7 +27,7 @@ readMaybe :: String -> Maybe Key.PublicKey
 readMaybe = Read.readMaybe
 
 
-decodeM :: MonadFail m => ByteString -> m Key.PublicKey
+decodeM :: MonadValidate DecodeError m => ByteString -> m Key.PublicKey
 decodeM = Key.decode
 
 
@@ -73,9 +76,9 @@ spec = do
     it "decodes empty string to Nothing" $ do
       let actual = readMaybe ""
       actual `shouldBe` Nothing
-      case decodeM ByteString.empty of
-        R.Failure msg -> msg `shouldStartWith` "unable to decode"
-        R.Success val -> expectationFailure $ "unexpected success: " ++ show val
+      case runValidate $ decodeM ByteString.empty of
+        Left msg -> errorMessages msg `shouldBe` ["unable to decode ByteString to Key"]
+        Right val -> expectationFailure $ "unexpected success: " ++ show val
 
     it "decodes valid hex string of wrong length to Nothing" $
       let actual = readMaybe "\"0110\"" in

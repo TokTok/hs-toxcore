@@ -3,6 +3,8 @@
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving  #-}
 {-# LANGUAGE StrictData          #-}
@@ -11,6 +13,7 @@ module Network.Tox.Crypto.Key where
 
 import           Control.Applicative               ((<$>))
 import           Control.Monad                     ((>=>))
+import           Control.Monad.Validate            (MonadValidate, refute)
 import qualified Crypto.Saltine.Class              as Sodium (IsEncoding,
                                                               decode, encode)
 import qualified Crypto.Saltine.Core.Box           as Sodium (CombinedKey,
@@ -27,7 +30,8 @@ import qualified Data.Binary.Put                   as Binary (putByteString)
 import qualified Data.ByteString                   as ByteString
 import qualified Data.ByteString.Base16            as Base16
 import qualified Data.ByteString.Lazy              as LazyByteString
-import           Data.MessagePack                  (MessagePack (..))
+import           Data.MessagePack                  (DecodeError,
+                                                    MessagePack (..))
 import           Data.Proxy                        (Proxy (..))
 import           Data.Typeable                     (Typeable)
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
@@ -112,11 +116,11 @@ keyToInteger =
         . Sodium.encode
 
 
-decode :: (CryptoNumber a, MonadFail m) => ByteString.ByteString -> m (Key a)
+decode :: (CryptoNumber a, MonadValidate DecodeError m) => ByteString.ByteString -> m (Key a)
 decode bytes =
   case Sodium.decode bytes of
     Just key -> return $ Key key
-    Nothing  -> fail "unable to decode ByteString to Key"
+    Nothing  -> refute "unable to decode ByteString to Key"
 
 
 instance CryptoNumber a => Binary (Key a) where
@@ -139,8 +143,8 @@ instance CryptoNumber a => Read (Key a) where
       Right ok -> decode ok
 
 instance CryptoNumber a => MessagePack (Key a) where
-  toObject = toObject . Sodium.encode
-  fromObject = fromObject >=> decode
+  toObject cfg = toObject cfg . Sodium.encode
+  fromObjectWith cfg = fromObjectWith cfg >=> decode
 
 
 {-------------------------------------------------------------------------------
