@@ -6,11 +6,8 @@
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.DHT.Distance where
 
-import           Control.Applicative       ((<$>))
 import           Control.Arrow             (first)
 import           Data.Bits                 (xor)
-import           Data.Monoid               (Monoid, mappend, mempty)
-import           Data.Semigroup            (Semigroup, (<>))
 import           GHC.Exts                  (Int (I#))
 import           GHC.Integer.Logarithms    (integerLog2#)
 import           Network.Tox.Crypto.Key    (PublicKey)

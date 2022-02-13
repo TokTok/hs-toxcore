@@ -2,7 +2,6 @@
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.CombinedKeySpec where
 
-import           Control.Monad.IO.Class         (liftIO)
 import           Test.Hspec
 import           Test.QuickCheck
 

@@ -17,7 +17,6 @@ packed byte is the protocol and the next 7 bits are the address family.
 {-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.HostAddress where
 
-import           Control.Applicative       ((<$>))
 import           Control.Arrow             ((&&&))
 import           Data.Binary               (Binary)
 import qualified Data.Binary               as Binary (get, put)

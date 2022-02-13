@@ -7,38 +7,16 @@ module Network.Tox.Binary
   , decode
   ) where
 
-import           Data.Binary                            (Binary)
-import           Data.ByteString                        (ByteString)
-import           Data.MessagePack                       (MessagePack,
-                                                         fromObject, toObject)
-import qualified Data.MessagePack                       as MessagePack
-import           Data.Proxy                             (Proxy (..))
-import           Data.Typeable                          (Typeable)
-import qualified Data.Typeable                          as Typeable
-import           Data.Word                              (Word64)
+import           Data.Binary          (Binary)
+import           Data.ByteString      (ByteString)
+import           Data.Typeable        (Typeable)
+import qualified Data.Typeable        as Typeable
 
-import qualified Network.Tox.Encoding                   as Encoding
-
-import qualified Network.Tox.Crypto.Box                 as T
-import qualified Network.Tox.Crypto.Key                 as T
-import qualified Network.Tox.Crypto.KeyPair             as T
-import qualified Network.Tox.DHT.DhtPacket              as T
-import qualified Network.Tox.DHT.DhtRequestPacket       as T
-import qualified Network.Tox.DHT.NodesRequest           as T
-import qualified Network.Tox.DHT.NodesResponse          as T
-import qualified Network.Tox.DHT.PingPacket             as T
-import qualified Network.Tox.DHT.RpcPacket              as T
-import qualified Network.Tox.NodeInfo.HostAddress       as T
-import qualified Network.Tox.NodeInfo.NodeInfo          as T
-import qualified Network.Tox.NodeInfo.PortNumber        as T
-import qualified Network.Tox.NodeInfo.SocketAddress     as T
-import qualified Network.Tox.NodeInfo.TransportProtocol as T
-import qualified Network.Tox.Protocol.Packet            as T
-import qualified Network.Tox.Protocol.PacketKind        as T
+import qualified Network.Tox.Encoding as Encoding
 
 
-typeName :: Typeable a => Proxy a -> String
-typeName (Proxy :: Proxy a) =
+typeName :: Typeable a => proxy a -> String
+typeName (_ :: proxy a) =
   show . Typeable.typeOf $ (undefined :: a)
 
 

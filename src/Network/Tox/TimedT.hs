@@ -5,8 +5,6 @@
 
 module Network.Tox.TimedT where
 
-import           Control.Applicative                  (Applicative)
-import           Control.Monad                        (Monad)
 import           Control.Monad.IO.Class               (MonadIO)
 import           Control.Monad.Reader                 (ReaderT, ask, runReaderT)
 import           Control.Monad.State                  (MonadState)

@@ -11,7 +11,6 @@ any internet host.
 {-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.SocketAddress where
 
-import           Control.Applicative                    ((<$>), (<*>))
 import           Data.Binary                            (Binary, get, put)
 import qualified Data.Binary.Bits.Get                   as Bits (runBitGet)
 import qualified Data.Binary.Bits.Put                   as Bits (runBitPut)

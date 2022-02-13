@@ -86,7 +86,7 @@ library
     , base16-bytestring         >= 1
     , binary
     , bytestring
-    , clock                     >= 0.3
+    , clock                     >= 0.3 && <= 0.8.2
     , containers
     , entropy
     , integer-gmp

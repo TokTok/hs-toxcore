@@ -9,16 +9,14 @@
 {-# LANGUAGE StrictData            #-}
 module Network.Tox.DHT.DhtState where
 
-import           Control.Applicative            (Applicative, Const (..),
-                                                 getConst, (<$>), (<*>), (<|>))
+import           Control.Applicative            (Const (..), getConst, (<|>))
 import           Data.Functor.Identity          (Identity (..))
 import           Data.List                      (nub, sortBy)
 import           Data.Map                       (Map)
 import qualified Data.Map                       as Map
 import qualified Data.Maybe                     as Maybe
-import           Data.Monoid                    (All (..), Monoid, getAll)
+import           Data.Monoid                    (All (..), getAll)
 import           Data.Ord                       (comparing)
-import           Data.Traversable               (traverse)
 import           Lens.Family2                   (Lens')
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary, shrink)
 

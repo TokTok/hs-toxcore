@@ -11,7 +11,6 @@ lifetime of a k-buckets instance.
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.KBuckets where
 
-import           Control.Applicative           (Applicative, (<$>))
 import           Data.Binary                   (Binary)
 import           Data.Foldable                 (toList)
 import           Data.List                     (sortBy)
@@ -19,8 +18,7 @@ import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Data.Maybe                    (isJust)
 import           Data.Ord                      (comparing)
-import           Data.Traversable              (Traversable, mapAccumR,
-                                                traverse)
+import           Data.Traversable              (mapAccumR)
 import           Data.Word                     (Word8)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
 import           Test.QuickCheck.Gen           (Gen)

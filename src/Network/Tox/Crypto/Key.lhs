@@ -11,7 +11,6 @@
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.Key where
 
-import           Control.Applicative               ((<$>))
 import           Control.Monad                     ((>=>))
 import           Control.Monad.Validate            (MonadValidate, refute)
 import qualified Crypto.Saltine.Class              as Sodium (IsEncoding,
@@ -60,7 +59,7 @@ applications directly using those APIs, binary encoding and decoding is the
 \begin{code}
 
 class Sodium.IsEncoding a => CryptoNumber a where
-  encodedByteSize :: Proxy a -> Int
+  encodedByteSize :: proxy a -> Int
 
 \end{code}
 
@@ -77,10 +76,10 @@ Tox uses four kinds of Crypto Numbers:
 
 \begin{code}
 
-instance CryptoNumber Sodium.PublicKey   where { encodedByteSize Proxy = Sodium.boxPK       }
-instance CryptoNumber Sodium.SecretKey   where { encodedByteSize Proxy = Sodium.boxSK       }
-instance CryptoNumber Sodium.CombinedKey where { encodedByteSize Proxy = Sodium.boxBeforeNM }
-instance CryptoNumber Sodium.Nonce       where { encodedByteSize Proxy = Sodium.boxNonce    }
+instance CryptoNumber Sodium.PublicKey   where { encodedByteSize _ = Sodium.boxPK       }
+instance CryptoNumber Sodium.SecretKey   where { encodedByteSize _ = Sodium.boxSK       }
+instance CryptoNumber Sodium.CombinedKey where { encodedByteSize _ = Sodium.boxBeforeNM }
+instance CryptoNumber Sodium.Nonce       where { encodedByteSize _ = Sodium.boxNonce    }
 
 deriving instance Typeable Sodium.PublicKey
 deriving instance Typeable Sodium.SecretKey

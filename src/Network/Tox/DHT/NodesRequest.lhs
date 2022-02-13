@@ -15,7 +15,6 @@ The DHT Public Key sent in the request is the one the sender is searching for.
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.NodesRequest where
 
-import           Control.Applicative       ((<$>))
 import           Data.Binary               (Binary)
 import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)

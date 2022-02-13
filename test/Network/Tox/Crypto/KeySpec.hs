@@ -14,7 +14,6 @@ import           Data.ByteString          (ByteString)
 import qualified Data.ByteString          as ByteString
 import           Data.MessagePack         (DecodeError, errorMessages)
 import           Data.Proxy               (Proxy (..))
-import qualified Data.Result              as R
 import           Data.Typeable            (Typeable)
 import qualified Network.Tox.Binary       as Binary
 import           Network.Tox.Crypto.Key   (Key (..))

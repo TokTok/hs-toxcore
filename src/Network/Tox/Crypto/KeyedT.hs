@@ -8,8 +8,6 @@
 {-# LANGUAGE UndecidableInstances       #-}
 module Network.Tox.Crypto.KeyedT where
 
-import           Control.Applicative                  (Applicative, (<$>))
-import           Control.Monad                        (Monad)
 import           Control.Monad.IO.Class               (MonadIO)
 import           Control.Monad.State                  (MonadState, StateT (..),
                                                        evalStateT, gets, modify,

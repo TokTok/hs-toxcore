@@ -2,7 +2,6 @@
 {-# LANGUAGE StrictData #-}
 module Network.Tox.Time where
 
-import           Control.Applicative       ((<$>), (<*>))
 import qualified System.Clock              as Clock
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 

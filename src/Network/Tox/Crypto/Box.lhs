@@ -20,7 +20,6 @@ module Network.Tox.Crypto.Box
   , encrypt
   ) where
 
-import           Control.Applicative               ((<$>), (<*>))
 import           Control.Monad.Validate            (MonadValidate (..))
 import qualified Crypto.Saltine.Core.Box           as Sodium (boxAfterNM,
                                                               boxOpenAfterNM)
@@ -33,7 +32,8 @@ import           Data.ByteString                   (ByteString)
 import qualified Data.ByteString                   as ByteString
 import qualified Data.ByteString.Base16            as Base16
 import qualified Data.ByteString.Lazy              as LazyByteString
-import           Data.MessagePack                  (MessagePack (..), DecodeError)
+import           Data.MessagePack                  (DecodeError,
+                                                    MessagePack (..))
 import           Data.Typeable                     (Typeable)
 import           GHC.Generics                      (Generic)
 import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)

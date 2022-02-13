@@ -3,7 +3,6 @@
 module Network.Tox.DHT.DhtRequestPacketSpec where
 
 import           Test.Hspec
-import           Test.QuickCheck
 
 import           Data.Proxy                       (Proxy (..))
 import           Network.Tox.DHT.DhtRequestPacket (DhtRequestPacket (..))

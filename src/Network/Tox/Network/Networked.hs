@@ -10,7 +10,6 @@
 --   (ii) allow a simulated network in place of actual network IO.
 module Network.Tox.Network.Networked where
 
-import           Control.Applicative                  (Applicative, (<$>))
 import           Control.Monad.Random                 (RandT)
 import           Control.Monad.Reader                 (ReaderT)
 import           Control.Monad.State                  (MonadState, StateT)
@@ -18,7 +17,6 @@ import           Control.Monad.Trans.Class            (lift)
 import           Control.Monad.Writer                 (WriterT, execWriterT,
                                                        runWriterT, tell)
 import           Data.Binary                          (Binary)
-import           Data.Monoid                          (Monoid)
 
 import           Network.Tox.Network.MonadRandomBytes (MonadRandomBytes)
 import           Network.Tox.NodeInfo.NodeInfo        (NodeInfo)

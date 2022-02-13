@@ -6,12 +6,11 @@ the DHT State.
 {-# LANGUAGE StrictData #-}
 module Network.Tox.DHT.NodeList where
 
-import           Control.Applicative           (Applicative, Const (..),
-                                                getConst)
+import           Control.Applicative           (Const (..), getConst)
 import           Control.Monad                 (guard)
 import           Data.Maybe                    (listToMaybe)
-import           Data.Monoid                   (Dual (..), Endo (..), Monoid,
-                                                appEndo, getDual, mempty)
+import           Data.Monoid                   (Dual (..), Endo (..), appEndo,
+                                                getDual)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientList    (ClientList)

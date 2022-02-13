@@ -20,7 +20,6 @@ response has in their lists of known nodes.
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.NodesResponse where
 
-import           Control.Applicative           ((<$>))
 import           Data.Binary                   (Binary, get, put)
 import qualified Data.Binary.Get               as Binary (getWord8)
 import qualified Data.Binary.Put               as Binary (putWord8)

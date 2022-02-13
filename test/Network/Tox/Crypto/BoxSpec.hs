@@ -4,7 +4,6 @@
 {-# LANGUAGE Trustworthy         #-}
 module Network.Tox.Crypto.BoxSpec where
 
-import           Control.Monad.IO.Class         (liftIO)
 import qualified Data.ByteString                as ByteString
 import           Data.Proxy                     (Proxy (..))
 import qualified Data.Result                    as R

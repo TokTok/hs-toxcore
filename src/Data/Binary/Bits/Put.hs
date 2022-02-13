@@ -38,9 +38,7 @@ import qualified Data.Binary.Put     as Put
 
 import           Data.ByteString
 
-import           Control.Applicative
 import           Data.Bits
-import           Data.Monoid
 import           Data.Word
 
 newtype BitPut a = BitPut { run :: S -> PairS a }

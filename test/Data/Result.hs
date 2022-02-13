@@ -7,11 +7,7 @@ module Data.Result
     ( Result (..)
     ) where
 
-import           Control.Applicative (Alternative (..), Applicative (..), (<$>),
-                                      (<*>))
-import           Control.Monad.Fail  (MonadFail (..))
-import           Data.Foldable       (Foldable)
-import           Data.Traversable    (Traversable)
+import           Control.Applicative (Alternative (..))
 
 data Result a
     = Success a

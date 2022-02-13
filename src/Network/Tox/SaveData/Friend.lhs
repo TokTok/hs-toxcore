@@ -8,7 +8,6 @@ import           Data.Binary               (Binary (..))
 import qualified Data.Binary.Get           as Get
 import qualified Data.Binary.Put           as Put
 import qualified Data.ByteString           as BS
-import           Data.Monoid               ((<>))
 import           Data.Word                 (Word32, Word64, Word8)
 import           Network.Tox.Crypto.Key    (PublicKey)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)

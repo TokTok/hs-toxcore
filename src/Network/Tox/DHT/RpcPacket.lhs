@@ -6,7 +6,6 @@
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.RpcPacket where
 
-import           Control.Applicative       ((<$>), (<*>))
 import           Data.Binary               (Binary)
 import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)

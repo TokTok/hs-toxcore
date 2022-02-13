@@ -5,9 +5,7 @@ module Network.Tox.DHT.PendingRepliesSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Network.Tox.DHT.PendingReplies (PendingReplies)
 import           Network.Tox.DHT.PendingReplies as PendingReplies
-import           Network.Tox.DHT.Stamped        (Stamped)
 import qualified Network.Tox.DHT.Stamped        as Stamped
 
 spec :: Spec
