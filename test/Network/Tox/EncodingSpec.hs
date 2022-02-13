@@ -13,26 +13,26 @@ module Network.Tox.EncodingSpec
     , expectDecoderFail
     ) where
 
-import           Data.MessagePack       (MessagePack)
+import           Data.MessagePack     (MessagePack)
 import           Test.Hspec
-import           Test.QuickCheck        (Arbitrary)
-import qualified Test.QuickCheck        as QC
+import           Test.QuickCheck      (Arbitrary)
+import qualified Test.QuickCheck      as QC
 
-import           Data.Binary            (Binary)
-import qualified Data.Binary            as Binary (get, put)
-import qualified Data.Binary.Bits.Get   as Bits (BitGet, runBitGet)
-import qualified Data.Binary.Bits.Put   as Bits (BitPut, runBitPut)
-import qualified Data.Binary.Get        as Binary (Decoder (..), Get, pushChunk,
-                                                   runGet, runGetIncremental)
-import qualified Data.Binary.Put        as Binary (Put, runPut)
-import qualified Data.ByteString        as ByteString
-import qualified Data.ByteString.Lazy   as LazyByteString
-import           Data.Proxy             (Proxy (..))
-import           Data.Typeable          (Typeable)
-import           Data.Word              (Word64, Word8)
+import           Data.Binary          (Binary)
+import qualified Data.Binary          as Binary (get, put)
+import qualified Data.Binary.Bits.Get as Bits (BitGet, runBitGet)
+import qualified Data.Binary.Bits.Put as Bits (BitPut, runBitPut)
+import qualified Data.Binary.Get      as Binary (Decoder (..), Get, pushChunk,
+                                                 runGet, runGetIncremental)
+import qualified Data.Binary.Put      as Binary (Put, runPut)
+import qualified Data.ByteString      as ByteString
+import qualified Data.ByteString.Lazy as LazyByteString
+import           Data.Proxy           (Proxy (..))
+import           Data.Typeable        (Typeable)
+import           Data.Word            (Word64, Word8)
 
-import qualified Network.Tox.Binary     as Binary
-import           Network.Tox.Encoding   (BitEncoding, bitGet, bitPut)
+import qualified Network.Tox.Binary   as Binary
+import           Network.Tox.Encoding (BitEncoding, bitGet, bitPut)
 
 
 spec :: Spec
