@@ -7,15 +7,12 @@
 -- | Monad class for caching of combined keys
 module Network.Tox.Crypto.Keyed where
 
-import           Control.Applicative            (Applicative, pure, (<*>))
-import           Control.Monad                  (Monad)
 import           Control.Monad.RWS              (RWST)
 import           Control.Monad.Random           (RandT)
 import           Control.Monad.Reader           (ReaderT)
 import           Control.Monad.State            (StateT)
 import           Control.Monad.Trans            (lift)
 import           Control.Monad.Writer           (WriterT)
-import           Data.Monoid                    (Monoid)
 
 import qualified Network.Tox.Crypto.CombinedKey as CombinedKey
 import           Network.Tox.Crypto.Key         (CombinedKey, PublicKey,

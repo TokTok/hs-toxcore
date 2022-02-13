@@ -2,7 +2,6 @@
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.KeyPairSpec where
 
-import           Control.Monad.IO.Class         (liftIO)
 import qualified Crypto.Saltine.Class           as Sodium (encode)
 import           Data.Proxy                     (Proxy (..))
 import           Test.Hspec

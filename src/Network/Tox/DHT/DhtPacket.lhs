@@ -28,7 +28,6 @@ protocol never actually sends empty messages, so in reality the minimum size is
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.DhtPacket where
 
-import           Control.Applicative        ((<$>), (<*>))
 import           Data.Binary                (Binary, get, put)
 import           Data.Binary.Get            (getRemainingLazyByteString)
 import           Data.Binary.Put            (putByteString, runPut)

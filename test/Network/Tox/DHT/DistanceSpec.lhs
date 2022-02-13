@@ -7,7 +7,6 @@ module Network.Tox.DHT.DistanceSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Data.Monoid              (Monoid, mappend, mempty)
 import           Data.Proxy               (Proxy (..))
 import qualified Network.Tox.Crypto.Key   as Key
 import           Network.Tox.DHT.Distance

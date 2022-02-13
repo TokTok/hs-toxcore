@@ -20,7 +20,6 @@ DHT Packet which is to be received by the addressee.
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.DhtRequestPacket where
 
-import           Control.Applicative       ((<$>), (<*>))
 import           Data.Binary               (Binary, get, put)
 import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)

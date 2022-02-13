@@ -5,7 +5,6 @@
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.Protocol.Packet where
 
-import           Control.Applicative             ((<$>), (<*>))
 import           Data.Binary                     (Binary)
 import           Data.MessagePack                (MessagePack)
 import           Data.Typeable                   (Typeable)

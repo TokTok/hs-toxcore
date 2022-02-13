@@ -7,9 +7,7 @@ module Network.Tox.SaveData.DHT (DHT) where
 import           Control.Arrow              (second)
 import           Control.Monad              (when)
 import           Data.Binary                (Binary (..))
-import           Data.Binary.Get            (Get)
 import qualified Data.Binary.Get            as Get
-import           Data.Binary.Put            (Put)
 import qualified Data.Binary.Put            as Put
 import qualified Data.ByteString.Lazy       as LBS
 import           Data.Word                  (Word16, Word32)

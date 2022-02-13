@@ -6,17 +6,13 @@ module Network.Tox.DHT.OperationSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Control.Monad                 (mzero, when)
+import           Control.Monad                 (when)
 import           Control.Monad.Writer          (execWriterT)
 import qualified Data.Map                      as Map
-import           Data.Proxy                    (Proxy (..))
 
-import           Network.Tox.Crypto.Key        (PublicKey)
 import qualified Network.Tox.Crypto.KeyPair    as KeyPair
-import           Network.Tox.DHT.DhtState      (DhtState)
 import qualified Network.Tox.DHT.DhtState      as DhtState
 import qualified Network.Tox.DHT.Operation     as Operation
-import           Network.Tox.EncodingSpec
 import           Network.Tox.NodeInfo.NodeInfo (NodeInfo)
 import qualified Network.Tox.NodeInfo.NodeInfo as NodeInfo
 import qualified Network.Tox.Time              as Time

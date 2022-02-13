@@ -90,9 +90,8 @@ module Data.Binary.Bits.Get
 
             ) where
 
-import           Data.Binary.Get          as B (Get, getByteString,
-                                                getLazyByteString, isEmpty,
-                                                runGet)
+import           Data.Binary.Get          as B (Get,
+                                                getLazyByteString, isEmpty)
 import           Data.Binary.Get.Internal as B (ensureN, get, put)
 
 import           Data.ByteString          as B

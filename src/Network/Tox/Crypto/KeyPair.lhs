@@ -19,7 +19,6 @@ standard group element and the Secret Key.  See the
 {-# LANGUAGE Trustworthy        #-}
 module Network.Tox.Crypto.KeyPair where
 
-import           Control.Applicative            ((<$>))
 import qualified Crypto.Saltine.Class           as Sodium (decode, encode)
 import qualified Crypto.Saltine.Core.Box        as Sodium (newKeypair)
 import qualified Crypto.Saltine.Core.ScalarMult as Sodium (multBase)

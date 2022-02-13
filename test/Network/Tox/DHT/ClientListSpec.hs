@@ -5,12 +5,10 @@ module Network.Tox.DHT.ClientListSpec where
 import           Test.Hspec
 import           Test.QuickCheck
 
-import           Control.Monad                 (unless, when)
-import           Data.List                     (sort, sortOn)
+import           Control.Monad                 (unless)
+import           Data.List                     (sortOn)
 import qualified Data.Map                      as Map
-import           Data.Ord                      (comparing)
 import           Data.Proxy                    (Proxy (..))
-import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientList    (ClientList)
 import qualified Network.Tox.DHT.ClientList    as ClientList
 import qualified Network.Tox.DHT.Distance      as Distance

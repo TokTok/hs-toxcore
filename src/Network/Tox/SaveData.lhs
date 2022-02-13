@@ -31,7 +31,6 @@ import           Data.Binary.Get                  (Get)
 import qualified Data.Binary.Get                  as Get
 import           Data.Binary.Put                  (Put)
 import qualified Data.Binary.Put                  as Put
-import qualified Data.ByteString                  as BS
 import qualified Data.ByteString.Lazy             as LBS
 import           Data.Word                        (Word16, Word32, Word8)
 import           GHC.Generics                     (Generic)

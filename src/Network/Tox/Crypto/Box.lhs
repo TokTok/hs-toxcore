@@ -20,7 +20,6 @@ module Network.Tox.Crypto.Box
   , encrypt
   ) where
 
-import           Control.Applicative               ((<$>), (<*>))
 import           Control.Monad.Validate            (MonadValidate (..))
 import qualified Crypto.Saltine.Core.Box           as Sodium (boxAfterNM,
                                                               boxOpenAfterNM)

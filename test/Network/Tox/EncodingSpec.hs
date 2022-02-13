@@ -13,7 +13,6 @@ module Network.Tox.EncodingSpec
     , expectDecoderFail
     ) where
 
-import           Control.Monad.IO.Class (liftIO)
 import           Data.MessagePack       (MessagePack)
 import           Test.Hspec
 import           Test.QuickCheck        (Arbitrary)
@@ -104,13 +103,13 @@ binaryGetPutSpec name getA putA =
         Binary.Done {}      -> expectationFailure "Done with empty input; packet grammar appears to be nullable"
 
 
-binarySpec :: (Arbitrary a, Eq a, Show a, Binary a) => Proxy a -> Spec
-binarySpec (Proxy :: Proxy a) =
+binarySpec :: (Arbitrary a, Eq a, Show a, Binary a) => proxy a -> Spec
+binarySpec (_ :: proxy a) =
   binaryGetPutSpec "Binary.{get,put}" (Binary.get :: Binary.Get a) (Binary.put :: a -> Binary.Put)
 
 
-bitEncodingSpec :: (Arbitrary a, Eq a, Show a, BitEncoding a) => Proxy a -> Spec
-bitEncodingSpec (Proxy :: Proxy a) =
+bitEncodingSpec :: (Arbitrary a, Eq a, Show a, BitEncoding a) => proxy a -> Spec
+bitEncodingSpec (_ :: proxy a) =
   let
     bitGetA = (bitGet :: Bits.BitGet a)
     bitPutA = (bitPut :: a -> Bits.BitPut ())
@@ -118,8 +117,8 @@ bitEncodingSpec (Proxy :: Proxy a) =
   binaryGetPutSpec "BitEncoding.bit{Get,Put}" (Bits.runBitGet bitGetA) (Bits.runBitPut . bitPutA)
 
 
-readShowSpec :: (Arbitrary a, Eq a, Show a, Read a) => Proxy a -> Spec
-readShowSpec (Proxy :: Proxy a) =
+readShowSpec :: (Arbitrary a, Eq a, Show a, Read a) => proxy a -> Spec
+readShowSpec (_ :: proxy a) =
   let
     showA = show :: a -> String
     readA = read :: String -> a
@@ -133,9 +132,9 @@ readShowSpec (Proxy :: Proxy a) =
 
 rpcSpec
     :: (Arbitrary a, Eq a, Show a, Typeable a, Binary a, MessagePack a)
-    => Proxy a
+    => proxy a
     -> Spec
-rpcSpec (Proxy :: Proxy a) =
+rpcSpec (_ :: proxy a) =
     describe "MessagePack" $
         it "encodes and decodes correctly" $ property $ \x ->
             decodeA (encodeA x) `shouldBe` Just x

@@ -11,8 +11,6 @@
 {-# LANGUAGE StrictData            #-}
 module Network.Tox.DHT.Operation where
 
-import           Control.Applicative                  (Applicative, pure, (<$>),
-                                                       (<*>))
 import           Control.Monad                        (guard, msum, replicateM,
                                                        unless, void, when)
 import           Control.Monad.Identity               (Identity, runIdentity)
@@ -30,7 +28,6 @@ import           Data.Functor                         (($>))
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
 import           Data.Maybe                           (isNothing)
-import           Data.Traversable                     (traverse)
 import           Lens.Family2                         (Lens')
 import           Lens.Family2.State                   (zoom, (%%=), (%=))
 import           System.Random                        (StdGen, mkStdGen)

@@ -18,7 +18,6 @@ together.
 {-# LANGUAGE Trustworthy #-}
 module Network.Tox.Crypto.Nonce where
 
-import           Control.Applicative     ((<$>))
 import qualified Crypto.Saltine.Class    as Sodium (decode, encode, nudge)
 import qualified Crypto.Saltine.Core.Box as Sodium (newNonce)
 import qualified Data.ByteString         as ByteString

@@ -6,7 +6,6 @@
 {-# LANGUAGE StrictData     #-}
 module Network.Tox.DHT.ClientList where
 
-import           Control.Applicative           ((<$>), (<*>))
 import           Control.Monad                 (join)
 import           Data.List                     (sort)
 import           Data.Map                      (Map)

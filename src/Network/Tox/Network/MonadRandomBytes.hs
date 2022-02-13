@@ -4,7 +4,6 @@
 
 module Network.Tox.Network.MonadRandomBytes where
 
-import           Control.Applicative        (Applicative, (<$>))
 import           Control.Monad.RWS          (RWST)
 import           Control.Monad.Random       (RandT, getRandoms)
 import           Control.Monad.Reader       (ReaderT)
@@ -16,7 +15,6 @@ import           Data.Binary.Get            (Get, getWord16be, getWord32be,
                                              getWord64be, getWord8, runGet)
 import           Data.ByteString            (ByteString, pack, unpack)
 import           Data.ByteString.Lazy       (fromStrict)
-import           Data.Monoid                (Monoid)
 import           Data.Proxy                 (Proxy (..))
 import           Data.Word                  (Word16, Word32, Word64, Word8)
 import           System.Entropy             (getEntropy)
