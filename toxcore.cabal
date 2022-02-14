@@ -171,7 +171,7 @@ test-suite testsuite
     , hspec
     , monad-validate
     , msgpack-binary
-    , msgpack-types             >= 0.2 && < 0.3
+    , msgpack-types             >= 0.2 && < 0.4
     , mtl
     , saltine
     , text

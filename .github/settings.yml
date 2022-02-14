@@ -19,3 +19,5 @@ branches:
           - "android-x86_64"
           - "bazel-opt"
           - "build / stack"
+          - "checks / check-release"
+          - "common / buildifier"

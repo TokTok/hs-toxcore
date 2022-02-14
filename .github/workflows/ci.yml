@@ -7,3 +7,6 @@ on:
 jobs:
   build:
     uses: TokTok/ci-tools/.github/workflows/haskell-ci.yml@master
+
+  common:
+    uses: TokTok/ci-tools/.github/workflows/common-ci.yml@master
