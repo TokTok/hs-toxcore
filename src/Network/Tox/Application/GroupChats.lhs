@@ -340,7 +340,10 @@ which case they will ignore the version. They will then verify the
 signature using the setter's public signature key and validate the
 checksum.
 
-If the peer who set the current topic is kicked or demoted, or if the topic lock is enabled, the peer who initiated the action will re-sign the topic using his own signature key and rebroadcast it to the entire group.
+If the peer who set the current topic is kicked or demoted, or if the
+topic lock is enabled, the peer who initiated the action will re-sign
+the topic using his own signature key and rebroadcast it to the entire
+group.
 
 If the peer who set the current topic is kicked or demoted, or if the
 topic lock is enabled, the peer who initiated the action will re-sign

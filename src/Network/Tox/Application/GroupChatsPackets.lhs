@@ -188,6 +188,26 @@ follows:
 
 \section{Lossless Packet Payloads}
 
+\subsection{FRAGMENT (0xef)}
+
+Fragment packets are structured as follows:
+
+\begin{tabular}{l|l}
+  Length                & Contents \\
+  \hline
+  \texttt{1}            & Lossless Packet Type \textbf{\verb'[First chunk only]'} \\
+  Variable              & Arbitrary data \\
+\end{tabular}
+
+Represents a segment in a sequence of packet fragments that comprise one
+full lossless packet payload which exceeds the maximum allowed packet
+chunk size (500 bytes). The first byte in the first chunk must be a lossless
+packet type. Each chunk in the sequence must be sent in succession.
+
+The end of the sequence is signaled by a fragment packet with a length of zero.
+
+A fully assembled packet must be no greater than 50,000 bytes.
+
 \subsection{KEY\_ROTATIONS (0xf0)}
 
 Key rotation packets are structured as follows:
