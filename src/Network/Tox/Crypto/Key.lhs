@@ -2,13 +2,14 @@
 
 \begin{code}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE DeriveDataTypeable  #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving  #-}
-{-# LANGUAGE StrictData          #-}
-{-# LANGUAGE Trustworthy         #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE StrictData                 #-}
+{-# LANGUAGE Trustworthy                #-}
 module Network.Tox.Crypto.Key where
 
 import           Control.Monad                     ((>=>))

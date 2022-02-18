@@ -3,15 +3,17 @@
 This section contains a list of saved conferences.
 
 \begin{code}
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE StrictData      #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE StrictData                 #-}
 module Network.Tox.SaveData.Conferences where
 
 import           Data.Binary               (Binary (..))
 import qualified Data.Binary.Get           as Get
 import qualified Data.Binary.Put           as Put
 import qualified Data.ByteString           as BS
+import           Data.MessagePack          (MessagePack)
 import           Data.Word                 (Word16, Word32, Word64, Word8)
 import           GHC.Generics              (Generic)
 import           Network.Tox.Crypto.Key    (PublicKey)
@@ -31,6 +33,8 @@ import qualified Test.QuickCheck.Arbitrary as Arbitrary
 
 newtype Conferences = Conferences [Conference]
     deriving (Eq, Show, Read, Generic)
+
+instance MessagePack Conferences
 
 instance Binary Conferences where
     get = Conferences <$> Util.getList
@@ -75,7 +79,9 @@ data Conference = Conference
     , title              :: BS.ByteString
     , peers              :: [Peer]
     }
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show, Read, Generic)
+
+instance MessagePack Conference
 
 instance Binary Conference where
     get = do
@@ -139,7 +145,9 @@ data Peer = Peer
     , lastActiveTime :: Word64
     , name           :: BS.ByteString
     }
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show, Read, Generic)
+
+instance MessagePack Peer
 
 instance Binary Peer where
     get = do

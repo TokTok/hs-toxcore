@@ -1,4 +1,5 @@
 \begin{code}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE StrictData        #-}
@@ -8,7 +9,9 @@ import           Data.Binary               (Binary (..))
 import qualified Data.Binary.Get           as Get
 import qualified Data.Binary.Put           as Put
 import qualified Data.ByteString           as BS
+import           Data.MessagePack          (MessagePack)
 import           Data.Word                 (Word32, Word64, Word8)
+import           GHC.Generics              (Generic)
 import           Network.Tox.Crypto.Key    (PublicKey)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 \end{code}
@@ -60,7 +63,9 @@ data Friend = Friend
     , nospam        :: Word32
     , lastSeenTime  :: Word64
     }
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show, Read, Generic)
+
+instance MessagePack Friend
 
 maxFriendRequestLen :: Int
 maxFriendRequestLen = 1024

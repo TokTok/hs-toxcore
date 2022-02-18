@@ -32,6 +32,7 @@ import qualified Data.Binary.Get                  as Get
 import           Data.Binary.Put                  (Put)
 import qualified Data.Binary.Put                  as Put
 import qualified Data.ByteString.Lazy             as LBS
+import           Data.MessagePack                 (MessagePack)
 import           Data.Word                        (Word16, Word32, Word8)
 import           GHC.Generics                     (Generic)
 import           Network.Tox.Crypto.Key           (PublicKey, SecretKey)
@@ -61,6 +62,8 @@ saveDataMagic = 0x15ED1B1F
 
 newtype SaveData = SaveData [Section]
     deriving (Eq, Show, Read, Generic)
+
+instance MessagePack SaveData
 
 instance Binary SaveData where
     get = do
@@ -273,6 +276,8 @@ data Section
     | SectionEOF
     deriving (Eq, Show, Read, Generic)
 
+instance MessagePack Section
+
 instance Arbitrary Section where
     arbitrary = Gen.oneof
         [ SectionNospamKeys <$> arbitrary
@@ -293,6 +298,8 @@ data NospamKeys = NospamKeys
     , secretKey :: SecretKey
     }
     deriving (Eq, Show, Read, Generic)
+
+instance MessagePack NospamKeys
 
 instance Binary NospamKeys where
     get = NospamKeys
@@ -315,6 +322,8 @@ instance Arbitrary NospamKeys where
 newtype Friends = Friends [Friend]
     deriving (Eq, Show, Read, Generic)
 
+instance MessagePack Friends
+
 instance Binary Friends where
     get = Friends <$> Util.getList
     put (Friends xs) = mapM_ put xs
@@ -325,6 +334,8 @@ instance Arbitrary Friends where
 
 newtype Bytes = Bytes LBS.ByteString
     deriving (Eq, Show, Read, Generic)
+
+instance MessagePack Bytes
 
 instance Binary Bytes where
     get = Bytes <$> Get.getRemainingLazyByteString
