@@ -1,7 +1,9 @@
 \subsection{DHT (0x02)}
 
 \begin{code}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StrictData                 #-}
 module Network.Tox.SaveData.DHT (DHT) where
 
 import           Control.Arrow              (second)
@@ -10,7 +12,9 @@ import           Data.Binary                (Binary (..))
 import qualified Data.Binary.Get            as Get
 import qualified Data.Binary.Put            as Put
 import qualified Data.ByteString.Lazy       as LBS
+import           Data.MessagePack           (MessagePack)
 import           Data.Word                  (Word16, Word32)
+import           GHC.Generics               (Generic)
 import           Network.Tox.SaveData.Nodes (Nodes)
 import qualified Network.Tox.SaveData.Util  as Util
 import           Test.QuickCheck.Arbitrary  (Arbitrary, arbitrary)
@@ -71,7 +75,9 @@ sectionMagic :: Word16
 sectionMagic =  0x11CE
 
 newtype DHT = DHT [DhtSection]
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show, Read, Generic)
+
+instance MessagePack DHT
 
 instance Arbitrary DHT where
     arbitrary = DHT <$> arbitrary
@@ -92,7 +98,9 @@ instance Binary DHT where
 
 newtype DhtSection
     = DhtSectionNodes Nodes
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show, Read, Generic)
+
+instance MessagePack DhtSection
 
 instance Binary DhtSection where
     get = do

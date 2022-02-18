@@ -1,0 +1,7 @@
+FROM toxchat/haskell:hs-toxcore AS build
+FROM ubuntu:20.04
+
+COPY --from=build /bin/webservice /app/
+CMD ["/app/webservice"]
+
+# vim:ft=dockerfile

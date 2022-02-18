@@ -1,0 +1,24 @@
+load("@ai_formation_hazel//tools:mangling.bzl", "hazel_library")
+load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
+
+package(features = ["-layering_check"])
+
+haskell_binary(
+    name = "webservice",
+    srcs = glob(["**/*.hs"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//hs-msgpack-binary",
+        "//hs-toxcore",
+        hazel_library("QuickCheck"),
+        hazel_library("base"),
+        hazel_library("binary"),
+        hazel_library("bytestring"),
+        hazel_library("groom"),
+        hazel_library("servant"),
+        hazel_library("servant-server"),
+        hazel_library("wai"),
+        hazel_library("wai-cors"),
+        hazel_library("warp"),
+    ],
+)
