@@ -58,8 +58,9 @@ the group instance for which the packet is intended.
 The encrypted header for lossless and lossy packets contains between 0
 and 8 bytes of empty padding. The \textbf{\verb'Group Packet Identifier'}
 is used to identify the type of group packet, and the
-\textbf{\verb'Message ID'} is a unique packet identifier which is used
-for the lossless UDP implementation.
+\textbf{\verb'Message ID'} is a unique packet identifier which must be
+included in the lossless packet header. The message ID must begin at 1,
+and increment by 1 after each new lossless packet is successfully sent.
 
 The encrypted payload contains arbitrary data specific to the respective
 group packet identifier. The length may range from zero to the maximum
@@ -129,7 +130,7 @@ A ping packet payload is structured as follows:
   Variable              & Packed IP Address and Port \\
 \end{tabular}
 
-Ping packets are periodically sent to every confirmed peer in order to
+Ping packets are sent every 12 seconds to every confirmed peer in order to
 maintain peer connections, and to ensure the group state between peers
 are in sync. A peer is considered to be disconnected from the group after
 a ping packet has not been receieved over a period of time.
@@ -188,6 +189,20 @@ follows:
 
 \section{Lossless Packet Payloads}
 
+\subsection{CUSTOM\_PRIVATE\_PACKET (0xee)}
+
+A custom private packet payload is structured as follows:
+
+\begin{tabular}{l|l}
+  Length                & Contents \\
+  \hline
+  Variable              & Arbitrary Data \\
+\end{tabular}
+
+This packet is used to to send arbitrary data to a specific peer. It may be
+used for client-side features. A custom private packet must be greater than 0 bytes,
+and may not exceed \textbf{\verb'TOX_MAX_CUSTOM_PACKET'} bytes.
+
 \subsection{FRAGMENT (0xef)}
 
 Fragment packets are structured as follows:
@@ -220,19 +235,23 @@ Key rotation packets are structured as follows:
 \end{tabular}
 
 Key rotation packets are used to rotate session encryption keys with
-a peer. If \textbf{\verb'is_response'} is false, the packet initiates a
-public key exchange. Otherwise the packet is a response to a previously
-initiated exchange.
+a peer. If \textbf{\verb'is_response'} is zero, the packet initiates a
+public key exchange. Otherwise, a non-zero value indicates that the packet
+is a response to a previously initiated exchange.
 
 The public encryption key must be a newly generated key which takes
 the place of the previously used session key. The resulting shared
 session key is generated using the same protocol as the initial
 handshake, and must be kept secret.
 
-Request packets should only be sent by the peer whose permanent public
-encryption key for the given group is closer to the group
-\textbf{\verb'Chat ID'} according to the \href{#distance}{\texttt{Distance}}
-metric.
+Request packets should be sent at least once every 10 minutes, and only by the
+peer whose permanent public encryption key for the given group is closer to
+the group \textbf{\verb'Chat ID'} according to the
+\href{#distance}{\texttt{Distance}} metric.
+
+If the receiving peer does not receive a key rotation request packet after more
+than 10 minutes plus 12 seconds since the last successful rotation, the connection
+with the peer should be severed.
 
 \subsection{TCP\_RELAYS (0xf1)}
 
@@ -263,8 +282,9 @@ A custom packet payload is structured as follows:
   Variable              & Arbitrary Data \\
 \end{tabular}
 
-This packet is used to to send arbitrary data to another peer. It may be
-used for client-side features.
+This packet is used to send arbitrary data to the group. It may be
+used for client-side features. A custom packet must be greater than 0 bytes,
+and may not exceed \textbf{\verb'TOX_MAX_CUSTOM_PACKET'} bytes.
 
 \subsection{BROADCAST (0xf3)}
 
@@ -368,13 +388,13 @@ be removed from the peer list.
 \begin{tabular}{l|l}
   Length                 & Contents \\
   \hline
-  \texttt{1}             & Flag \\
+  \texttt{1}             & is_promoted \\
   \texttt{32}            & Public Signature Key \\
 \end{tabular}
 
 Indicates that the peer associated with the public signature key has
 either been promoted to or demoted from the \textbf{\verb'Moderator'} role
-by the group founder. If \textbf{\verb'flag'} is non-zero, the peer should
+by the group founder. If \textbf{\verb'is_promoted'} is non-zero, the peer should
 be promoted and added to the moderator list. Otherwise they should be
 demoted to the \textbf{\verb'User'} role and removed from the moderator list.
 
@@ -383,7 +403,7 @@ demoted to the \textbf{\verb'User'} role and removed from the moderator list.
 \begin{tabular}{l|l}
   Length                 & Contents \\
   \hline
-  \texttt{1}             & Flag \\
+  \texttt{1}             & is_demoted \\
   \texttt{32}            & Public Encryption Key \\
   \texttt{32}            & Public Signature Key \\
   \texttt{137}           & Sanctions List Entry \textbf{\verb'[optional]'} \\
@@ -392,7 +412,7 @@ demoted to the \textbf{\verb'User'} role and removed from the moderator list.
 
 Indicates that the peer associated with the given public keys has either
 been demoted to or promoted from the \textbf{\verb'Observer'} role by the group
-founder or a moderator. If \textbf{\verb'flag'} is non-zero, the peer should be
+founder or a moderator. If \textbf{\verb'is_demoted'} is non-zero, the peer should be
 demoted and added to the sanctions list. Otherwise they should be
 promoted to the \textbf{\verb'User'} role and removed from the sanctions list.
 
@@ -475,6 +495,10 @@ information is being requested:
   \textbf{\verb'TOPIC'}            & 0x02 \\
   \textbf{\verb'STATE'}            & 0x04 \\
 \end{tabular}
+
+When the \textbf{\verb'STATE'} flag is set, the group's state data must be
+sent first, and in the following order: \textbf{\verb'Shared State'},
+\textbf{\verb'Moderation List'}, \textbf{\verb'Sanctions List'}.
 
 \subsection{SYNC\_RESPONSE (0xf9)}
 
