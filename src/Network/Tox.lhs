@@ -429,7 +429,7 @@ Note that file type and file size are sent in big endian/network byte format.
 
 \subsection{\texttt{FILE\_CONTROL}}
 
-length: 4 bytes if \texttt{control\_type} isn't seek.  8 bytes if
+length: 4 bytes if \texttt{control\_type} isn't seek.  12 bytes if
 \texttt{control\_type} is seek.
 
 \begin{tabular}{l|l}
