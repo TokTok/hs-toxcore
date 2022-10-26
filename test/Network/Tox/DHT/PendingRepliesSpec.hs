@@ -10,7 +10,7 @@ import qualified Network.Tox.DHT.Stamped        as Stamped
 
 spec :: Spec
 spec = do
-  it "Accepts a response with the same RequestID iff sent since the cutoff" $
+  it "Accepts a response with the same RequestID if sent since the cutoff" $
     property $ \time time' node requestID ->
       let
         expecting = PendingReplies.expectReply time node requestID Stamped.empty
