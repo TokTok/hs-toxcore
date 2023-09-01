@@ -20,27 +20,25 @@ module Network.Tox.Crypto.Box
   , encrypt
   ) where
 
-import           Control.Monad.Validate            (MonadValidate (..))
-import qualified Crypto.Saltine.Core.Box           as Sodium (boxAfterNM,
-                                                              boxOpenAfterNM)
-import qualified Crypto.Saltine.Internal.ByteSizes as ByteSizes
-import           Data.Binary                       (Binary, get, put)
-import           Data.Binary.Get                   (Decoder (..), pushChunk,
-                                                    runGetIncremental)
-import           Data.Binary.Put                   (runPut)
-import           Data.ByteString                   (ByteString)
-import qualified Data.ByteString                   as ByteString
-import qualified Data.ByteString.Base16            as Base16
-import qualified Data.ByteString.Lazy              as LazyByteString
-import           Data.MessagePack                  (DecodeError,
-                                                    MessagePack (..))
-import           Data.Typeable                     (Typeable)
-import           GHC.Generics                      (Generic)
-import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
-import           Text.Read                         (readPrec)
+import           Control.Monad.Validate      (MonadValidate (..))
+import qualified Crypto.Saltine.Core.Box     as Sodium (boxAfterNM,
+                                                        boxOpenAfterNM)
+import qualified Crypto.Saltine.Internal.Box as Sodium
+import           Data.Binary                 (Binary, get, put)
+import           Data.Binary.Get             (Decoder (..), pushChunk,
+                                              runGetIncremental)
+import           Data.Binary.Put             (runPut)
+import           Data.ByteString             (ByteString)
+import qualified Data.ByteString             as ByteString
+import qualified Data.ByteString.Base16      as Base16
+import qualified Data.ByteString.Lazy        as LazyByteString
+import           Data.MessagePack            (DecodeError, MessagePack (..))
+import           Data.Typeable               (Typeable)
+import           GHC.Generics                (Generic)
+import           Test.QuickCheck.Arbitrary   (Arbitrary, arbitrary)
+import           Text.Read                   (readPrec)
 
-import           Network.Tox.Crypto.Key            (CombinedKey, Key (..),
-                                                    Nonce)
+import           Network.Tox.Crypto.Key      (CombinedKey, Key (..), Nonce)
 
 
 {-------------------------------------------------------------------------------
@@ -82,8 +80,8 @@ newtype CipherText = CipherText { unCipherText :: ByteString }
 
 cipherText :: MonadValidate DecodeError m => ByteString -> m CipherText
 cipherText bs
-  | ByteString.length bs >= ByteSizes.boxMac = return $ CipherText bs
-  | otherwise                                = refute "ciphertext is too short"
+  | ByteString.length bs >= Sodium.box_macbytes = return $ CipherText bs
+  | otherwise                                   = refute "ciphertext is too short"
 
 instance Binary CipherText where
   put = put . unCipherText

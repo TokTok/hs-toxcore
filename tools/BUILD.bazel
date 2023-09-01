@@ -12,3 +12,17 @@ haskell_binary(
         hazel_library("groom"),
     ],
 )
+
+haskell_binary(
+    name = "toxsave-test",
+    srcs = ["toxsave-test.hs"],
+    compiler_flags = ["-optl=-fsanitize=address"],
+    deps = [
+        "//c-toxcore",
+        "//hs-toxcore",
+        hazel_library("QuickCheck"),
+        hazel_library("base"),
+        hazel_library("binary"),
+        hazel_library("bytestring"),
+    ],
+)
