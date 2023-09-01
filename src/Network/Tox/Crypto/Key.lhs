@@ -12,31 +12,29 @@
 {-# LANGUAGE Trustworthy                #-}
 module Network.Tox.Crypto.Key where
 
-import           Control.Monad                     ((>=>))
-import           Control.Monad.Validate            (MonadValidate, refute)
-import qualified Crypto.Saltine.Class              as Sodium (IsEncoding,
-                                                              decode, encode)
-import qualified Crypto.Saltine.Core.Box           as Sodium (CombinedKey,
-                                                              Nonce, PublicKey,
-                                                              SecretKey)
-import qualified Crypto.Saltine.Internal.ByteSizes as Sodium (boxBeforeNM,
-                                                              boxNonce, boxPK,
-                                                              boxSK)
-import           Data.Binary                       (Binary)
-import qualified Data.Binary                       as Binary (get, put)
-import qualified Data.Binary.Get                   as Binary (getByteString,
-                                                              runGet)
-import qualified Data.Binary.Put                   as Binary (putByteString)
-import qualified Data.ByteString                   as ByteString
-import qualified Data.ByteString.Base16            as Base16
-import qualified Data.ByteString.Lazy              as LazyByteString
-import           Data.MessagePack                  (DecodeError,
-                                                    MessagePack (..))
-import           Data.Proxy                        (Proxy (..))
-import           Data.Typeable                     (Typeable)
-import           Test.QuickCheck.Arbitrary         (Arbitrary, arbitrary)
-import qualified Test.QuickCheck.Arbitrary         as Arbitrary
-import           Text.Read                         (readPrec)
+import           Control.Monad               ((>=>))
+import           Control.Monad.Validate      (MonadValidate, refute)
+import qualified Crypto.Saltine.Class        as Sodium (IsEncoding, decode,
+                                                        encode)
+import qualified Crypto.Saltine.Core.Box     as Sodium (CombinedKey, Nonce,
+                                                        PublicKey, SecretKey)
+import qualified Crypto.Saltine.Internal.Box as Sodium (box_beforenmbytes,
+                                                        box_noncebytes,
+                                                        box_publickeybytes,
+                                                        box_secretkeybytes)
+import           Data.Binary                 (Binary)
+import qualified Data.Binary                 as Binary (get, put)
+import qualified Data.Binary.Get             as Binary (getByteString, runGet)
+import qualified Data.Binary.Put             as Binary (putByteString)
+import qualified Data.ByteString             as ByteString
+import qualified Data.ByteString.Base16      as Base16
+import qualified Data.ByteString.Lazy        as LazyByteString
+import           Data.MessagePack            (DecodeError, MessagePack (..))
+import           Data.Proxy                  (Proxy (..))
+import           Data.Typeable               (Typeable)
+import           Test.QuickCheck.Arbitrary   (Arbitrary, arbitrary)
+import qualified Test.QuickCheck.Arbitrary   as Arbitrary
+import           Text.Read                   (readPrec)
 
 
 {-------------------------------------------------------------------------------
@@ -77,10 +75,10 @@ Tox uses four kinds of Crypto Numbers:
 
 \begin{code}
 
-instance CryptoNumber Sodium.PublicKey   where { encodedByteSize _ = Sodium.boxPK       }
-instance CryptoNumber Sodium.SecretKey   where { encodedByteSize _ = Sodium.boxSK       }
-instance CryptoNumber Sodium.CombinedKey where { encodedByteSize _ = Sodium.boxBeforeNM }
-instance CryptoNumber Sodium.Nonce       where { encodedByteSize _ = Sodium.boxNonce    }
+instance CryptoNumber Sodium.PublicKey   where { encodedByteSize _ = Sodium.box_publickeybytes }
+instance CryptoNumber Sodium.SecretKey   where { encodedByteSize _ = Sodium.box_secretkeybytes }
+instance CryptoNumber Sodium.CombinedKey where { encodedByteSize _ = Sodium.box_beforenmbytes  }
+instance CryptoNumber Sodium.Nonce       where { encodedByteSize _ = Sodium.box_noncebytes     }
 
 deriving instance Typeable Sodium.PublicKey
 deriving instance Typeable Sodium.SecretKey

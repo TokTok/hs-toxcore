@@ -1,5 +1,5 @@
-{-# LANGUAGE Safe       #-}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE StrictData  #-}
+{-# LANGUAGE Trustworthy #-}
 module Network.Tox.Time where
 
 import qualified System.Clock              as Clock

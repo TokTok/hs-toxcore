@@ -20,7 +20,8 @@ standard group element and the Secret Key.  See the
 module Network.Tox.Crypto.KeyPair where
 
 import qualified Crypto.Saltine.Class           as Sodium (decode, encode)
-import qualified Crypto.Saltine.Core.Box        as Sodium (newKeypair)
+import qualified Crypto.Saltine.Core.Box        as Sodium (Keypair (..),
+                                                           newKeypair)
 import qualified Crypto.Saltine.Core.ScalarMult as Sodium (multBase)
 import           Data.Binary                    (Binary)
 import           Data.MessagePack               (MessagePack (..))
@@ -51,7 +52,7 @@ instance MessagePack KeyPair
 
 newKeyPair :: IO KeyPair
 newKeyPair = do
-  (sk, pk) <- Sodium.newKeypair
+  Sodium.Keypair sk pk <- Sodium.newKeypair
   return $ KeyPair (Key sk) (Key pk)
 
 
