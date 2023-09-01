@@ -5,6 +5,7 @@ command = """\
   mv .git res src test website/hs-toxcore && \
   cd website && \
   make spec && \
+  gem install --no-document sass-embedded -v 1.63.6 && \
   gem install --no-document jekyll guard-livereload && \
   make toktok-site \
   """
