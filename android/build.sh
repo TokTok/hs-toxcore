@@ -2,8 +2,10 @@
 
 export THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HOME/ghc-build/set-env-android.sh"
-cd -
+cd - || exit
 set -x
+
+export PKG_CONFIG_PATH="$NDK_ADDON_PREFIX/lib/pkgconfig"
 
 "$NDK_TARGET-cabal" update
 
@@ -12,4 +14,4 @@ set -x
 
 (cd network-3.1.1.1 && patch -p1 <../android/patches/hs-network-ffi.patch)
 
-"$NDK_TARGET-cabal" new-install -j4 --with-happy="$(which happy)" --ghc-option="-fPIC"
+"$NDK_TARGET-cabal" new-install -j4 --with-happy="$GHC_HOST/bin/happy" --ghc-option="-fPIC"

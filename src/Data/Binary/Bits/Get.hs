@@ -475,6 +475,16 @@ shiftl_w16 :: Word16 -> Int -> Word16
 shiftl_w32 :: Word32 -> Int -> Word32
 shiftl_w64 :: Word64 -> Int -> Word64
 
+#if __GLASGOW_HASKELL__ < 900
+uncheckedShiftLWord8# = uncheckedShiftL#
+uncheckedShiftLWord16# = uncheckedShiftL#
+uncheckedShiftLWord32# = uncheckedShiftL#
+
+uncheckedShiftRLWord8# = uncheckedShiftRL#
+uncheckedShiftRLWord16# = uncheckedShiftRL#
+uncheckedShiftRLWord32# = uncheckedShiftRL#
+#endif
+
 #if !defined(__HADDOCK__)
 shiftl_w8  (W8#  w) (I# i) = W8# (w `uncheckedShiftLWord8#`     i)
 shiftl_w16 (W16# w) (I# i) = W16# (w `uncheckedShiftLWord16#`   i)
