@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Safe                  #-}
@@ -7,9 +8,9 @@
 -- | Monad class for caching of combined keys
 module Network.Tox.Crypto.Keyed where
 
-import           Control.Monad.RWS              (RWST)
 import           Control.Monad.Random           (RandT)
 import           Control.Monad.Reader           (ReaderT)
+import           Control.Monad.RWS              (RWST)
 import           Control.Monad.State            (StateT)
 import           Control.Monad.Trans            (lift)
 import           Control.Monad.Writer           (WriterT)

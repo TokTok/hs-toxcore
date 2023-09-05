@@ -5,6 +5,7 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -----------------------------------------------------------------------------

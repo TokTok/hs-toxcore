@@ -27,8 +27,6 @@ instance Alternative Result where
     _            <|> r = r
 
 instance Monad Result where
-    return = Success
-
     Success x   >>= f = f x
     Failure msg >>= _ = Failure msg
 

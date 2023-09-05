@@ -5,6 +5,7 @@ certain key called the base key.  The base key is constant throughout the
 lifetime of a k-buckets instance.
 
 \begin{code}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE StrictData                 #-}
@@ -194,7 +195,7 @@ traverseClientLists f kBuckets@KBuckets{ buckets } =
   (\x -> kBuckets{ buckets = x }) <$> traverse f (reverseT buckets)
   where
     reverseT :: (Traversable t) => t a -> t a
-    reverseT t = snd (mapAccumR (\ (x:xs) _ -> (xs, x)) (toList t) t)
+    reverseT t = snd (mapAccumR (\(x:xs) _ -> (xs, x)) (toList t) t)
 
 closeNodes :: PublicKey -> KBuckets -> [ (Distance, NodeInfo) ]
 closeNodes publicKey KBuckets{ baseKey, buckets } =

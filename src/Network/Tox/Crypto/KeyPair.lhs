@@ -12,6 +12,7 @@ standard group element and the Secret Key.  See the
 \href{https://nacl.cr.yp.to/scalarmult.html}{NaCl documentation} for details.
 
 \begin{code}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE OverloadedStrings  #-}

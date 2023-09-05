@@ -1,6 +1,7 @@
 \section{Distance}
 
 \begin{code}
+{-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 {-# LANGUAGE MagicHash   #-}
 {-# LANGUAGE StrictData  #-}
 {-# LANGUAGE Trustworthy #-}
@@ -36,11 +37,10 @@ newtype Distance = Distance Integer
 
 
 instance Semigroup Distance where
-  (Distance x) <> (Distance y) = Distance (x + y)
+  Distance x <> Distance y = Distance (x + y)
 
 instance Monoid Distance where
   mempty = Distance 0
-  mappend (Distance x) (Distance y) = Distance (x + y)
 
 
 instance Show Distance where

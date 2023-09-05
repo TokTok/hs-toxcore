@@ -11,6 +11,7 @@
 -- Put bits easily.
 -----------------------------------------------------------------------------
 
+{-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 module Data.Binary.Bits.Put
           ( BitPut
           , runBitPut
