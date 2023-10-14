@@ -9,7 +9,6 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE StrictData                 #-}
-{-# LANGUAGE Trustworthy                #-}
 module Network.Tox.Crypto.Key where
 
 import           Control.Monad               ((>=>))

@@ -1,13 +1,12 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 module Network.Tox.Timed where
 
-import           Control.Monad.RWS    (RWST)
 import           Control.Monad.Random (RandT)
 import           Control.Monad.Reader (ReaderT)
+import           Control.Monad.RWS    (RWST)
 import           Control.Monad.State  (StateT)
 import           Control.Monad.Trans  (lift)
 import           Control.Monad.Writer (WriterT)

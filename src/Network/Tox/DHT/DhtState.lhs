@@ -5,7 +5,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE StrictData            #-}
 module Network.Tox.DHT.DhtState where
 

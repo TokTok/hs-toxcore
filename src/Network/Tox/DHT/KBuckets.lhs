@@ -9,7 +9,6 @@ lifetime of a k-buckets instance.
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE StrictData                 #-}
-{-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.KBuckets where
 
 import           Data.Binary                   (Binary)

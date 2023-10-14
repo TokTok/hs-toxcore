@@ -16,7 +16,6 @@ response has in their lists of known nodes.
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE Safe               #-}
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.NodesResponse where
 

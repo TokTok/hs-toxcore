@@ -1,5 +1,4 @@
 \begin{code}
-{-# LANGUAGE Safe       #-}
 {-# LANGUAGE StrictData #-}
 module Network.Tox.DHT.ClientNode where
 

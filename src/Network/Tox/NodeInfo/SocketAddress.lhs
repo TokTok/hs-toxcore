@@ -8,7 +8,6 @@ any internet host.
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE StrictData         #-}
-{-# LANGUAGE Trustworthy        #-}
 module Network.Tox.NodeInfo.SocketAddress where
 
 import           Data.Binary                            (Binary, get, put)

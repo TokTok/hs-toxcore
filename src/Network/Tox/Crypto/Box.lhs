@@ -8,7 +8,6 @@
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE StrictData                 #-}
-{-# LANGUAGE Trustworthy                #-}
 module Network.Tox.Crypto.Box
   ( PlainText (..)
   , CipherText

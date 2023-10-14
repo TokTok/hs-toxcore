@@ -1,6 +1,5 @@
-{-# LANGUAGE LambdaCase  #-}
-{-# LANGUAGE StrictData  #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.Encoding where
 
 import           Data.Binary            (Binary, get, put)

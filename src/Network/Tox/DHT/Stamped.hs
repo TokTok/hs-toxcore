@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe       #-}
 {-# LANGUAGE StrictData #-}
 module Network.Tox.DHT.Stamped where
 

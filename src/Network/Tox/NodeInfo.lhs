@@ -1,7 +1,6 @@
 \chapter{Node Info}
 
 \begin{code}
-{-# LANGUAGE Safe       #-}
 {-# LANGUAGE StrictData #-}
 module Network.Tox.NodeInfo where
 \end{code}

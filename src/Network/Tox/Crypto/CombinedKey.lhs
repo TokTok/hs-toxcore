@@ -1,8 +1,7 @@
 \subsection{Combined Key}
 
 \begin{code}
-{-# LANGUAGE StrictData  #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.Crypto.CombinedKey where
 
 import qualified Crypto.Saltine.Core.Box as Sodium (beforeNM)

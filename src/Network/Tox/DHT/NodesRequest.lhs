@@ -11,7 +11,6 @@ The DHT Public Key sent in the request is the one the sender is searching for.
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE Safe               #-}
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.NodesRequest where
 
