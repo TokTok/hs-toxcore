@@ -15,8 +15,7 @@ together.
 
 \begin{code}
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
-{-# LANGUAGE StrictData  #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.Crypto.Nonce where
 
 import qualified Crypto.Saltine.Class    as Sodium (decode, encode, nudge)

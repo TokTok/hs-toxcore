@@ -1,7 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StrictData                 #-}
-{-# LANGUAGE Trustworthy                #-}
 
 module Network.Tox.TimedT where
 

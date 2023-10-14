@@ -1,7 +1,6 @@
 \chapter{Protocol Packet}
 
 \begin{code}
-{-# LANGUAGE Safe       #-}
 {-# LANGUAGE StrictData #-}
 module Network.Tox.Protocol where
 \end{code}

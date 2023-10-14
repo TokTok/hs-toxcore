@@ -3,7 +3,6 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StrictData                 #-}
-{-# LANGUAGE Trustworthy                #-}
 module Network.Tox.DHT.RpcPacket where
 
 import           Data.Binary               (Binary)

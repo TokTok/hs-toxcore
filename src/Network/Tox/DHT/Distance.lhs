@@ -2,9 +2,8 @@
 
 \begin{code}
 {-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
-{-# LANGUAGE MagicHash   #-}
-{-# LANGUAGE StrictData  #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE MagicHash  #-}
+{-# LANGUAGE StrictData #-}
 module Network.Tox.DHT.Distance where
 
 import           Control.Arrow             (first)

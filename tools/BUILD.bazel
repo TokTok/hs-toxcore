@@ -1,4 +1,3 @@
-load("@ai_formation_hazel//tools:mangling.bzl", "hazel_library")
 load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
 
 haskell_binary(
@@ -6,10 +5,10 @@ haskell_binary(
     srcs = ["toxsave-convert.hs"],
     deps = [
         "//hs-toxcore",
-        hazel_library("base"),
-        hazel_library("binary"),
-        hazel_library("bytestring"),
-        hazel_library("groom"),
+        "//third_party/haskell:base",
+        "//third_party/haskell:binary",
+        "//third_party/haskell:bytestring",
+        "//third_party/haskell:groom",
     ],
 )
 
@@ -20,9 +19,9 @@ haskell_binary(
     deps = [
         "//c-toxcore",
         "//hs-toxcore",
-        hazel_library("QuickCheck"),
-        hazel_library("base"),
-        hazel_library("binary"),
-        hazel_library("bytestring"),
+        "//third_party/haskell:QuickCheck",
+        "//third_party/haskell:base",
+        "//third_party/haskell:binary",
+        "//third_party/haskell:bytestring",
     ],
 )

@@ -42,7 +42,6 @@ The reason for these numbers is that the numbers on Linux for IPv4 and IPv6
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE Safe               #-}
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.NodeInfo.NodeInfo where
 

@@ -1,7 +1,6 @@
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE Safe               #-}
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.Protocol.Packet where
 

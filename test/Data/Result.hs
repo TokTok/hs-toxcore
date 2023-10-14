@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveFoldable    #-}
 {-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE Safe              #-}
 {-# LANGUAGE StrictData        #-}
 module Data.Result
     ( Result (..)

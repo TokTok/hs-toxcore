@@ -8,7 +8,6 @@ bit unsigned integer (2 bytes).
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StrictData                 #-}
-{-# LANGUAGE Trustworthy                #-}
 module Network.Tox.NodeInfo.PortNumber where
 
 import           Data.Binary               (Binary)

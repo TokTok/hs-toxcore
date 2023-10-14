@@ -2,7 +2,6 @@
 
 \begin{code}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE Safe           #-}
 {-# LANGUAGE StrictData     #-}
 module Network.Tox.DHT.ClientList where
 

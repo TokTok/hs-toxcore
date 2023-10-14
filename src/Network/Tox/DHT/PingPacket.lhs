@@ -5,7 +5,6 @@ The Ping Service is used to check if a node is responsive.
 \begin{code}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE Safe               #-}
 {-# LANGUAGE StrictData         #-}
 module Network.Tox.DHT.PingPacket where
 

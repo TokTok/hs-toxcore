@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE StrictData            #-}
 {-# LANGUAGE UndecidableInstances  #-}
 

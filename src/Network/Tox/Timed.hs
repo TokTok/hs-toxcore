@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE Safe                  #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 module Network.Tox.Timed where

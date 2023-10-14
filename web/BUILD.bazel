@@ -1,4 +1,3 @@
-load("@ai_formation_hazel//tools:mangling.bzl", "hazel_library")
 load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
 
 package(features = ["-layering_check"])
@@ -10,15 +9,15 @@ haskell_binary(
     deps = [
         "//hs-msgpack-binary",
         "//hs-toxcore",
-        hazel_library("QuickCheck"),
-        hazel_library("base"),
-        hazel_library("binary"),
-        hazel_library("bytestring"),
-        hazel_library("groom"),
-        hazel_library("servant"),
-        hazel_library("servant-server"),
-        hazel_library("wai"),
-        hazel_library("wai-cors"),
-        hazel_library("warp"),
+        "//third_party/haskell:QuickCheck",
+        "//third_party/haskell:base",
+        "//third_party/haskell:binary",
+        "//third_party/haskell:bytestring",
+        "//third_party/haskell:groom",
+        "//third_party/haskell:servant",
+        "//third_party/haskell:servant-server",
+        "//third_party/haskell:wai",
+        "//third_party/haskell:wai-cors",
+        "//third_party/haskell:warp",
     ],
 )

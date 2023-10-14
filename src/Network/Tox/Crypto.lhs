@@ -1,7 +1,6 @@
 \chapter{Crypto}
 
 \begin{code}
-{-# LANGUAGE Safe       #-}
 {-# LANGUAGE StrictData #-}
 module Network.Tox.Crypto where
 \end{code}
