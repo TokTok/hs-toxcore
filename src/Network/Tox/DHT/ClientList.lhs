@@ -11,8 +11,8 @@ import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary,
                                                 arbitrarySizedNatural)
-import           Test.QuickCheck.Gen           (Gen)
 import qualified Test.QuickCheck.Gen           as Gen
+import           Test.QuickCheck.Gen           (Gen)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientNode    (ClientNode)

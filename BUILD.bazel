@@ -7,14 +7,14 @@ project(custom_cirrus = True)
 haskell_library(
     name = "hs-toxcore",
     srcs = glob(["src/**/*.*hs"]),
-    compiler_flags = [
-        "-j4",
-    ],
+    ghcopts = ["-j4"],
     src_strip_prefix = "src",
     version = "0.2.12",
     visibility = ["//visibility:public"],
     deps = [
+        "//hs-msgpack-arbitrary",
         "//hs-msgpack-binary",
+        "//hs-msgpack-types",
         "//third_party/haskell:MonadRandom",
         "//third_party/haskell:QuickCheck",
         "//third_party/haskell:base",
@@ -39,9 +39,7 @@ haskell_library(
 hspec_test(
     name = "testsuite",
     size = "small",
-    compiler_flags = [
-        "-j4",
-    ],
+    ghcopts = ["-j4"],
     deps = [
         ":hs-toxcore",
         "//hs-msgpack-binary",

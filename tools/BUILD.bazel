@@ -1,8 +1,9 @@
-load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
+load("@rules_haskell//haskell:defs.bzl", "haskell_binary", "haskell_test")
 
 haskell_binary(
     name = "toxsave-convert",
     srcs = ["toxsave-convert.hs"],
+    visibility = ["//tools/haskell:__pkg__"],
     deps = [
         "//hs-toxcore",
         "//third_party/haskell:base",
@@ -12,10 +13,11 @@ haskell_binary(
     ],
 )
 
-haskell_binary(
+haskell_test(
     name = "toxsave-test",
     srcs = ["toxsave-test.hs"],
-    compiler_flags = ["-optl=-fsanitize=address"],
+    ghcopts = ["-optl=-fsanitize=address"],
+    visibility = ["//tools/haskell:__pkg__"],
     deps = [
         "//c-toxcore",
         "//hs-toxcore",

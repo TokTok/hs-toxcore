@@ -68,14 +68,17 @@ library
     Network.Tox.Protocol.Packet
     Network.Tox.Protocol.PacketKind
     Network.Tox.SaveData
+    Network.Tox.SaveData.Bytes
     Network.Tox.SaveData.Conferences
     Network.Tox.SaveData.DHT
     Network.Tox.SaveData.Friend
+    Network.Tox.SaveData.Groups
     Network.Tox.SaveData.Nodes
     Network.Tox.SaveData.Util
     Network.Tox.Time
     Network.Tox.Timed
     Network.Tox.TimedT
+    Network.Tox.TypeName
 
   build-depends:
       base               <5
@@ -90,7 +93,9 @@ library
     , lens-family
     , monad-validate
     , MonadRandom
+    , msgpack-arbitrary
     , msgpack-binary     >=0.0.12
+    , msgpack-types
     , mtl
     , network
     , QuickCheck         >=2.9.1
@@ -107,6 +112,7 @@ executable toxsave-convert
       base        <5
     , binary
     , bytestring
+    , groom
     , text
     , toxcore
 

@@ -11,29 +11,32 @@
 {-# LANGUAGE StrictData                 #-}
 module Network.Tox.Crypto.Key where
 
-import           Control.Monad               ((>=>))
-import           Control.Monad.Validate      (MonadValidate, refute)
-import qualified Crypto.Saltine.Class        as Sodium (IsEncoding, decode,
-                                                        encode)
-import qualified Crypto.Saltine.Core.Box     as Sodium (CombinedKey, Nonce,
-                                                        PublicKey, SecretKey)
-import qualified Crypto.Saltine.Internal.Box as Sodium (box_beforenmbytes,
-                                                        box_noncebytes,
-                                                        box_publickeybytes,
-                                                        box_secretkeybytes)
-import           Data.Binary                 (Binary)
-import qualified Data.Binary                 as Binary (get, put)
-import qualified Data.Binary.Get             as Binary (getByteString, runGet)
-import qualified Data.Binary.Put             as Binary (putByteString)
-import qualified Data.ByteString             as ByteString
-import qualified Data.ByteString.Base16      as Base16
-import qualified Data.ByteString.Lazy        as LazyByteString
-import           Data.MessagePack            (DecodeError, MessagePack (..))
-import           Data.Proxy                  (Proxy (..))
-import           Data.Typeable               (Typeable)
-import           Test.QuickCheck.Arbitrary   (Arbitrary, arbitrary)
-import qualified Test.QuickCheck.Arbitrary   as Arbitrary
-import           Text.Read                   (readPrec)
+import           Control.Monad                ((>=>))
+import           Control.Monad.Validate       (MonadValidate, refute)
+import qualified Crypto.Saltine.Class         as Sodium (IsEncoding, decode,
+                                                         encode)
+import qualified Crypto.Saltine.Core.Box      as Sodium (CombinedKey, Nonce,
+                                                         PublicKey, SecretKey)
+import qualified Crypto.Saltine.Core.Sign     as Sodium (Signature)
+import qualified Crypto.Saltine.Internal.Box  as Sodium (box_beforenmbytes,
+                                                         box_noncebytes,
+                                                         box_publickeybytes,
+                                                         box_secretkeybytes)
+import qualified Crypto.Saltine.Internal.Sign as Sodium (sign_bytes)
+import           Data.Binary                  (Binary)
+import qualified Data.Binary                  as Binary (get, put)
+import qualified Data.Binary.Get              as Binary (getByteString, runGet)
+import qualified Data.Binary.Put              as Binary (putByteString)
+import qualified Data.ByteString              as ByteString
+import qualified Data.ByteString.Base16       as Base16
+import qualified Data.ByteString.Lazy         as LazyByteString
+import           Data.MessagePack             (DecodeError, MessagePack (..))
+import           Data.Proxy                   (Proxy (..))
+import           Data.String                  (fromString)
+import           Data.Typeable                (Typeable)
+import qualified Test.QuickCheck.Arbitrary    as Arbitrary
+import           Test.QuickCheck.Arbitrary    (Arbitrary, arbitrary)
+import           Text.Read                    (readPrec)
 
 
 {-------------------------------------------------------------------------------
@@ -78,11 +81,13 @@ instance CryptoNumber Sodium.PublicKey   where { encodedByteSize _ = Sodium.box_
 instance CryptoNumber Sodium.SecretKey   where { encodedByteSize _ = Sodium.box_secretkeybytes }
 instance CryptoNumber Sodium.CombinedKey where { encodedByteSize _ = Sodium.box_beforenmbytes  }
 instance CryptoNumber Sodium.Nonce       where { encodedByteSize _ = Sodium.box_noncebytes     }
+instance CryptoNumber Sodium.Signature   where { encodedByteSize _ = Sodium.sign_bytes         }
 
 deriving instance Typeable Sodium.PublicKey
 deriving instance Typeable Sodium.SecretKey
 deriving instance Typeable Sodium.CombinedKey
 deriving instance Typeable Sodium.Nonce
+deriving instance Typeable Sodium.Signature
 
 newtype Key a = Key { unKey :: a }
   deriving (Eq, Ord, Typeable)
@@ -91,6 +96,7 @@ type PublicKey   = Key Sodium.PublicKey
 type SecretKey   = Key Sodium.SecretKey
 type CombinedKey = Key Sodium.CombinedKey
 type Nonce       = Key Sodium.Nonce
+type Signature   = Key Sodium.Signature
 
 instance Sodium.IsEncoding a => Sodium.IsEncoding (Key a) where
   encode = Sodium.encode . unKey
@@ -117,7 +123,7 @@ decode :: (CryptoNumber a, MonadValidate DecodeError m) => ByteString.ByteString
 decode bytes =
   case Sodium.decode bytes of
     Just key -> return $ Key key
-    Nothing  -> refute "unable to decode ByteString to Key"
+    Nothing  -> refute $ fromString $ "unable to decode ByteString to Key: " <> show (ByteString.length bytes)
 
 
 instance CryptoNumber a => Binary (Key a) where

@@ -16,10 +16,10 @@ import qualified Data.ByteString          as ByteString
 import           Data.MessagePack         (DecodeError, errorMessages)
 import           Data.Proxy               (Proxy (..))
 import           Data.Typeable            (Typeable)
-import qualified Network.Tox.Binary       as Binary
 import           Network.Tox.Crypto.Key   (Key (..))
 import qualified Network.Tox.Crypto.Key   as Key
 import           Network.Tox.EncodingSpec
+import           Network.Tox.TypeName     (typeName)
 import qualified Text.Read                as Read
 
 
@@ -45,7 +45,7 @@ localEncodingSpec
   :: (Typeable a, Read a, Show a, Binary a, Arbitrary a, Eq a)
   => Proxy a -> Spec
 localEncodingSpec proxy =
-  describe (Binary.typeName proxy) $ do
+  describe (typeName proxy) $ do
     binarySpec proxy
     readShowSpec proxy
 
@@ -77,7 +77,7 @@ spec = do
       let actual = readMaybe ""
       actual `shouldBe` Nothing
       case runValidate $ decodeM ByteString.empty of
-        Left msg -> errorMessages msg `shouldBe` ["unable to decode ByteString to Key"]
+        Left msg -> errorMessages msg `shouldBe` ["unable to decode ByteString to Key: 0"]
         Right val -> expectationFailure $ "unexpected success: " ++ show val
 
     it "decodes valid hex string of wrong length to Nothing" $

@@ -11,34 +11,34 @@ bazel-opt_task:
         --config=ci
         //hs-toxcore/...
 
-android-aarch64_task:
-  container:
-    image: toktoknet/ghc-android:8.10.7.aarch64
-    cpu: 2
-    memory: 6G
-  build_script:
-    - android/build.sh
-
-android-arm_task:
-  container:
-    image: toktoknet/ghc-android:8.10.7.arm
-    cpu: 2
-    memory: 6G
-  build_script:
-    - android/build.sh
-
-android-i686_task:
-  container:
-    image: toktoknet/ghc-android:8.10.7.i686
-    cpu: 2
-    memory: 6G
-  build_script:
-    - android/build.sh
-
-android-x86_64_task:
-  container:
-    image: toktoknet/ghc-android:8.10.7.x86_64
-    cpu: 2
-    memory: 6G
-  build_script:
-    - android/build.sh
+#android-aarch64_task:
+#  container:
+#    image: toktoknet/ghc-android:8.10.7.aarch64
+#    cpu: 2
+#    memory: 6G
+#  build_script:
+#    - android/build.sh
+#
+#android-arm_task:
+#  container:
+#    image: toktoknet/ghc-android:8.10.7.arm
+#    cpu: 2
+#    memory: 6G
+#  build_script:
+#    - android/build.sh
+#
+#android-i686_task:
+#  container:
+#    image: toktoknet/ghc-android:8.10.7.i686
+#    cpu: 2
+#    memory: 6G
+#  build_script:
+#    - android/build.sh
+#
+#android-x86_64_task:
+#  container:
+#    image: toktoknet/ghc-android:8.10.7.x86_64
+#    cpu: 2
+#    memory: 6G
+#  build_script:
+#    - android/build.sh

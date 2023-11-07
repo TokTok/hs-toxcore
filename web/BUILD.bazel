@@ -1,7 +1,5 @@
 load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
 
-package(features = ["-layering_check"])
-
 haskell_binary(
     name = "webservice",
     srcs = glob(["**/*.hs"]),
