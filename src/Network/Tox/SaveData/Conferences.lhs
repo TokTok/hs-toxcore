@@ -18,8 +18,8 @@ import           Data.Word                 (Word16, Word32, Word64, Word8)
 import           GHC.Generics              (Generic)
 import           Network.Tox.Crypto.Key    (PublicKey)
 import qualified Network.Tox.SaveData.Util as Util
-import           Test.QuickCheck.Arbitrary (Arbitrary (..), genericShrink)
 import qualified Test.QuickCheck.Arbitrary as Arbitrary
+import           Test.QuickCheck.Arbitrary (Arbitrary (..), genericShrink)
 
 \end{code}
 

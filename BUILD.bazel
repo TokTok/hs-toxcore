@@ -14,7 +14,9 @@ haskell_library(
     version = "0.2.12",
     visibility = ["//visibility:public"],
     deps = [
+        "//hs-msgpack-arbitrary",
         "//hs-msgpack-binary",
+        "//hs-msgpack-types",
         "//third_party/haskell:MonadRandom",
         "//third_party/haskell:QuickCheck",
         "//third_party/haskell:base",

@@ -21,8 +21,8 @@ import           Data.Ord                      (comparing)
 import           Data.Traversable              (mapAccumR)
 import           Data.Word                     (Word8)
 import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
-import           Test.QuickCheck.Gen           (Gen)
 import qualified Test.QuickCheck.Gen           as Gen
+import           Test.QuickCheck.Gen           (Gen)
 
 import           Network.Tox.Crypto.Key        (PublicKey)
 import           Network.Tox.DHT.ClientList    (ClientList)
