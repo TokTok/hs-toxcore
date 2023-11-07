@@ -50,9 +50,10 @@ prop_Save save = monadicIO $ do
         tox_options_set_savedata_data opts saveData (fromIntegral saveLenInt)
         tox_options_set_log_callback opts =<< wrapLogCb logHandler
         tox <- tox_new opts nullPtr
+        let isNull = tox == nullPtr
         tox_kill tox
         tox_options_free opts
-        return $ tox /= nullPtr
+        return $ not isNull
     assert ok
 
 

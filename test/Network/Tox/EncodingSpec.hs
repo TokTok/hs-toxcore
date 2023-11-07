@@ -15,8 +15,8 @@ module Network.Tox.EncodingSpec
 
 import           Data.MessagePack     (MessagePack)
 import           Test.Hspec
-import           Test.QuickCheck      (Arbitrary)
 import qualified Test.QuickCheck      as QC
+import           Test.QuickCheck      (Arbitrary)
 
 import           Data.Binary          (Binary)
 import qualified Data.Binary          as Binary (get, put)

@@ -18,8 +18,8 @@ import           Data.Word                 (Word16, Word32, Word64, Word8)
 import           GHC.Generics              (Generic)
 import           Network.Tox.Crypto.Key    (PublicKey)
 import qualified Network.Tox.SaveData.Util as Util
-import           Test.QuickCheck.Arbitrary (Arbitrary (..), genericShrink)
 import qualified Test.QuickCheck.Arbitrary as Arbitrary
+import           Test.QuickCheck.Arbitrary (Arbitrary (..), genericShrink)
 
 \end{code}
 
@@ -72,7 +72,7 @@ maxTitleLen = 128
 
 data Conference = Conference
     { conferenceType     :: Word8
-    , conferenceId       :: BS.ByteString
+    , conferenceId       :: PublicKey
     , messageNumber      :: Word32
     , lossyMessageNumber :: Word16
     , selfPeerNumber     :: Word16
@@ -86,7 +86,7 @@ instance MessagePack Conference
 instance Binary Conference where
     get = do
         conferenceType     <- Get.getWord8
-        conferenceId       <- Get.getByteString 32
+        conferenceId       <- get
         messageNumber      <- Get.getWord32le
         lossyMessageNumber <- Get.getWord16le
         selfPeerNumber     <- Get.getWord16le
@@ -98,7 +98,7 @@ instance Binary Conference where
 
     put Conference{..} = do
         Put.putWord8      conferenceType
-        Put.putByteString conferenceId
+        put               conferenceId
         Put.putWord32le   messageNumber
         Put.putWord16le   lossyMessageNumber
         Put.putWord16le   selfPeerNumber
@@ -111,7 +111,7 @@ instance Binary Conference where
 instance Arbitrary Conference where
     arbitrary = Conference
         <$> arbitrary
-        <*> (BS.pack <$> Arbitrary.vector 32)
+        <*> arbitrary
         <*> arbitrary
         <*> arbitrary
         <*> arbitrary

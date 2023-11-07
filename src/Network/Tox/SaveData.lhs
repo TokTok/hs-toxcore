@@ -36,9 +36,13 @@ import           Data.MessagePack                 (MessagePack)
 import           Data.Word                        (Word16, Word32, Word8)
 import           GHC.Generics                     (Generic)
 import           Network.Tox.Crypto.Key           (PublicKey, SecretKey)
+import           Network.Tox.Crypto.KeyPair       (KeyPair (..))
+import qualified Network.Tox.Crypto.KeyPair       as KeyPair
+import           Network.Tox.SaveData.Bytes       (Bytes)
 import           Network.Tox.SaveData.Conferences (Conferences)
 import           Network.Tox.SaveData.DHT         (DHT)
 import           Network.Tox.SaveData.Friend      (Friend)
+import           Network.Tox.SaveData.Groups      (Groups)
 import           Network.Tox.SaveData.Nodes       (Nodes)
 import qualified Network.Tox.SaveData.Util        as Util
 import           Test.QuickCheck.Arbitrary        (Arbitrary (..),
@@ -124,6 +128,7 @@ Section types:
   Name          & 0x04 \\
   StatusMessage & 0x05 \\
   Status        & 0x06 \\
+  Groups        & 0x07 \\
   TcpRelays     & 0x0A \\
   PathNodes     & 0x0B \\
   Conferences   & 0x14 \\
@@ -147,6 +152,7 @@ getSections = go
             0x04 -> load SectionName
             0x05 -> load SectionStatusMessage
             0x06 -> load SectionStatus
+            0x07 -> load SectionGroups
             0x0A -> load SectionTcpRelays
             0x0B -> load SectionPathNodes
             0x14 -> load SectionConferences
@@ -169,6 +175,7 @@ putSections = mapM_ go
         SectionName          x -> (0x04, put x)
         SectionStatusMessage x -> (0x05, put x)
         SectionStatus        x -> (0x06, put x)
+        SectionGroups        x -> (0x07, put x)
         SectionTcpRelays     x -> (0x0A, put x)
         SectionPathNodes     x -> (0x0B, put x)
         SectionConferences   x -> (0x14, put x)
@@ -270,6 +277,7 @@ data Section
     | SectionName Bytes
     | SectionStatusMessage Bytes
     | SectionStatus Word8
+    | SectionGroups Groups
     | SectionTcpRelays Nodes
     | SectionPathNodes Nodes
     | SectionConferences Conferences
@@ -286,6 +294,7 @@ instance Arbitrary Section where
         , SectionName <$> arbitrary
         , SectionStatusMessage <$> arbitrary
         , SectionStatus <$> arbitrary
+        , SectionGroups <$> arbitrary
         , SectionTcpRelays <$> arbitrary
         , SectionPathNodes <$> arbitrary
         , SectionConferences <$> arbitrary
@@ -313,10 +322,12 @@ instance Binary NospamKeys where
         put secretKey
 
 instance Arbitrary NospamKeys where
-    arbitrary = NospamKeys
-        <$> arbitrary
-        <*> arbitrary
-        <*> arbitrary
+    arbitrary = do
+        KeyPair sk pk <- KeyPair.fromSecretKey <$> arbitrary
+        NospamKeys
+            <$> arbitrary
+            <*> pure pk
+            <*> pure sk
     shrink = genericShrink
 
 newtype Friends = Friends [Friend]
@@ -331,17 +342,5 @@ instance Binary Friends where
 instance Arbitrary Friends where
     arbitrary = Friends <$> arbitrary
     shrink = genericShrink
-
-newtype Bytes = Bytes LBS.ByteString
-    deriving (Eq, Show, Read, Generic)
-
-instance MessagePack Bytes
-
-instance Binary Bytes where
-    get = Bytes <$> Get.getRemainingLazyByteString
-    put (Bytes bs) = Put.putLazyByteString bs
-
-instance Arbitrary Bytes where
-    arbitrary = Bytes . LBS.pack <$> arbitrary
 
 \end{code}
