@@ -3,6 +3,7 @@ load("@rules_haskell//haskell:defs.bzl", "haskell_binary")
 haskell_binary(
     name = "webservice",
     srcs = glob(["**/*.hs"]),
+    tags = ["no-cross"],
     visibility = ["//visibility:public"],
     deps = [
         "//hs-msgpack-binary",

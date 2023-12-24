@@ -3,6 +3,7 @@ load("@rules_haskell//haskell:defs.bzl", "haskell_binary", "haskell_test")
 haskell_binary(
     name = "toxsave-convert",
     srcs = ["toxsave-convert.hs"],
+    tags = ["no-cross"],
     visibility = ["//tools/haskell:__pkg__"],
     deps = [
         "//hs-toxcore",
@@ -17,6 +18,7 @@ haskell_test(
     name = "toxsave-test",
     srcs = ["toxsave-test.hs"],
     ghcopts = ["-optl=-fsanitize=address"],
+    tags = ["no-cross"],
     visibility = ["//tools/haskell:__pkg__"],
     deps = [
         "//c-toxcore",

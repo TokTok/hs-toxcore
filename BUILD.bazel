@@ -9,6 +9,7 @@ haskell_library(
     srcs = glob(["src/**/*.*hs"]),
     ghcopts = ["-j4"],
     src_strip_prefix = "src",
+    tags = ["no-cross"],
     version = "0.2.12",
     visibility = ["//visibility:public"],
     deps = [

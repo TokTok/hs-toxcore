@@ -15,4 +15,4 @@ parse str = maybe
 
 
 main :: IO ()
-main = parse <$> LBS.getContents >>= LBS.putStr
+main = LBS.getContents >>= LBS.putStr . parse
