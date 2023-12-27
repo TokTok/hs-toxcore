@@ -14,4 +14,4 @@ export PKG_CONFIG_PATH="$NDK_ADDON_PREFIX/lib/pkgconfig"
 
 (cd network-3.1.1.1 && patch -p1 <../android/patches/hs-network-ffi.patch)
 
-"$NDK_TARGET-cabal" new-install -j4 --with-happy="$GHC_HOST/bin/happy" --ghc-option="-fPIC"
+"$NDK_TARGET-cabal" new-install -j4 --with-happy="$GHC_HOST/bin/happy" --ghc-option="-fPIC" -f-webservice
