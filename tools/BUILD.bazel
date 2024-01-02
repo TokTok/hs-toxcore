@@ -16,6 +16,7 @@ haskell_binary(
 
 haskell_test(
     name = "toxsave-test",
+    size = "small",
     srcs = ["toxsave-test.hs"],
     ghcopts = ["-optl=-fsanitize=address"],
     tags = ["no-cross"],
