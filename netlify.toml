@@ -1,11 +1,9 @@
 [build]
 command = """\
+  gem install --no-document jekyll:4.2.2 guard-livereload && \
   git clone --depth=1 https://github.com/TokTok/website && \
   mkdir website/hs-toxcore && \
   mv .git res src test website/hs-toxcore && \
-  cd website && \
-  make spec && \
-  gem install --no-document jekyll:4.2.2 guard-livereload && \
-  make toktok-site \
+  cd website && make spec && make toktok-site \
   """
 publish = "website/toktok-site"
