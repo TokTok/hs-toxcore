@@ -105,7 +105,7 @@ Binary formats are specified in tables with length, type, and content
 descriptions.  If applicable, specific enumeration types are used, so types may
 be self-explanatory in some cases.  The length can be either a fixed number in
 bytes (e.g. \texttt{32}), a number in bits (e.g. \texttt{7} bit), a choice of
-lengths (e.g. \texttt{4 $|$ 16}), or an inclusive range (e.g. \texttt{[0,
+lengths (e.g. \texttt{4 / 16}), or an inclusive range (e.g. \texttt{[0,
 100]}). Open ranges are denoted \texttt{[n,]} to mean a minimum length of
 \texttt{n} with no specified maximum length.
 
@@ -2902,8 +2902,8 @@ The \texttt{IP\_Port} is an ip and port in packed format:
   Length             & Contents \\
   \hline
   \texttt{1}         & \texttt{TOX\_AF\_INET} (2) for IPv4 or \texttt{TOX\_AF\_INET6} (10) for IPv6 \\
-  \texttt{4 $|$ 16}  & IP address (4 bytes if IPv4, 16 if IPv6) \\
-  \texttt{12 $|$ 0}  & Zeroes \\
+  \texttt{4 / 16}    & IP address (4 bytes if IPv4, 16 if IPv6) \\
+  \texttt{12 / 0}    & Zeroes \\
   \texttt{2}         & \texttt{uint16\_t} Port \\
 \end{tabular}
 
