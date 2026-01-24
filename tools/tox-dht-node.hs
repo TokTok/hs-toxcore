@@ -60,7 +60,7 @@ import           Tox.Crypto.Core.MonadRandomBytes   (MonadRandomBytes (..))
 import           Tox.DHT.DhtPacket                  (DhtPacket (..))
 import qualified Tox.DHT.DhtState                   as DhtState
 import           Tox.DHT.DhtState                   (DhtState)
-import           Tox.DHT.Operation                  (DhtNodeMonad, initDht)
+import           Tox.DHT.Operation                  (DhtNodeMonad (..), initDht)
 import           Tox.Network.Core.HostAddress       (HostAddress (..))
 
 import           Tox.Network.Core.Networked         (Networked (..))
@@ -132,7 +132,10 @@ instance (MonadIO m, MonadRandomBytes m) => MonadState DhtState (DhtApp m) where
 instance MonadIO m => Timed (DhtApp m) where
     askTime = liftIO getTime
 
-instance (MonadIO m, MonadRandomBytes m) => DhtNodeMonad (DhtApp m)
+instance (MonadIO m, MonadRandomBytes m) => DhtNodeMonad (DhtApp m) where
+    getDhtState = get
+    putDhtState = put
+    handleDhtRequestPayload _ _ = return ()
 
 instance (Monad m) => Networked (DhtApp m) where
     sendPacket _ _ = return ()
