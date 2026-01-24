@@ -3,10 +3,8 @@ module Tox.Onion.RPCSpec (spec) where
 
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
-import           Test.QuickCheck
 
 import           Data.Binary           (decode, encode)
-import qualified Data.ByteString.Lazy  as LBS
 
 import           Tox.Onion.RPC
 

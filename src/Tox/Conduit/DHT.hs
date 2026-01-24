@@ -9,9 +9,9 @@ module Tox.Conduit.DHT where
 
 import           Control.Monad                    (forever)
 import           Control.Monad.IO.Class           (MonadIO)
+import           Control.Monad.Logger             (MonadLogger (..))
 import           Control.Monad.State              (MonadState (..))
 import           Control.Monad.Trans              (MonadTrans, lift)
-import           Data.Binary                      (Binary)
 import qualified Data.ByteString                  as BS
 import           Data.Conduit                     (ConduitT, await, yield)
 
@@ -22,7 +22,7 @@ import           Tox.DHT.DhtState                 (DhtState)
 import           Tox.DHT.Node                     (handleBootstrap,
                                                    handleIncomingPacket,
                                                    handleMaintenance)
-import           Tox.DHT.Operation                (DhtNodeMonad)
+import           Tox.DHT.Operation                (DhtNodeMonad (..))
 import qualified Tox.Network.Core.Encoding        as Encoding
 import           Tox.Network.Core.Networked       (Networked (..))
 import           Tox.Network.Core.NodeInfo        (NodeInfo)
@@ -43,16 +43,21 @@ instance MonadRandomBytes m => MonadRandomBytes (DhtConduit i o m) where
 instance Keyed m => Keyed (DhtConduit i o m) where
     getCombinedKey sk pk = lift $ getCombinedKey sk pk
 
+instance MonadLogger m => MonadLogger (DhtConduit i o m) where
+    monadLoggerLog a b c d = DhtConduit $ monadLoggerLog a b c d
+
 -- | The 'Networked' instance for 'DhtConduit' yields outgoing packets.
 instance (Monad m) => Networked (DhtConduit i (NodeInfo, Packet BS.ByteString) m) where
     sendPacket to packet = DhtConduit $ yield (to, fmap Encoding.encode packet)
 
 -- | 'DhtConduit' is a 'DhtNodeMonad' if the underlying monad 'm' provides state and other effects.
-instance (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m)
-    => DhtNodeMonad (DhtConduit i (NodeInfo, Packet BS.ByteString) m)
+instance (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m, MonadLogger m)
+    => DhtNodeMonad (DhtConduit i (NodeInfo, Packet BS.ByteString) m) where
+    getDhtState = get
+    putDhtState = put
 
 -- | Conduit that handles incoming DHT packets.
-dhtPacketHandler :: forall m. (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m)
+dhtPacketHandler :: forall m. (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m, MonadLogger m)
                  => ConduitT (NodeInfo, Packet BS.ByteString) (NodeInfo, Packet BS.ByteString) m ()
 dhtPacketHandler = unDhtConduit $ forever $ do
     mInp <- DhtConduit await
@@ -61,11 +66,11 @@ dhtPacketHandler = unDhtConduit $ forever $ do
         Just (from, pkt) -> handleIncomingPacket from pkt
 
 -- | Run maintenance operations within a conduit.
-dhtMaintenanceLoop :: forall i m. (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m)
+dhtMaintenanceLoop :: forall i m. (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m, MonadLogger m)
                    => ConduitT i (NodeInfo, Packet BS.ByteString) m ()
 dhtMaintenanceLoop = unDhtConduit handleMaintenance
 
 -- | Bootstrap from a node within a conduit.
-dhtBootstrapFrom :: forall i m. (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m)
+dhtBootstrapFrom :: forall i m. (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m, MonadLogger m)
                  => NodeInfo -> ConduitT i (NodeInfo, Packet BS.ByteString) m ()
 dhtBootstrapFrom node = unDhtConduit $ handleBootstrap node

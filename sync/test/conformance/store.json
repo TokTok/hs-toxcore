@@ -1,0 +1,262 @@
+{
+  "defaults": { "author": "%alice", "graph": "$account", "time": 0 },
+  "graphs": {
+    "account": { "account": "%alice" },
+    "bob": { "account": "%bob" },
+    "chat": { "friend": ["%alice", "%bob"] }
+  },
+  "keys": {
+    "alice": "0101010101010101010101010101010101010101010101010101010101010101",
+    "bob": "0202020202020202020202020202020202020202020202020202020202020202",
+    "device": "0303030303030303030303030303030303030303030303030303030303030303"
+  },
+  "stores": [
+    {
+      "display": ["$chat"],
+      "display_order": [
+        ["@first", "@slow", "@fast", "@twin", "@after slow", "@after fast"]
+      ],
+      "events": [
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c42001010101010101010101010101010101010101010101010101010101010101019000649204a56669727374",
+          "content": { "notice": { "text": "first" } },
+          "graph": "$chat",
+          "label": "first",
+          "time": 100
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420030303030303030303030303030303030303030303030303030303030303030391c42021ce1a9ec1920979196fec855e8c21a4216269d242fc53e1e9e9fb8b70c8f0e901cd01f49204aa6661737420636c6f636b",
+          "content": { "notice": { "text": "fast clock" } },
+          "graph": "$chat",
+          "label": "fast",
+          "parents": ["@first"],
+          "time": 500
+        },
+        {
+          "author": "%bob",
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420020202020202020202020202020202020202020202020202020202020202020291c42021ce1a9ec1920979196fec855e8c21a4216269d242fc53e1e9e9fb8b70c8f0e901329204aa736c6f7720636c6f636b",
+          "content": { "notice": { "text": "slow clock" } },
+          "graph": "$chat",
+          "label": "slow",
+          "parents": ["@first"],
+          "time": 50
+        },
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420010101010101010101010101010101010101010101010101010101010101010191c4207bc26edac5a20609f7a94218399a64ff74046c69a5f3e081fa6605228df719eb02ccc89204b26166746572207468652066617374206f6e65",
+          "content": { "notice": { "text": "after the fast one" } },
+          "graph": "$chat",
+          "label": "after fast",
+          "parents": ["@fast"],
+          "time": 200
+        },
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420010101010101010101010101010101010101010101010101010101010101010191c4205a361c23fe87a05ca815ad00660ddd22079dafae94cfd1c442903371b7056dd202cd012c9204b261667465722074686520736c6f77206f6e65",
+          "content": { "notice": { "text": "after the slow one" } },
+          "graph": "$chat",
+          "label": "after slow",
+          "parents": ["@slow"],
+          "time": 300
+        },
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420010101010101010101010101010101010101010101010101010101010101010191c4205a361c23fe87a05ca815ad00660ddd22079dafae94cfd1c442903371b7056dd202cd012c9204b273616d652072616e6b20616e642074696d65",
+          "content": { "notice": { "text": "same rank and time" } },
+          "graph": "$chat",
+          "label": "twin",
+          "parents": ["@slow"],
+          "time": 300
+        }
+      ],
+      "graphs": [
+        {
+          "count": 6,
+          "frontier": [],
+          "graph": "$chat",
+          "heads": ["@after fast", "@twin", "@after slow"]
+        }
+      ],
+      "inserts": ["after slow", "twin", "first", "fast", "slow", "after fast"],
+      "name": "display order: by rank, then effective time, then ID",
+      "results": [true, true, true, true, true, true]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a0",
+          "content": { "notice": { "text": "" } },
+          "label": "first"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb05009204a8746f6f2068696768",
+          "content": { "notice": { "text": "too high" } },
+          "label": "too high",
+          "parents": ["@first"],
+          "rank": 5
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb00009204a7746f6f206c6f77",
+          "content": { "notice": { "text": "too low" } },
+          "label": "too low",
+          "parents": ["@first"],
+          "rank": 0
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb01009204a46e657874",
+          "content": { "notice": { "text": "next" } },
+          "label": "next",
+          "parents": ["@first"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010192c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71cebc420090909090909090909090909090909090909090909090909090909090909090907009204b26166746572206f6e65206e6f742068657265",
+          "content": { "notice": { "text": "after one not here" } },
+          "label": "after one not here",
+          "parents": [
+            "@first",
+            "0909090909090909090909090909090909090909090909090909090909090909"
+          ],
+          "rank": 7
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010192c420670f9aa1b289bd4abe072fca6dfa7ca065d09b6bba64dd5679a7ccb2136f1aa4c420090909090909090909090909090909090909090909090909090909090909090901009204b66e6f742061626f7665206f6e65206e6f742068657265",
+          "content": { "notice": { "text": "not above one not here" } },
+          "label": "not above",
+          "parents": [
+            "@next",
+            "0909090909090909090909090909090909090909090909090909090909090909"
+          ],
+          "rank": 1
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010190cf0020000000000000009204b277696e6e696e672065766572797468696e67",
+          "content": { "notice": { "text": "winning everything" } },
+          "label": "too far",
+          "rank": 9007199254740992
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010190cf001fffffffffffff009204b6746865206d6f737420612072616e6b206d6179206265",
+          "content": { "notice": { "text": "the most a rank may be" } },
+          "label": "far",
+          "rank": 9007199254740991
+        }
+      ],
+      "graphs": [
+        {
+          "count": 4,
+          "frontier": ["@after one not here"],
+          "graph": "$account",
+          "heads": ["@after one not here", "@next", "@far"]
+        }
+      ],
+      "inserts": [
+        "first",
+        "too high",
+        "too low",
+        "next",
+        "after one not here",
+        "not above",
+        "too far",
+        "far"
+      ],
+      "name": "a rank follows its parents",
+      "results": [true, false, false, true, true, false, false, true]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a0",
+          "content": { "notice": { "text": "" } },
+          "label": "one"
+        },
+        {
+          "bytes": "920396c42074f356af1e00607fb5468894c906e227c6192da60200ef4b15c939d3b24b2664c420010101010101010101010101010101010101010101010101010101010101010191c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb01009204a0",
+          "content": { "notice": { "text": "" } },
+          "graph": "$bob",
+          "label": "two",
+          "parents": ["@one"]
+        }
+      ],
+      "graphs": [
+        { "count": 1, "frontier": [], "graph": "$account", "heads": ["@one"] },
+        { "count": 1, "frontier": [], "graph": "$bob", "heads": ["@two"] }
+      ],
+      "inserts": ["two", "one"],
+      "name": "a parent in another graph leaves heads as they are",
+      "results": [true, true]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a0",
+          "content": { "notice": { "text": "" } },
+          "label": "root"
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb01009204a161",
+          "content": { "notice": { "text": "a" } },
+          "label": "a",
+          "parents": ["@root"]
+        },
+        {
+          "author": "%bob",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420020202020202020202020202020202020202020202020202020202020202020291c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb01009204a162",
+          "content": { "notice": { "text": "b" } },
+          "label": "b",
+          "parents": ["@root"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010192c4206ca9b9a3a8f1c3cc989eda87807867f3726559a1078a51bd0a4424321a61f1b8c4201f78d157f4dc83cc5eba49e41796bdaadf68afe32cacdee4a1a8cbe08adcb1b202009204a4626f7468",
+          "content": { "notice": { "text": "both" } },
+          "label": "both",
+          "parents": ["@a", "@b"]
+        }
+      ],
+      "graphs": [
+        { "count": 4, "frontier": [], "graph": "$account", "heads": ["@both"] }
+      ],
+      "inserts": ["root", "a", "b", "both", "a"],
+      "name": "heads merge once written after",
+      "results": [true, true, true, true, true]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c42001010101010101010101010101010101010101010101010101010101010101019000009204a56561726c79",
+          "content": { "notice": { "text": "early" } },
+          "graph": "$chat",
+          "label": "early",
+          "rank": 0
+        },
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420010101010101010101010101010101010101010101010101010101010101010191c420c8711305d616486fb551cdff4df6bb248eda47ce244a3136f61463266c585ce503009204a46c617465",
+          "content": { "notice": { "text": "late" } },
+          "graph": "$chat",
+          "label": "late",
+          "parents": ["@early"],
+          "rank": 3
+        }
+      ],
+      "graphs": [
+        {
+          "count": 1,
+          "frontier": ["@late"],
+          "graph": "$chat",
+          "heads": ["@late"]
+        }
+      ],
+      "inserts": ["late"],
+      "name": "an event before its parent is a head with a gap",
+      "results": [true]
+    },
+    {
+      "events": [
+        { "label": "garbage", "raw": "c0" },
+        { "label": "nothing", "raw": "" }
+      ],
+      "graphs": [],
+      "inserts": ["garbage", "nothing"],
+      "name": "bytes that aren't an event",
+      "results": [false, false]
+    }
+  ]
+}

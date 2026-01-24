@@ -45,16 +45,18 @@ The reason for these numbers is that the numbers on Linux for IPv4 and IPv6
 {-# LANGUAGE StrictData         #-}
 module Tox.Network.Core.NodeInfo where
 
-import           Data.Binary                   (Binary)
-import qualified Data.Binary                   as Binary (get, put)
-import           Data.MessagePack              (MessagePack)
-import           Data.Typeable                 (Typeable)
-import           GHC.Generics                  (Generic)
-import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
+import           Data.Binary                        (Binary)
+import qualified Data.Binary                        as Binary (get, put)
+import           Data.Binary.Get                    (Get)
+import qualified Data.Binary.Get                    as Get
+import           Data.MessagePack                   (MessagePack)
+import           Data.Typeable                      (Typeable)
+import           GHC.Generics                       (Generic)
+import           Test.QuickCheck.Arbitrary          (Arbitrary, arbitrary)
 
 import           Tox.Crypto.Core.Key                (PublicKey)
-import           Tox.Network.Core.SocketAddress     (SocketAddress)
 import qualified Tox.Network.Core.SocketAddress     as SocketAddress
+import           Tox.Network.Core.SocketAddress     (SocketAddress)
 import           Tox.Network.Core.TransportProtocol (TransportProtocol)
 
 
@@ -82,6 +84,12 @@ instance Binary NodeInfo where
   put ni = do
     SocketAddress.putSocketAddress (protocol ni) (address ni)
     Binary.put $ publicKey ni
+
+-- | Nodes up to the end of the input.
+getNodes :: Get [NodeInfo]
+getNodes = do
+  done <- Get.isEmpty
+  if done then return [] else (:) <$> Binary.get <*> getNodes
 
 
 {-------------------------------------------------------------------------------

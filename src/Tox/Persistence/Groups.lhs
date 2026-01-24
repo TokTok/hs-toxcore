@@ -1,35 +1,44 @@
-\subsection{Groups (0x14)}
+\subsection{Groups (0x07)}
 
-This section contains a list of saved conferences.
+This section contains a list of saved NGC groups, as a MessagePack array with
+one 7-element array per group.
 
 \begin{code}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE StrictData                 #-}
 module Tox.Persistence.Groups where
 
-import           Control.Monad.Validate     (refute)
-import qualified Crypto.Saltine.Class       as Sodium (decode, encode)
-import           Data.Binary                (Binary (..))
-import qualified Data.ByteString            as BS
-import           Data.MessagePack           (MessagePack (..), defaultConfig,
-                                             toObject)
-import           Data.MessagePack.Arbitrary ()
-import           Data.MessagePack.Types     (fromObject)
-import           Data.Word                  (Word16, Word32, Word8)
-import           GHC.Generics               (Generic)
-import           Test.QuickCheck.Arbitrary  (Arbitrary (..), genericShrink)
-import qualified Test.QuickCheck.Arbitrary  as Arbitrary
-import           Tox.Crypto.Core.Key             (PublicKey, Signature)
+import           Control.Monad.Validate             (refute)
+import qualified Crypto.Saltine.Class               as Sodium (decode, encode)
+import           Data.Binary                        (Binary (..))
+import qualified Data.Binary.Get                    as Get
+import qualified Data.Binary.Put                    as Put
+import qualified Data.ByteString                    as BS
+import qualified Data.ByteString.Lazy               as LBS
+import qualified Data.Map                           as Map
+import           Data.Maybe                         (isJust, isNothing,
+                                                     listToMaybe)
+import           Data.MessagePack                   (MessagePack (..),
+                                                     defaultConfig, toObject)
+import           Data.MessagePack.Arbitrary         ()
+import           Data.MessagePack.Types             (Object (..), fromObject)
+import           Data.Word                          (Word16, Word32, Word8)
+import           GHC.Generics                       (Generic)
+import qualified Test.QuickCheck.Arbitrary          as Arbitrary
+import           Test.QuickCheck.Arbitrary          (Arbitrary (..),
+                                                     genericShrink)
+import qualified Test.QuickCheck.Gen                as Gen
+import           Tox.Crypto.Core.Key                (PublicKey, Signature)
+import qualified Tox.Network.Core.NodeInfo          as NodeInfo
+import           Tox.Network.Core.NodeInfo          (NodeInfo)
+import qualified Tox.Network.Core.SocketAddress     as SocketAddress
+import           Tox.Network.Core.SocketAddress     (SocketAddress)
+import           Tox.Network.Core.TransportProtocol (TransportProtocol (..))
 
 \end{code}
-
-\begin{tabular}{l|l}
-  Length        & Contents \\
-  \hline
-  \texttt{?}    & List of conferences \\
-\end{tabular}
 
 \begin{code}
 
@@ -47,24 +56,9 @@ instance Binary Groups where
 
 \end{code}
 
-Group:
-
-\begin{tabular}{l|l}
-  Length        & Contents \\
-  \hline
-  \texttt{1}    & \texttt{uint8\_t} Groupchat type \\
-  \texttt{32}   & Groupchat id \\
-  \texttt{4}    & \texttt{uint32\_t} Message number \\
-  \texttt{2}    & \texttt{uint16\_t} Lossy message number \\
-  \texttt{2}    & \texttt{uint16\_t} Peer number \\
-  \texttt{4}    & \texttt{uint32\_t} Number of peers \\
-  \texttt{1}    & \texttt{uint8\_t} Title length \\
-  \texttt{?}    & Title \\
-  \texttt{?}    & List of peers \\
-\end{tabular}
-
-All peers other than the saver are saved, including frozen peers. On reload,
-they all start as frozen.
+Extended keys are an encryption key followed by a signing key: 64 bytes for
+public keys and 96 for secret keys. A chat secret key is all zeros for anyone
+but the founder.
 
 \begin{code}
 
@@ -75,7 +69,7 @@ data Group = Group
     , groupModList     :: ModList
     , groupKeys        :: Keys
     , groupSelfInfo    :: SelfInfo
-    , groupSavedPeers  :: (Int, BS.ByteString)
+    , groupSavedPeers  :: SavedPeers
     } deriving (Eq, Show, Read, Generic)
 
 instance MessagePack Group
@@ -88,18 +82,18 @@ instance Arbitrary Group where
         <*> arbitrary
         <*> arbitrary
         <*> arbitrary
-        <*> pure (0, BS.empty)
+        <*> arbitrary
     shrink = genericShrink
 
 data StateValues = StateValues
-    { connectionState :: Bool
-    , groupNameLen    :: Word16
-    , privacyState    :: Word8
-    , maxPeers        :: Word16
-    , passwordLength  :: Word16
-    , version         :: Word32
-    , topicLock       :: Word32
-    , voiceState      :: Word8
+    { manuallyDisconnected :: Bool
+    , groupNameLen         :: Word16
+    , privacyState         :: Word8
+    , maxPeers             :: Word16
+    , passwordLength       :: Word16
+    , version              :: Word32
+    , topicLock            :: Word32
+    , voiceState           :: Word8
     } deriving (Eq, Show, Read, Generic)
 
 instance MessagePack StateValues
@@ -138,7 +132,7 @@ instance Arbitrary StateBin where
 data TopicInfo = TopicInfo
     { topicVersion   :: Word32
     , topicLength    :: Word16
-    , topicChecksum  :: Word8
+    , topicChecksum  :: Word16
     , topic          :: BS.ByteString
     , topicPublicKey :: PublicKey
     , topicSignature :: Signature
@@ -156,30 +150,48 @@ instance Arbitrary TopicInfo where
         <*> arbitrary
     shrink = genericShrink
 
+\end{code}
+
+The moderators' signing keys, as a count and their concatenation, which is nil
+when there are none.
+
+\begin{code}
+
 newtype ModList = ModList
     { modList :: [PublicKey]
     } deriving (Eq, Show, Read, Generic)
 
 instance MessagePack ModList where
     toObject cfg (ModList mods) =
-        toObject cfg (length mods, BS.concat $ map Sodium.encode mods)
+        toObject cfg (length mods, binOrNil . BS.concat $ map Sodium.encode mods)
 
     fromObjectWith cfg obj = do
         (len, catMods) <- fromObjectWith cfg obj
-        case splitMods len catMods of
+        case splitMods len (fromBinOrNil catMods) of
             Just mods -> return $ ModList mods
             Nothing   -> refute "mod list decoding failed"
       where
-        splitMods :: Word8 -> BS.ByteString -> Maybe [PublicKey]
+        splitMods :: Word16 -> Maybe BS.ByteString -> Maybe [PublicKey]
         splitMods 0 _ = Just []
         splitMods len catMods = do
-            let (modKey, rest) = BS.splitAt 32 catMods
-            (:) <$> Sodium.decode modKey <*> splitMods (len - 1) rest
+            (modKey, rest) <- BS.splitAt 32 <$> catMods
+            (:) <$> Sodium.decode modKey <*> splitMods (len - 1) (Just rest)
 
 instance Arbitrary ModList where
     arbitrary = ModList
         <$> arbitrary
     shrink = genericShrink
+
+binOrNil :: BS.ByteString -> Object
+binOrNil bs
+    | BS.null bs = ObjectNil
+    | otherwise  = ObjectBin bs
+
+fromBinOrNil :: Object -> Maybe BS.ByteString
+fromBinOrNil = \case
+    ObjectNil    -> Just BS.empty
+    ObjectBin bs -> Just bs
+    _            -> Nothing
 
 data Keys = Keys
     { chatPublicKey :: Signature
@@ -210,28 +222,96 @@ instance MessagePack SelfInfo
 instance Arbitrary SelfInfo where
     arbitrary = do
         nick <- BS.pack <$> (Arbitrary.vector =<< arbitrary)
-        SelfInfo
-            <$> (pure . fromIntegral . BS.length $ nick)
-            <*> arbitrary
+        SelfInfo (fromIntegral $ BS.length nick)
+            <$> arbitrary
             <*> arbitrary
             <*> pure nick
     shrink = genericShrink
 
 \end{code}
 
-Peer:
-
-\begin{tabular}{l|l}
-  Length        & Contents \\
-  \hline
-  \texttt{32}   & Long term public key \\
-  \texttt{32}   & DHT public key \\
-  \texttt{2}    & \texttt{uint16\_t} Peer number \\
-  \texttt{8}    & \texttt{uint64\_t} Last active timestamp \\
-  \texttt{1}    & \texttt{uint8\_t} Name length \\
-  \texttt{?}    & Name \\
-\end{tabular}
+Saved peers are the peers to reconnect to after loading, as their packed size
+and the packed peers, which are nil when there are none. Each peer is its
+address, a TCP relay in packed node format, and its encryption key. Either the
+address or the relay can be left out.
 
 \begin{code}
+
+data SavedPeer = SavedPeer
+    { savedAddress   :: Maybe SocketAddress
+    , savedRelay     :: Maybe NodeInfo
+    , savedPublicKey :: PublicKey
+    } deriving (Eq, Show, Read, Generic)
+
+newtype SavedPeers = SavedPeers
+    { savedPeers :: [SavedPeer]
+    } deriving (Eq, Show, Read, Generic)
+
+instance MessagePack SavedPeers where
+    toObject cfg (SavedPeers peers) =
+        let packed = LBS.toStrict . Put.runPut $ mapM_ putSavedPeer peers in
+        toObject cfg (BS.length packed, binOrNil packed)
+
+    fromObjectWith cfg obj = do
+        (len, packed) <- fromObjectWith cfg obj
+        case fromBinOrNil packed of
+            Just bs | BS.length bs == fromIntegral (len :: Word16) -> SavedPeers <$> getSavedPeers bs
+            _ -> refute "saved peers decoding failed"
+      where
+        getSavedPeers = maybe (refute "saved peers decoding failed") return . parseSavedPeers
+
+putSavedPeer :: SavedPeer -> Put.Put
+putSavedPeer (SavedPeer addr relay pk) = do
+    mapM_ (SocketAddress.putSocketAddress UDP) addr
+    mapM_ put relay
+    put pk
+
+\end{code}
+
+Nothing marks which parts a peer has, so we read them as toxcore does: an
+address if there is one, then a relay if there is one, then the key. A key
+that starts with a TCP address family reads as a relay, which toxcore gets
+wrong too.
+
+\begin{code}
+
+parseSavedPeers :: BS.ByteString -> Maybe [SavedPeer]
+parseSavedPeers bs = from 0
+  where
+    end = BS.length bs
+    from i = readings Map.! i
+    readings = Map.fromList [ (i, firstReading i) | i <- [0 .. end] ]
+    firstReading i
+      | i == end = Just []
+      | otherwise = listToMaybe
+          [ SavedPeer addr relay pk : rest
+          | (addr, afterAddr) <- optionalPart getAddress i
+          , (relay, afterRelay) <- optionalPart getRelay afterAddr
+          , isJust addr || isJust relay
+          , Just (pk, next) <- [run get afterRelay]
+          , Just rest <- [from next]
+          ]
+    getAddress = do
+        (protocol, addr) <- SocketAddress.getSocketAddress
+        if protocol == UDP then return addr else fail "not a UDP address"
+    getRelay = do
+        relay <- get
+        if NodeInfo.protocol relay == TCP then return relay else fail "not a TCP relay"
+    optionalPart g i = [ (Just x, next) | Just (x, next) <- [run g i] ] ++ [(Nothing, i)]
+    run :: Get.Get a -> Int -> Maybe (a, Int)
+    run g i = case Get.runGetOrFail g (LBS.fromStrict $ BS.drop i bs) of
+        Right (_, used, x) -> Just (x, i + fromIntegral used)
+        Left _             -> Nothing
+
+instance Arbitrary SavedPeers where
+    arbitrary = SavedPeers <$> Gen.listOf (do
+        let tcpRelay = (\ni -> ni { NodeInfo.protocol = TCP }) <$> arbitrary
+        (addr, relay) <- Gen.oneof
+            [ (,) . Just <$> arbitrary <*> Gen.oneof [pure Nothing, Just <$> tcpRelay]
+            , (,) Nothing . Just <$> tcpRelay
+            ]
+        let readsAsRelay pk = isNothing relay && BS.head (Sodium.encode pk) `elem` [130, 138]
+        SavedPeer addr relay <$> arbitrary `Gen.suchThat` (not . readsAsRelay))
+    shrink (SavedPeers peers) = SavedPeers <$> Arbitrary.shrinkList (const []) peers
 
 \end{code}

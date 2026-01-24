@@ -27,6 +27,7 @@ protocol never actually sends empty messages, so in reality the minimum size is
 {-# LANGUAGE StrictData         #-}
 module Tox.DHT.DhtPacket where
 
+import qualified Crypto.Saltine.Class      as Sodium
 import           Data.Binary               (Binary, get, put)
 import           Data.Binary.Get           (getRemainingLazyByteString)
 import           Data.Binary.Put           (putByteString, runPut)
@@ -35,13 +36,13 @@ import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
-import           Tox.Crypto.Core.Box            (CipherText, PlainText (..),
+import qualified Tox.Crypto.Core.Box       as Box
+import           Tox.Crypto.Core.Box       (CipherText, PlainText (..),
                                             unCipherText)
-import qualified Tox.Crypto.Core.Box            as Box
-import           Tox.Crypto.Core.Key            (Nonce, PublicKey)
-import           Tox.Crypto.Core.Keyed          (Keyed)
-import qualified Tox.Crypto.Core.Keyed          as Keyed
-import           Tox.Crypto.Core.KeyPair        (KeyPair (..))
+import           Tox.Crypto.Core.Key       (Nonce, PublicKey, unKey)
+import qualified Tox.Crypto.Core.Keyed     as Keyed
+import           Tox.Crypto.Core.Keyed     (Keyed)
+import           Tox.Crypto.Core.KeyPair   (KeyPair (..))
 
 
 
@@ -64,12 +65,12 @@ instance MessagePack DhtPacket
 
 instance Binary DhtPacket where
   put packet = do
-    put $ senderPublicKey packet
-    put $ encryptionNonce packet
+    putByteString . Sodium.encode . unKey . senderPublicKey $ packet
+    putByteString . Sodium.encode . unKey . encryptionNonce $ packet
     putByteString . unCipherText . encryptedPayload $ packet
 
   get =
-    DhtPacket <$> get <*> get <*> (LazyByteString.toStrict <$> getRemainingLazyByteString >>= Box.cipherText)
+    DhtPacket <$> get <*> get <*> (getRemainingLazyByteString >>= Box.cipherText . LazyByteString.toStrict)
 
 
 encrypt :: KeyPair -> PublicKey -> Nonce -> PlainText -> DhtPacket

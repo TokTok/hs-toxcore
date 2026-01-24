@@ -1,0 +1,716 @@
+{
+  "answers": [
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a3426f62",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "Bob" }
+            }
+          },
+          "label": "account"
+        },
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "graph": "$chat",
+          "label": "chat"
+        }
+      ],
+      "message": {
+        "summary": [
+          [
+            "$account",
+            "0000000000000000000000000000000000000000000000000000000000000000"
+          ],
+          [
+            "$other",
+            "0000000000000000000000000000000000000000000000000000000000000000"
+          ]
+        ]
+      },
+      "name": "a summary is answered with the heads that differ",
+      "replies": [
+        { "heads": { "graph": "$account", "heads": ["@account"] } },
+        { "heads": { "graph": "$chat", "heads": ["@chat"] } }
+      ],
+      "store": ["account", "chat"]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "label": "root"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420f490523c3b13c56917dd6ef2f5cc7a0e178f15495cc64ef4b98825726976842b01009204a5616761696e",
+          "content": { "notice": { "text": "again" } },
+          "label": "next",
+          "parents": ["@root"]
+        }
+      ],
+      "message": "summary",
+      "name": "the same heads need no answer",
+      "replies": [],
+      "store": ["root", "next"]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "label": "held"
+        }
+      ],
+      "message": {
+        "heads": {
+          "graph": "$account",
+          "heads": [
+            "@held",
+            "0909090909090909090909090909090909090909090909090909090909090909"
+          ]
+        }
+      },
+      "name": "heads are answered with a want of those not held",
+      "replies": [
+        {
+          "want": [
+            "0909090909090909090909090909090909090909090909090909090909090909"
+          ]
+        }
+      ],
+      "store": ["held"]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a161",
+          "content": { "notice": { "text": "a" } },
+          "label": "a"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420155296716e8220d3740fe064068c95541da6121024585f19a799c2817883056601009204a162",
+          "content": { "notice": { "text": "b" } },
+          "label": "b",
+          "parents": ["@a"]
+        }
+      ],
+      "message": {
+        "want": [
+          "@b",
+          "0909090909090909090909090909090909090909090909090909090909090909",
+          "@a"
+        ]
+      },
+      "name": "a want is answered with the events held, as asked",
+      "replies": [{ "events": ["#b", "#a"] }],
+      "store": ["a", "b"]
+    },
+    {
+      "events": [{ "chain": "c", "count": 70 }],
+      "message": {
+        "want": [
+          "@c0",
+          "@c1",
+          "@c2",
+          "@c3",
+          "@c4",
+          "@c5",
+          "@c6",
+          "@c7",
+          "@c8",
+          "@c9",
+          "@c10",
+          "@c11",
+          "@c12",
+          "@c13",
+          "@c14",
+          "@c15",
+          "@c16",
+          "@c17",
+          "@c18",
+          "@c19",
+          "@c20",
+          "@c21",
+          "@c22",
+          "@c23",
+          "@c24",
+          "@c25",
+          "@c26",
+          "@c27",
+          "@c28",
+          "@c29",
+          "@c30",
+          "@c31",
+          "@c32",
+          "@c33",
+          "@c34",
+          "@c35",
+          "@c36",
+          "@c37",
+          "@c38",
+          "@c39",
+          "@c40",
+          "@c41",
+          "@c42",
+          "@c43",
+          "@c44",
+          "@c45",
+          "@c46",
+          "@c47",
+          "@c48",
+          "@c49",
+          "@c50",
+          "@c51",
+          "@c52",
+          "@c53",
+          "@c54",
+          "@c55",
+          "@c56",
+          "@c57",
+          "@c58",
+          "@c59",
+          "@c60",
+          "@c61",
+          "@c62",
+          "@c63",
+          "@c64",
+          "@c65"
+        ]
+      },
+      "name": "a want is answered for its first 64",
+      "replies": [
+        {
+          "events": [
+            "#c0",
+            "#c1",
+            "#c2",
+            "#c3",
+            "#c4",
+            "#c5",
+            "#c6",
+            "#c7",
+            "#c8",
+            "#c9",
+            "#c10",
+            "#c11",
+            "#c12",
+            "#c13",
+            "#c14",
+            "#c15",
+            "#c16",
+            "#c17",
+            "#c18",
+            "#c19",
+            "#c20",
+            "#c21",
+            "#c22",
+            "#c23",
+            "#c24",
+            "#c25",
+            "#c26",
+            "#c27",
+            "#c28",
+            "#c29",
+            "#c30",
+            "#c31",
+            "#c32",
+            "#c33",
+            "#c34",
+            "#c35",
+            "#c36",
+            "#c37",
+            "#c38",
+            "#c39",
+            "#c40",
+            "#c41",
+            "#c42",
+            "#c43",
+            "#c44",
+            "#c45",
+            "#c46",
+            "#c47",
+            "#c48",
+            "#c49",
+            "#c50",
+            "#c51",
+            "#c52",
+            "#c53",
+            "#c54",
+            "#c55",
+            "#c56",
+            "#c57",
+            "#c58",
+            "#c59",
+            "#c60",
+            "#c61",
+            "#c62",
+            "#c63"
+          ]
+        }
+      ],
+      "store": ["c"]
+    },
+    {
+      "events": [
+        { "chain": "c", "count": 5, "graph": "$chat" },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4206f435658a1cd02e673bf7fb201588a480fd131e666b8009e61822de7b8b95cf403009204a9656c73657768657265",
+          "content": { "notice": { "text": "elsewhere" } },
+          "label": "elsewhere",
+          "parents": ["@c2"],
+          "rank": 3
+        }
+      ],
+      "message": {
+        "history": { "before": ["@c4"], "graph": "$chat", "limit": 2 }
+      },
+      "name": "history goes back newest first",
+      "replies": [{ "events": ["#c3", "#c2"] }],
+      "role": "home",
+      "store": ["c", "elsewhere"]
+    },
+    {
+      "events": [
+        { "chain": "c", "count": 3, "graph": "$chat" },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4206f435658a1cd02e673bf7fb201588a480fd131e666b8009e61822de7b8b95cf403009204a9656c73657768657265",
+          "content": { "notice": { "text": "elsewhere" } },
+          "label": "elsewhere",
+          "parents": ["@c2"]
+        }
+      ],
+      "message": {
+        "history": { "before": ["@elsewhere"], "graph": "$chat", "limit": 10 }
+      },
+      "name": "history holds only the graph asked for",
+      "replies": [{ "events": ["#c2", "#c1", "#c0"] }],
+      "role": "home",
+      "store": ["c", "elsewhere"]
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "label": "held"
+        }
+      ],
+      "message": { "hello": { "features": 1, "version": 1 } },
+      "name": "a hello needs nothing from the store",
+      "replies": [],
+      "store": ["held"]
+    }
+  ],
+  "defaults": { "author": "%alice", "graph": "$account", "time": 0 },
+  "graphs": {
+    "account": { "account": "%alice" },
+    "chat": { "friend": ["%alice", "%bob"] },
+    "other": { "friend": ["%alice", "%device"] }
+  },
+  "keys": {
+    "alice": "0101010101010101010101010101010101010101010101010101010101010101",
+    "bob": "0202020202020202020202020202020202020202020202020202020202020202",
+    "device": "0303030303030303030303030303030303030303030303030303030303030303",
+    "other": "0404040404040404040404040404040404040404040404040404040404040404"
+  },
+  "replicas": [
+    {
+      "device": "%device",
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a2426f",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "Bo" }
+            }
+          },
+          "label": "bo"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42033ef39618f2d4189217899aa255b176b58ea984ce1816ae4fe74504e5575021f01009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a3426f62",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "Bob" }
+            }
+          },
+          "label": "bob",
+          "parents": ["@bo"]
+        },
+        { "chain": "c", "count": 100, "graph": "$chat" },
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420010101010101010101010101010101010101010101010101010101010101010191c420133bbf99a23981ae4bb71a630614fa78eed6b74c9c9b2706d445eb730069e1e564009204a56c61746572",
+          "content": { "notice": { "text": "later" } },
+          "graph": "$chat",
+          "label": "later",
+          "parents": ["@c99"]
+        },
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c420010101010101010101010101010101010101010101010101010101010101010191c420813b83a6e4470d79d711ea066255e4eef031844a52dea864f57a76d2ad88c05165009204a56e65776572",
+          "content": { "notice": { "text": "newer" } },
+          "graph": "$chat",
+          "label": "newer",
+          "parents": ["@later"]
+        }
+      ],
+      "home": "%alice",
+      "home_store": ["bo", "bob", "c"],
+      "name": "keeps the account whole and conversations from their latest",
+      "steps": [
+        { "receive": { "summary": [] }, "replies": [] },
+        {
+          "converse": "session",
+          "home": [
+            { "count": 100, "graph": "$chat" },
+            { "count": 2, "graph": "$account" }
+          ],
+          "replica": [
+            { "count": 2, "graph": "$account" },
+            { "count": 51, "graph": "$chat" }
+          ]
+        },
+        { "receive": { "events": ["#later"] }, "replies": [] },
+        { "offline": true },
+        {
+          "receive": { "hello": { "features": 1, "version": 1 } },
+          "replies": [
+            {
+              "summary": [
+                [
+                  "$account",
+                  "8302d48d40d82de3b1cd95d560be1172a4e4bdd3012bc4c091cc10e73485f792"
+                ],
+                [
+                  "$chat",
+                  "0c9d3045efa9856651bcbe0a84b2e41ba3583ae5ad897771ccd8940682cfa86b"
+                ]
+              ]
+            }
+          ]
+        },
+        { "receive": { "events": ["#later"] }, "replies": [] },
+        {
+          "receive": { "events": ["#newer"] },
+          "replies": [
+            {
+              "history": { "before": ["@newer"], "graph": "$chat", "limit": 50 }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "device": "%device",
+      "events": [
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "graph": "$chat",
+          "label": "hi"
+        },
+        { "after": "hi", "chain": "c", "count": 120, "graph": "$chat" }
+      ],
+      "home": "%alice",
+      "home_store": ["hi"],
+      "name": "fills the gap left while offline, however long",
+      "steps": [
+        {
+          "converse": "session",
+          "home": [{ "count": 1, "graph": "$chat" }],
+          "replica": [{ "count": 1, "graph": "$chat" }]
+        },
+        { "offline": true },
+        { "home_add": ["c"] },
+        {
+          "converse": "session",
+          "home": [{ "count": 121, "graph": "$chat" }],
+          "replica": [{ "count": 121, "graph": "$chat" }]
+        }
+      ]
+    },
+    {
+      "device": "%device",
+      "events": [
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "graph": "$chat",
+          "label": "hi"
+        },
+        { "after": "hi", "chain": "c", "count": 3, "graph": "$chat" }
+      ],
+      "home": "%alice",
+      "home_store": ["hi"],
+      "name": "catches up on a new hello without going offline",
+      "steps": [
+        {
+          "converse": "session",
+          "home": [{ "count": 1, "graph": "$chat" }],
+          "replica": [{ "count": 1, "graph": "$chat" }]
+        },
+        { "home_add": ["c"] },
+        {
+          "converse": "session",
+          "home": [{ "count": 4, "graph": "$chat" }],
+          "replica": [{ "count": 4, "graph": "$chat" }]
+        }
+      ]
+    },
+    {
+      "device": "%device",
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a4726f6f74",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "root" }
+            }
+          },
+          "label": "root"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420603878aec21ec84d5d2dc0d8f96d53631ebea7d492fe74e9f5927c709b399eea01009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a46b657074",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "kept" }
+            }
+          },
+          "label": "kept",
+          "parents": ["@root"]
+        },
+        {
+          "author": "%other",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420040404040404040404040404040404040404040404040404040404040404040491c420603878aec21ec84d5d2dc0d8f96d53631ebea7d492fe74e9f5927c709b399eea01009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a46c6f7374",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "lost" }
+            }
+          },
+          "label": "lost",
+          "parents": ["@root"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010192c420f210b33fd97b58eeccf72302e594f38cd64e57ec07e7e523c94b91335d0fddbfc4202ced344e768d2bcd64023ecce1ed9a5888614f12493a685bbc88514db2f0e48002009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a56d65726765",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "merge" }
+            }
+          },
+          "label": "merge",
+          "parents": ["@kept", "@lost"]
+        }
+      ],
+      "home": "%alice",
+      "home_store": ["root", "kept", "merge"],
+      "name": "a parent history doesn't bring is asked for",
+      "steps": [
+        {
+          "receive": { "hello": { "features": 1, "version": 1 } },
+          "replies": [{ "summary": [] }]
+        },
+        {
+          "receive": { "events": ["#root", "#kept", "#merge"] },
+          "replies": [
+            {
+              "history": {
+                "before": ["@merge"],
+                "graph": "$account",
+                "limit": 500
+              }
+            }
+          ]
+        },
+        {
+          "receive": { "events": ["#kept", "#root"] },
+          "replies": [{ "want": ["@lost"] }]
+        }
+      ]
+    },
+    {
+      "device": "%device",
+      "events": [
+        { "chain": "c", "count": 600 },
+        {
+          "author": "%other",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420040404040404040404040404040404040404040404040404040404040404040491c420d4ec1e070a4f30a5511171da2837ba92060c9a1d9ae2f744b1f4953ef5ee5b790a00924692009200a24d65",
+          "content": {
+            "fact": { "subject": "account", "value": { "name": "Me" } }
+          },
+          "label": "missed",
+          "parents": ["@c9"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010192c4200efa6e17201bad7d84507be40d278ef24eb3f595b9f11adf29b325d01716dfd0c42065b3204ee61478409b04b225b13e4dd15768c61944cf4028a859aa38e6c16833cd0258009204a66d6572676564",
+          "content": { "notice": { "text": "merged" } },
+          "label": "merged",
+          "parents": ["@c599", "@missed"]
+        }
+      ],
+      "home": "%alice",
+      "home_store": ["c"],
+      "name": "gets a parent further back than history goes",
+      "steps": [
+        {
+          "converse": "session",
+          "home": [{ "count": 600, "graph": "$account" }],
+          "replica": [{ "count": 600, "graph": "$account" }]
+        },
+        { "home_add": ["missed", "merged"] },
+        {
+          "converse": [{ "events": ["#merged"] }],
+          "home": [{ "count": 602, "graph": "$account" }],
+          "replica": [{ "count": 602, "graph": "$account" }]
+        }
+      ]
+    },
+    {
+      "device": "%device",
+      "events": [
+        {
+          "bytes": "920396c42073119215f9ead5897516ded9094c34ba48e456c34d4f3401ec89da7e852e4606c42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "graph": "$chat",
+          "label": "hi"
+        }
+      ],
+      "home": "%alice",
+      "home_store": ["hi"],
+      "name": "this device's events reach the home",
+      "steps": [
+        {
+          "author": {
+            "content": {
+              "send": {
+                "kind": "normal",
+                "message": "6265666f7265",
+                "sender": "Me"
+              }
+            },
+            "graph": "$chat",
+            "label": "before",
+            "time": 1
+          },
+          "event": {
+            "author": "%device",
+            "content": {
+              "send": {
+                "kind": "normal",
+                "message": "6265666f7265",
+                "sender": "Me"
+              }
+            },
+            "graph": "$chat",
+            "parents": [],
+            "rank": 0,
+            "time": 1
+          },
+          "push": []
+        },
+        {
+          "converse": "session",
+          "home": [{ "count": 2, "graph": "$chat" }],
+          "replica": [{ "count": 2, "graph": "$chat" }]
+        },
+        {
+          "author": {
+            "content": {
+              "send": {
+                "kind": "normal",
+                "message": "6c697665",
+                "sender": "Me"
+              }
+            },
+            "graph": "$chat",
+            "label": "live",
+            "time": 2
+          },
+          "event": {
+            "author": "%device",
+            "content": {
+              "send": {
+                "kind": "normal",
+                "message": "6c697665",
+                "sender": "Me"
+              }
+            },
+            "graph": "$chat",
+            "parents": ["@hi", "@before"],
+            "rank": 1,
+            "time": 2
+          },
+          "push": [{ "events": ["#live"] }]
+        },
+        { "offline": true },
+        {
+          "author": {
+            "content": {
+              "send": {
+                "kind": "normal",
+                "message": "6f66666c696e65",
+                "sender": "Me"
+              }
+            },
+            "graph": "$chat",
+            "label": "offline",
+            "time": 3
+          },
+          "event": {
+            "author": "%device",
+            "content": {
+              "send": {
+                "kind": "normal",
+                "message": "6f66666c696e65",
+                "sender": "Me"
+              }
+            },
+            "graph": "$chat",
+            "parents": ["@live"],
+            "rank": 2,
+            "time": 3
+          },
+          "push": []
+        },
+        {
+          "converse": "session",
+          "home": [{ "count": 4, "graph": "$chat" }],
+          "replica": [{ "count": 4, "graph": "$chat" }]
+        }
+      ]
+    },
+    {
+      "device": "%device",
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a26869",
+          "content": { "notice": { "text": "hi" } },
+          "label": "hi"
+        }
+      ],
+      "home": "%alice",
+      "home_store": ["hi"],
+      "name": "nothing is said outside a session",
+      "steps": [
+        {
+          "receive": { "hello": { "features": 0, "version": 1 } },
+          "replies": []
+        },
+        { "receive": { "events": ["#hi"] }, "replies": [] },
+        { "receive": { "summary": [] }, "replies": [] },
+        {
+          "receive": { "hello": { "features": 3, "version": 1 } },
+          "replies": [{ "summary": [] }]
+        },
+        { "receive": { "events": ["#hi"] }, "replies": [] }
+      ]
+    }
+  ]
+}

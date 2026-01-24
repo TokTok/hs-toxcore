@@ -52,7 +52,7 @@ nonceLimit = 256 ^ (24 :: Int)
 
 integerToNonce :: Integer -> Nonce
 integerToNonce n =
-  let bs = BS.pack . reverse . take 24 . (++ repeat 0) . reverse $ toBytes (n `mod` nonceLimit)
+  let bs = BS.pack . reverse . take 24 . (++ repeat 0) $ toBytes (n `mod` nonceLimit)
       Just nonce = Sodium.decode bs
   in Key nonce
   where

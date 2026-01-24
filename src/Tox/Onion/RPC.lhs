@@ -4,14 +4,14 @@
 module Tox.Onion.RPC where
 
 import           Data.Binary               (Binary, get, put)
-import qualified Data.Binary.Get           as Get
 import           Data.Word                 (Word64, Word8)
 import           GHC.Generics              (Generic)
 import           Test.QuickCheck.Arbitrary (Arbitrary (..))
 
-import           Tox.Crypto.Core.Box               (CipherText)
-import           Tox.Crypto.Core.Key               (Nonce, PublicKey)
-import           Tox.Network.Core.NodeInfo         (NodeInfo)
+import           Tox.Crypto.Core.Box       (CipherText)
+import           Tox.Crypto.Core.Key       (Nonce, PublicKey)
+import qualified Tox.Network.Core.NodeInfo as NodeInfo
+import           Tox.Network.Core.NodeInfo (NodeInfo)
 
 
 {-------------------------------------------------------------------------------
@@ -77,13 +77,7 @@ instance Binary AnnounceResponsePayload where
   get = do
     isStored <- get
     pingId <- get
-    AnnounceResponsePayload isStored pingId <$> getNodes
-    where
-      getNodes = do
-        empty <- Get.isEmpty
-        if empty
-          then return []
-          else (:) <$> get <*> getNodes
+    AnnounceResponsePayload isStored pingId <$> NodeInfo.getNodes
 
 instance Arbitrary AnnounceResponsePayload where
   arbitrary = AnnounceResponsePayload <$> arbitrary <*> arbitrary <*> arbitrary
@@ -91,8 +85,8 @@ instance Arbitrary AnnounceResponsePayload where
 
 -- | Announce Response Packet (0x84).
 data AnnounceResponse = AnnounceResponse
-  { announceResponseSendbackData    :: Word64 -- ^ 8 bytes of sendback data
-  , announceResponseNonce           :: Nonce
+  { announceResponseSendbackData     :: Word64 -- ^ 8 bytes of sendback data
+  , announceResponseNonce            :: Nonce
   , announceResponseEncryptedPayload :: CipherText
   }
   deriving (Eq, Show, Read, Generic)
@@ -150,7 +144,7 @@ instance Arbitrary DataRouteResponse where
 
 -- | Inner payload of a Data Route packet (decrypted by destination).
 data DataRouteInner = DataRouteInner
-  { dataRouteInnerSenderPublicKey :: PublicKey -- ^ Sender real PK
+  { dataRouteInnerSenderPublicKey  :: PublicKey -- ^ Sender real PK
   , dataRouteInnerEncryptedPayload :: CipherText
   }
   deriving (Eq, Show, Read, Generic)
@@ -168,9 +162,9 @@ instance Arbitrary DataRouteInner where
 -- | DHT Public Key Packet (0x9c).
 -- Sent anonymously via Onion to help friends connect back.
 data DHTPublicKeyPacket = DHTPublicKeyPacket
-  { dhtPKPacketNoReplay   :: Word64
-  , dhtPKPacketOurDHTKey  :: PublicKey
-  , dhtPKPacketNodes      :: [NodeInfo] -- ^ Up to 4 nodes
+  { dhtPKPacketNoReplay  :: Word64
+  , dhtPKPacketOurDHTKey :: PublicKey
+  , dhtPKPacketNodes     :: [NodeInfo] -- ^ Up to 4 nodes
   }
   deriving (Eq, Show, Read, Generic)
 
@@ -182,13 +176,7 @@ instance Binary DHTPublicKeyPacket where
   get = do
     noReplay <- get
     dhtKey <- get
-    DHTPublicKeyPacket noReplay dhtKey <$> getNodes
-    where
-      getNodes = do
-        empty <- Get.isEmpty
-        if empty
-          then return []
-          else (:) <$> get <*> getNodes
+    DHTPublicKeyPacket noReplay dhtKey <$> NodeInfo.getNodes
 
 instance Arbitrary DHTPublicKeyPacket where
   arbitrary = DHTPublicKeyPacket <$> arbitrary <*> arbitrary <*> arbitrary

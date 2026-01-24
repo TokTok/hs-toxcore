@@ -55,7 +55,7 @@ spec = do
       \(w1 :: Word8) (w2 :: Word8) ->
         let bs = BS.pack [w1, w2]
             monadic :: (Word16, Word16)
-            monadic = B.runGet (runBitGet $ (,) <$> (fromIntegral <$> getWord8 4) <*> getWord16be 12) (LBS.fromStrict bs)
+            monadic = B.runGet (runBitGet $ (,) . fromIntegral <$> getWord8 4 <*> getWord16be 12) (LBS.fromStrict bs)
             applicative :: (Word16, Word16)
-            applicative = B.runGet (runBitGet $ block $ (,) <$> (fromIntegral <$> word8 4) <*> word16be 12) (LBS.fromStrict bs)
+            applicative = B.runGet (runBitGet $ block $ (,) . fromIntegral <$> word8 4 <*> word16be 12) (LBS.fromStrict bs)
         in monadic `shouldBe` applicative

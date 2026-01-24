@@ -10,16 +10,12 @@
 /stack.yaml.lock
 /cabal.config
 /cabal.sandbox.config
+/cabal.project
+/android/dist-newstyle
+/android/result
 
 # Generated.
 /tox-spec.md
-
-# Cross-compilation temporary source directories.
-/comonad-*
-/distributive-*
-/entropy-*
-/network-*
-/cabal.project
 
 # Temporary files.
 *~

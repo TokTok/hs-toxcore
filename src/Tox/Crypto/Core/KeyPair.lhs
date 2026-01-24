@@ -15,7 +15,6 @@ standard group element and the Secret Key.  See the
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE StrictData         #-}
 module Tox.Crypto.Core.KeyPair where
 
@@ -29,8 +28,8 @@ import           Data.Typeable                  (Typeable)
 import           GHC.Generics                   (Generic)
 import           Test.QuickCheck.Arbitrary      (Arbitrary, arbitrary)
 
-import           Tox.Crypto.Core.Key                 (Key (..))
-import qualified Tox.Crypto.Core.Key                 as Key
+import qualified Tox.Crypto.Core.Key            as Key
+import           Tox.Crypto.Core.Key            (Key (..))
 
 
 {-------------------------------------------------------------------------------

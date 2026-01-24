@@ -20,6 +20,7 @@ import           Control.Monad.State              (MonadState, StateT (..),
 import           Control.Monad.Trans              (MonadTrans, lift)
 import           Control.Monad.Writer             (MonadWriter, WriterT)
 
+import           Control.Monad.Logger             (LoggingT, MonadLogger (..))
 import           Data.Map                         (Map)
 import qualified Data.Map                         as Map
 import           Tox.Core.Timed                   (Timed)
@@ -41,6 +42,8 @@ instance (Monoid w, Keyed m) => Keyed (RWST r w s m) where
   getCombinedKey = (lift .) . getCombinedKey
 instance Keyed m => Keyed (RandT s m) where
   getCombinedKey = (lift .) . getCombinedKey
+instance Keyed m => Keyed (LoggingT m) where
+  getCombinedKey sk pk = lift $ getCombinedKey sk pk
 
 -- | trivial instance: the trivial monad, with no caching of keys
 newtype NullKeyed a = NullKeyed { runNullKeyed :: a }
@@ -60,7 +63,7 @@ type KeyRing = Map (SecretKey, PublicKey) CombinedKey
 -- | caches computations of combined keys. Makes no attempt to delete old keys.
 newtype KeyedT m a = KeyedT (StateT KeyRing m a)
   deriving (Monad, Applicative, Functor, MonadWriter w
-    , MonadRandomBytes, MonadTrans, MonadIO, Timed)
+    , MonadRandomBytes, MonadTrans, MonadIO, Timed, MonadLogger)
 
 runKeyedT :: Monad m => KeyedT m a -> KeyRing -> m (a, KeyRing)
 runKeyedT (KeyedT m) = runStateT m

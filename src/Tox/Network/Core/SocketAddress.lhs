@@ -10,18 +10,18 @@ any internet host.
 {-# LANGUAGE StrictData         #-}
 module Tox.Network.Core.SocketAddress where
 
-import           Data.Binary                   (Binary, get, put)
-import qualified Data.Binary.Get               as Binary (Get)
-import qualified Data.Binary.Put               as Binary (Put)
-import           Data.MessagePack              (MessagePack)
-import           Data.Typeable                 (Typeable)
-import           GHC.Generics                  (Generic)
-import           Test.QuickCheck.Arbitrary     (Arbitrary, arbitrary)
-import qualified Tox.Core.Bits.Get             as Bits (runBitGet)
-import qualified Tox.Core.Bits.Put             as Bits (runBitPut)
+import           Data.Binary                        (Binary, get, put)
+import qualified Data.Binary.Get                    as Binary (Get)
+import qualified Data.Binary.Put                    as Binary (Put)
+import           Data.MessagePack                   (MessagePack)
+import           Data.Typeable                      (Typeable)
+import           GHC.Generics                       (Generic)
+import           Test.QuickCheck.Arbitrary          (Arbitrary, arbitrary)
+import qualified Tox.Core.Bits.Get                  as Bits (runBitGet)
+import qualified Tox.Core.Bits.Put                  as Bits (runBitPut)
 import           Tox.Network.Core.Encoding          (bitGet, bitPut)
-import           Tox.Network.Core.HostAddress       (HostAddress (..))
 import qualified Tox.Network.Core.HostAddress       as HostAddress
+import           Tox.Network.Core.HostAddress       (HostAddress (..))
 import           Tox.Network.Core.PortNumber        (PortNumber)
 import           Tox.Network.Core.TransportProtocol (TransportProtocol)
 
@@ -38,6 +38,10 @@ data SocketAddress = SocketAddress HostAddress PortNumber
 
 instance Binary SocketAddress
 instance MessagePack SocketAddress
+
+
+isLan :: SocketAddress -> Bool
+isLan (SocketAddress host _) = HostAddress.isLan host
 
 
 putSocketAddress :: TransportProtocol -> SocketAddress -> Binary.Put

@@ -51,3 +51,11 @@ spec = do
       let nonce' = read "\"ff0000000000000000000000000000000000000000000000\""
       let incremented = Nonce.increment nonce
       incremented `shouldBe` nonce'
+
+  describe "integerToNonce" $ do
+    it "is the inverse of nonceToInteger" $
+      property $ \nonce ->
+        Nonce.integerToNonce (Nonce.nonceToInteger nonce) `shouldBe` nonce
+
+    it "puts the least significant byte last" $
+      Nonce.integerToNonce 1 `shouldBe` read "\"000000000000000000000000000000000000000000000001\""

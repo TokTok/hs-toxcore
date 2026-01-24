@@ -36,9 +36,9 @@ import           Data.Word                   (Word16, Word32, Word8)
 import           GHC.Generics                (Generic)
 import           Test.QuickCheck.Arbitrary   (Arbitrary (..), genericShrink)
 import qualified Test.QuickCheck.Gen         as Gen
-import           Tox.Crypto.Core.Key              (PublicKey, SecretKey)
-import           Tox.Crypto.Core.KeyPair          (KeyPair (..))
-import qualified Tox.Crypto.Core.KeyPair          as KeyPair
+import           Tox.Crypto.Core.Key         (PublicKey, SecretKey)
+import qualified Tox.Crypto.Core.KeyPair     as KeyPair
+import           Tox.Crypto.Core.KeyPair     (KeyPair (..))
 import           Tox.Persistence.Bytes       (Bytes)
 import           Tox.Persistence.Conferences (Conferences)
 import           Tox.Persistence.DHT         (DHT)
@@ -141,7 +141,7 @@ getSections = go
     go = do
         (len, ty) <- Util.getSectionHeader sectionMagic
 
-        let load f = (:) <$> (f <$> Get.isolate (fromIntegral len) get) <*> go
+        let load f = (:) . f <$> Get.isolate (fromIntegral len) get <*> go
 
         case ty of
             0x01 -> load SectionNospamKeys

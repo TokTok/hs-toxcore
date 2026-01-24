@@ -2,15 +2,20 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFunctor      #-}
 {-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE StrictData         #-}
 module Tox.Network.Core.Packet where
 
-import           Data.Binary               (Binary)
-import           Data.MessagePack          (MessagePack)
-import           Data.Typeable             (Typeable)
-import           GHC.Generics              (Generic)
-import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
-import           Tox.Network.Core.PacketKind    (PacketKind)
+import           Data.Binary                 (Binary, get, put)
+import qualified Data.Binary.Get             as Binary (getRemainingLazyByteString)
+import qualified Data.Binary.Put             as Binary (putByteString)
+import qualified Data.ByteString             as BS
+import qualified Data.ByteString.Lazy        as LBS
+import           Data.MessagePack            (MessagePack)
+import           Data.Typeable               (Typeable)
+import           GHC.Generics                (Generic)
+import           Test.QuickCheck.Arbitrary   (Arbitrary, arbitrary)
+import           Tox.Network.Core.PacketKind (PacketKind)
 
 
 {-------------------------------------------------------------------------------
@@ -18,6 +23,7 @@ import           Tox.Network.Core.PacketKind    (PacketKind)
  - :: Implementation.
  -
  ------------------------------------------------------------------------------}
+
 
 \end{code}
 
@@ -35,13 +41,28 @@ The payload is an arbitrary sequence of bytes.
 
 \begin{code}
 
+-- | A newtype for ByteString that encodes/decodes without a length prefix.
+newtype RawPayload = RawPayload { unRawPayload :: BS.ByteString }
+  deriving (Eq, Show, Read, Generic, Typeable)
+
+instance Binary RawPayload where
+  put = Binary.putByteString . unRawPayload
+  get = RawPayload . LBS.toStrict <$> Binary.getRemainingLazyByteString
+
+instance Arbitrary RawPayload where
+  arbitrary = RawPayload . BS.pack <$> arbitrary
+
+
 data Packet payload = Packet
   { packetKind    :: PacketKind
   , packetPayload :: payload
   }
   deriving (Eq, Read, Show, Generic, Typeable, Functor)
 
-instance Binary payload => Binary (Packet payload)
+instance Binary payload => Binary (Packet payload) where
+  put (Packet kind payload) = put kind >> put payload
+  get = Packet <$> get <*> get
+
 instance MessagePack payload => MessagePack (Packet payload)
 
 {-------------------------------------------------------------------------------

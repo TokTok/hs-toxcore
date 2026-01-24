@@ -1,6 +1,269 @@
 \begin{code}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StrictData        #-}
 module Tox.Network.TCP.Connections where
+
+import           Control.Monad                      (forM_, unless, when)
+import           Control.Monad.Logger               (MonadLogger, logInfoN)
+import           Data.ByteString                    (ByteString)
+import qualified Data.ByteString                    as BS
+import           Data.List                          (find)
+import           Data.Map                           (Map)
+import qualified Data.Map                           as Map
+import           Data.Maybe                         (isJust, mapMaybe)
+import           Data.Text                          (pack)
+
+import qualified Tox.Core.Time                      as Time
+import           Tox.Core.Time                      (TimeDiff, Timestamp)
+import           Tox.Core.Timed                     (Timed (..))
+import           Tox.Crypto.Core.Key                (PublicKey)
+import           Tox.Crypto.Core.KeyPair            (KeyPair)
+import           Tox.Crypto.Core.MonadRandomBytes   (MonadRandomBytes (..),
+                                                     randomNonce, randomWord64)
+import qualified Tox.Network.Core.NodeInfo          as NodeInfo
+import           Tox.Network.Core.NodeInfo          (NodeInfo (..))
+import           Tox.Network.Core.TransportProtocol (TransportProtocol (..))
+import qualified Tox.Network.TCP.Client             as Client
+import           Tox.Network.TCP.Client             (RelayConnection,
+                                                     RelayEvent (..))
+
+-- | Opening, writing to and closing TCP connections to relays, named by the
+-- relay's public key.  Received bytes go to 'handleRelayBytes', closed
+-- connections to 'relayClosed'.
+class Monad m => TcpNetworked m where
+  tcpConnect :: NodeInfo -> m ()
+  tcpSend    :: PublicKey -> ByteString -> m ()
+  tcpClose   :: PublicKey -> m ()
+  -- | Whether the connection holds more than the relay has taken.
+  tcpBusy    :: PublicKey -> m Bool
+  tcpBusy _ = return False
+
+class (TcpNetworked m, Timed m, MonadRandomBytes m, MonadLogger m) => TcpMonad m where
+  getTcpState  :: m TcpState
+  putTcpState  :: TcpState -> m ()
+  getTcpDhtKeys :: m KeyPair
+
+data TcpState = TcpState
+  { tsWanted   :: Map PublicKey NodeInfo        -- ^ Relays we want to stay connected to.
+  , tsRelays   :: Map PublicKey RelayConnection -- ^ Open connections to relays.
+  , tsPeers    :: Map PublicKey [NodeInfo]      -- ^ Peer key to the relays it should be routed on, newest first.
+  , tsAttempts :: Map PublicKey Timestamp       -- ^ When we last tried to connect to a relay.
+  }
+
+-- | Relays a peer may be routed on, as in toxcore. Older ones are let go.
+maxPeerRelays :: Int
+maxPeerRelays = 6
+
+-- | How long a relay has to accept our handshake, and how long we wait to
+-- try one again.
+connectTimeout :: TimeDiff
+connectTimeout = Time.seconds 10
+
+-- | A packet a peer sent us through a relay, with the link it came on.
+data TcpEvent
+  = TcpPacket NodeInfo ByteString
+  | TcpOnionResponse ByteString
+  deriving (Eq, Show)
+
+emptyTcpState :: TcpState
+emptyTcpState = TcpState Map.empty Map.empty Map.empty Map.empty
+
+modifyTcp :: TcpMonad m => (TcpState -> TcpState) -> m ()
+modifyTcp f = getTcpState >>= putTcpState . f
+
+-- | The link to a peer through a relay: the relay's address with the peer's
+-- DHT key.
+peerLink :: NodeInfo -> PublicKey -> NodeInfo
+peerLink relay = NodeInfo TCP (NodeInfo.address relay)
+
+relayFor :: NodeInfo -> TcpState -> Maybe RelayConnection
+relayFor link s = find ((== NodeInfo.address link) . NodeInfo.address . Client.rcRelay) (Map.elems $ tsRelays s)
+
+-- | Relays we are connected to, as TCP nodes.
+connectedRelays :: TcpMonad m => m [NodeInfo]
+connectedRelays = do
+  s <- getTcpState
+  return [ (Client.rcRelay rc) { protocol = TCP } | rc <- Map.elems (tsRelays s), Client.isConfirmed rc ]
+
+-- | Stay connected to a relay.
+addRelay :: TcpMonad m => NodeInfo -> m ()
+addRelay relay = do
+  let pk = NodeInfo.publicKey relay
+  modifyTcp $ \s -> s { tsWanted = Map.insert pk relay (tsWanted s) }
+  open <- Map.member pk . tsRelays <$> getTcpState
+  unless open $ connectRelay relay
+
+connectRelay :: TcpMonad m => NodeInfo -> m ()
+connectRelay relay = do
+  now <- askTime
+  modifyTcp $ \s -> s { tsAttempts = Map.insert (NodeInfo.publicKey relay) now (tsAttempts s) }
+  dhtKeys <- getTcpDhtKeys
+  tempKeys <- newKeyPair
+  sentNonce <- randomNonce
+  handshakeNonce <- randomNonce
+  let (rc, handshake) = Client.newRelayConnection dhtKeys tempKeys sentNonce handshakeNonce relay
+  modifyTcp $ \s -> s { tsRelays = Map.insert (NodeInfo.publicKey relay) rc (tsRelays s) }
+  logInfoN $ "Connecting to TCP relay " <> pack (show relay)
+  tcpConnect relay
+  tcpSend (NodeInfo.publicKey relay) handshake
+
+-- | Have a peer routed to us through a relay.
+addPeerRelay :: TcpMonad m => PublicKey -> NodeInfo -> m ()
+addPeerRelay peer relay = do
+  let relayPk = NodeInfo.publicKey relay
+  modifyTcp $ \s -> s { tsPeers = Map.insert peer
+    (take maxPeerRelays $ relay : filter ((/= relayPk) . NodeInfo.publicKey) (Map.findWithDefault [] peer (tsPeers s))) (tsPeers s) }
+  mRc <- Map.lookup relayPk . tsRelays <$> getTcpState
+  case mRc of
+    Nothing -> connectRelay relay
+    Just rc -> when (Client.isConfirmed rc && not (Client.hasRoute peer rc)) $
+      sendToRelay relayPk (Client.routingRequest peer)
+  dropUnused
+
+-- | Have the peer of a link routed on its relay.
+addPeerOnLink :: TcpMonad m => NodeInfo -> m ()
+addPeerOnLink link = do
+  s <- getTcpState
+  forM_ (relayFor link s) $ \rc -> do
+    let relayPk = NodeInfo.publicKey (Client.rcRelay rc)
+        known = maybe False (any ((== relayPk) . NodeInfo.publicKey)) $ Map.lookup (NodeInfo.publicKey link) (tsPeers s)
+    unless known $ addPeerRelay (NodeInfo.publicKey link) (Client.rcRelay rc)
+
+-- | Stop routing a peer to us.
+removePeer :: TcpMonad m => PublicKey -> m ()
+removePeer peer = do
+  modifyTcp $ \s -> s { tsPeers = Map.delete peer (tsPeers s) }
+  dropUnused
+
+-- | The relays we want, ourselves or for a peer.
+wantedRelays :: TcpState -> Map PublicKey NodeInfo
+wantedRelays s = Map.union (tsWanted s) $ Map.fromList [ (NodeInfo.publicKey r, r) | rs <- Map.elems (tsPeers s), r <- rs ]
+
+-- | Close the relays nobody wants any more.
+dropUnused :: TcpMonad m => m ()
+dropUnused = do
+  s <- getTcpState
+  let wanted = wantedRelays s
+  mapM_ relayClosed [ pk | pk <- Map.keys (tsRelays s), Map.notMember pk wanted ]
+  modifyTcp $ \s' -> s' { tsAttempts = Map.intersection (tsAttempts s') wanted }
+
+-- | Encrypt and send a packet to a relay.
+sendToRelay :: TcpMonad m => PublicKey -> ByteString -> m ()
+sendToRelay relayPk bytes = do
+  s <- getTcpState
+  forM_ (Map.lookup relayPk (tsRelays s) >>= Client.encodePacket bytes) $ \(frame, rc) -> do
+    putTcpState s { tsRelays = Map.insert relayPk rc (tsRelays s) }
+    tcpSend relayPk frame
+
+-- | Send a packet to a peer: on a relay that connected us to them, or else
+-- out of band through the relay of the link.
+sendToPeer :: TcpMonad m => NodeInfo -> ByteString -> m ()
+sendToPeer link bytes = do
+  s <- getTcpState
+  let peer = NodeInfo.publicKey link
+  case peerRoute link s of
+    Just (relayPk, True)  -> mapM_ (sendToRelay relayPk) (routeTo peer relayPk s)
+    Just (relayPk, False) -> mapM_ (sendToRelay relayPk) (Client.oobSend peer bytes)
+    Nothing               -> return ()
+  where
+    routeTo peer relayPk s = Map.lookup relayPk (tsRelays s) >>= Client.routeData peer bytes
+
+-- | The relay a packet to a peer goes through, and whether the relay routes
+-- it to the peer rather than sending it out of band.
+peerRoute :: NodeInfo -> TcpState -> Maybe (PublicKey, Bool)
+peerRoute link s = case routed of
+  relayPk : _ -> Just (relayPk, True)
+  []          -> (\rc -> (NodeInfo.publicKey $ Client.rcRelay rc, False)) <$> relayFor link s
+  where
+    routed = [ NodeInfo.publicKey (Client.rcRelay rc) | rc <- Map.elems (tsRelays s)
+             , isJust $ Client.routeData (NodeInfo.publicKey link) BS.empty rc ]
+
+-- | Whether the relay a packet to the peer would go through is busy.
+peerBusy :: TcpMonad m => NodeInfo -> m Bool
+peerBusy link = getTcpState >>= maybe (return False) (tcpBusy . fst) . peerRoute link
+
+-- | Send a packet to a peer by its key: on a relay that connected us to them,
+-- or else out of band through the first of the given relays we are on.
+-- 'False' if neither works.
+sendToKey :: TcpMonad m => PublicKey -> [PublicKey] -> ByteString -> m Bool
+sendToKey peer relays bytes = do
+  s <- getTcpState
+  let routed = [ (NodeInfo.publicKey (Client.rcRelay rc), packet)
+               | rc <- Map.elems (tsRelays s), Just packet <- [Client.routeData peer bytes rc] ]
+      oob = [ relayPk | relayPk <- relays, maybe False Client.isConfirmed (Map.lookup relayPk $ tsRelays s) ]
+  case (routed, oob, Client.oobSend peer bytes) of
+    ((relayPk, packet) : _, _, _)  -> True <$ sendToRelay relayPk packet
+    ([], relayPk : _, Just packet) -> True <$ sendToRelay relayPk packet
+    _                              -> return False
+
+-- | Send an onion request through a relay, which acts as the first node.
+sendOnionRequest :: TcpMonad m => NodeInfo -> ByteString -> m ()
+sendOnionRequest relay = sendToRelay (NodeInfo.publicKey relay) . Client.onionRequest
+
+-- | Take bytes received from a relay.
+handleRelayBytes :: TcpMonad m => PublicKey -> ByteString -> m [TcpEvent]
+handleRelayBytes relayPk bytes = do
+  s <- getTcpState
+  case Map.lookup relayPk (tsRelays s) of
+    Nothing -> return []
+    Just rc -> case Client.receiveBytes bytes rc of
+      Left () -> [] <$ relayClosed relayPk
+      Right (rc', events, replies) -> do
+        putTcpState s { tsRelays = Map.insert relayPk rc' (tsRelays s) }
+        mapM_ (sendToRelay relayPk) replies
+        when (not (Client.isConfirmed rc) && Client.isConfirmed rc') $ relayConfirmed relayPk
+        return $ mapMaybe (toEvent $ Client.rcRelay rc) events
+  where
+    toEvent relay = \case
+      RelayData peer packet    -> Just $ TcpPacket (peerLink relay peer) packet
+      RelayOob peer packet     -> Just $ TcpPacket (peerLink relay peer) packet
+      RelayOnionResponse packet -> Just $ TcpOnionResponse packet
+      RelayRouteChanged _ _    -> Nothing
+
+-- | A relay accepted our handshake: confirm with a ping and ask for the peers
+-- we want routed on it.
+relayConfirmed :: TcpMonad m => PublicKey -> m ()
+relayConfirmed relayPk = do
+  logInfoN $ "Connected to TCP relay " <> pack (show relayPk)
+  pingRelay relayPk
+  peers <- Map.keys . Map.filter (any ((== relayPk) . NodeInfo.publicKey)) . tsPeers <$> getTcpState
+  mapM_ (sendToRelay relayPk . Client.routingRequest) peers
+
+pingRelay :: TcpMonad m => PublicKey -> m ()
+pingRelay relayPk = do
+  now <- askTime
+  pingId <- max 1 <$> randomWord64
+  s <- getTcpState
+  forM_ (Map.lookup relayPk $ tsRelays s) $ \rc -> case Client.pingIfDue now pingId rc of
+    Left () -> relayClosed relayPk
+    Right (ping, rc') -> do
+      putTcpState s { tsRelays = Map.insert relayPk rc' (tsRelays s) }
+      mapM_ (sendToRelay relayPk) ping
+
+-- | The connection to a relay was closed.  'doTcp' reopens it.
+relayClosed :: TcpMonad m => PublicKey -> m ()
+relayClosed relayPk = do
+  open <- isJust . Map.lookup relayPk . tsRelays <$> getTcpState
+  when open $ do
+    logInfoN $ "TCP relay connection closed: " <> pack (show relayPk)
+    modifyTcp $ \s -> s { tsRelays = Map.delete relayPk (tsRelays s) }
+    tcpClose relayPk
+
+-- | Periodic work: ping relays, give up on the ones that do not accept us in
+-- time, and now and then reconnect to the wanted ones.
+doTcp :: TcpMonad m => m ()
+doTcp = do
+  now <- askTime
+  s <- getTcpState
+  let due pk = Time.due now connectTimeout (Map.lookup pk $ tsAttempts s)
+  mapM_ pingRelay (Map.keys $ tsRelays s)
+  mapM_ relayClosed [ pk | (pk, rc) <- Map.toList (tsRelays s), not (Client.isConfirmed rc), due pk ]
+  s' <- getTcpState
+  forM_ (Map.elems $ wantedRelays s') $ \relay -> do
+    let pk = NodeInfo.publicKey relay
+    when (Map.notMember pk (tsRelays s') && due pk) $ connectRelay relay
 \end{code}
 
 \chapter{TCP connections}

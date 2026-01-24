@@ -1,13 +1,12 @@
 \section{Box}
 
 \begin{code}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE StrictData                 #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE StrictData         #-}
 module Tox.Crypto.Core.Box
   ( PlainText (..)
   , CipherText
@@ -26,7 +25,9 @@ import qualified Crypto.Saltine.Internal.Box as Sodium
 import           Data.Binary                 (Binary, get, put)
 import           Data.Binary.Get             (Decoder (..), pushChunk,
                                               runGetIncremental)
+import qualified Data.Binary.Get             as Get
 import           Data.Binary.Put             (runPut)
+import qualified Data.Binary.Put             as Binary
 import           Data.ByteString             (ByteString)
 import qualified Data.ByteString             as ByteString
 import qualified Data.ByteString.Base16      as Base16
@@ -37,7 +38,7 @@ import           GHC.Generics                (Generic)
 import           Test.QuickCheck.Arbitrary   (Arbitrary, arbitrary)
 import           Text.Read                   (readPrec)
 
-import           Tox.Crypto.Core.Key              (CombinedKey, Key (..), Nonce)
+import           Tox.Crypto.Core.Key         (CombinedKey, Key (..), Nonce)
 
 
 {-------------------------------------------------------------------------------
@@ -59,9 +60,13 @@ transmitted over untrusted data channels.
 
 
 newtype PlainText = PlainText { unPlainText :: ByteString }
-  deriving (Eq, Binary, Generic, Typeable)
+  deriving (Eq, Generic, Typeable)
 
 instance MessagePack PlainText
+
+instance Binary PlainText where
+  put = Binary.putByteString . unPlainText
+  get = PlainText . LazyByteString.toStrict <$> Get.getRemainingLazyByteString
 
 instance Show PlainText where
   show = show . Base16.encode . unPlainText
@@ -83,8 +88,8 @@ cipherText bs
   | otherwise                                   = refute "ciphertext is too short"
 
 instance Binary CipherText where
-  put = put . unCipherText
-  get = get >>= cipherText
+  put = Binary.putByteString . unCipherText
+  get = Get.getRemainingLazyByteString >>= cipherText . LazyByteString.toStrict
 
 instance MessagePack CipherText where
   toObject cfg = toObject cfg . unCipherText

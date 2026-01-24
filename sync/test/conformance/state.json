@@ -1,0 +1,870 @@
+{
+  "account_states": [
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc4200101010101010101010101010101010101010101010101010101010101010101900000924392c4200202020202020202020202020202020202020202020202020202020202020202a26869",
+          "content": { "friend_request": { "message": "hi", "pk": "%bob" } },
+          "label": "request"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420f804eeb4349d345bc73b03ec4103d42a13393c3371a6e154e5f10e9034476a450100924093c420020202020202020202020202020202020202020202020202020202020202020291a2686991ce01020304",
+          "content": {
+            "want_friend": {
+              "nospam": 16909060,
+              "pk": "%bob",
+              "request_message": "hi"
+            }
+          },
+          "label": "wanted",
+          "parents": ["@request"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42057e875353cb7556ac8a8a74c1d9c96c377e7b69a64bac56388b64d5d32774e270200924392c4200707070707070707070707070707070707070707070707070707070707070707a5616761696e",
+          "content": {
+            "friend_request": { "message": "again", "pk": "%carol" }
+          },
+          "label": "carol",
+          "parents": ["@wanted"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420654d85face4b3c25c079d206cee96b762074fa5a77dd35e0b5e3b5086f7d934a03009241c4200808080808080808080808080808080808080808080808080808080808080808",
+          "content": { "unwant_friend": { "pk": "%dave" } },
+          "label": "dave",
+          "parents": ["@carol"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4208227feb4bf96bb7cb88db376912ca5e17978ce3a39bf0922d02177c66c6486b404009246929201c42002020202020202020202020202020202020202020202020202020202020202029201a462757379",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "status_message": "busy" }
+            }
+          },
+          "label": "status",
+          "parents": ["@dave"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420831fd661233cf8da6983d9f0fdd920ef36f1a989b4be56fcaca928b17141d8aa05009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a2426f",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "Bo" }
+            }
+          },
+          "label": "name",
+          "parents": ["@status"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4207b82fc809725cc11861ac0399927be7441256624ca0acd5bf290c72463a20eed06009246929201c42002020202020202020202020202020202020202020202020202020202020202029200a3426f62",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "name": "Bob" }
+            }
+          },
+          "label": "renamed",
+          "parents": ["@name"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420f6cbaf4fa8bbe0e86352f0dd5de5119e61ba561f32163bcbd771ccc90e8efbe8070092469292029200c4200404040404040404040404040404040404040404040404040404040404040404920cc3",
+          "content": {
+            "fact": {
+              "subject": { "chat": "&chat" },
+              "value": { "joined": true }
+            }
+          },
+          "label": "joined",
+          "parents": ["@renamed"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42056a660d7e4f72eb12e5ec4461c60607e49e64015a58e07047abe140f909c5382080092469292029200c4200404040404040404040404040404040404040404040404040404040404040404920cc2",
+          "content": {
+            "fact": {
+              "subject": { "chat": "&chat" },
+              "value": { "joined": false }
+            }
+          },
+          "label": "left",
+          "parents": ["@joined"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420a65704c03b365986462ba58b81738400c08f452c120fe2c44f27b73ad08981fb09009244959200c4200505050505050505050505050505050505050505050505050505050505050505c42002020202020202020202020202020202020202020202020202020202020202029200c4200606060606060606060606060606060606060606060606060606060606060606c4200303030303030303030303030303030303030303030303030303030303030303c3",
+          "content": {
+            "merge_chat": {
+              "bot": "%bob",
+              "chat": "&other",
+              "into": "&into",
+              "into_bot": "%device",
+              "merged": true
+            }
+          },
+          "label": "merge other",
+          "parents": ["@left"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420aabd169f6b8893f1ef07b4e23738b7cac669dca3db05751b4e5eafe66349241c0a009244959200c4200404040404040404040404040404040404040404040404040404040404040404c42002020202020202020202020202020202020202020202020202020202020202029200c4200606060606060606060606060606060606060606060606060606060606060606c4200303030303030303030303030303030303030303030303030303030303030303c3",
+          "content": {
+            "merge_chat": {
+              "bot": "%bob",
+              "chat": "&chat",
+              "into": "&into",
+              "into_bot": "%device",
+              "merged": true
+            }
+          },
+          "label": "merge",
+          "parents": ["@merge other"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420fdd21ae5348a58584968eba406be558bb3f9615df6a0469cdfeee25a09bdf0730b009244959200c4200404040404040404040404040404040404040404040404040404040404040404c42002020202020202020202020202020202020202020202020202020202020202029200c4200606060606060606060606060606060606060606060606060606060606060606c4200303030303030303030303030303030303030303030303030303030303030303c2",
+          "content": {
+            "merge_chat": {
+              "bot": "%bob",
+              "chat": "&chat",
+              "into": "&into",
+              "into_bot": "%device",
+              "merged": false
+            }
+          },
+          "label": "unmerge",
+          "parents": ["@merge"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42080c0dd4ef78eb2085cc93cabb85b219bc21891938a4175920deae3c250cf3ce50c009245939200c4200505050505050505050505050505050505050505050505050505050505050505c4200202020202020202020202020202020202020202020202020202020202020202c3",
+          "content": {
+            "relay_bot": { "bot": "%bob", "chat": "&other", "relays": true }
+          },
+          "label": "relay other",
+          "parents": ["@unmerge"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420bd291eaa9649e798375264078a3c7028c2cd5cd7b9a83447221ef7e9bd4739d30d009245939200c4200404040404040404040404040404040404040404040404040404040404040404c4200202020202020202020202020202020202020202020202020202020202020202c3",
+          "content": {
+            "relay_bot": { "bot": "%bob", "chat": "&chat", "relays": true }
+          },
+          "label": "relay",
+          "parents": ["@relay other"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42013f702188e165a97d22f6c105ab712977db646b3a61dee20dce49e7737fb80830e009245939200c4200404040404040404040404040404040404040404040404040404040404040404c4200202020202020202020202020202020202020202020202020202020202020202c2",
+          "content": {
+            "relay_bot": { "bot": "%bob", "chat": "&chat", "relays": false }
+          },
+          "label": "unrelay",
+          "parents": ["@relay"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420245ae8a8ebe02fab7f41d5857de61c43f41b4a952726c3529e4607ab6a971d120f00924b929201c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc089200929101c2",
+          "content": {
+            "setting": {
+              "scope": { "conversation": "$group" },
+              "setting": { "mute": { "mentions": false, "until": 1 } }
+            }
+          },
+          "label": "mute",
+          "parents": ["@unrelay"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42049378bbb28df7c3c9d8927622dc895241b58e144d6b0959a22704d52b31111071000924b929201c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc089200929102c2",
+          "content": {
+            "setting": {
+              "scope": { "conversation": "$group" },
+              "setting": { "mute": { "mentions": false, "until": 2 } }
+            }
+          },
+          "label": "mute longer",
+          "parents": ["@mute"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420755fe084e1c26c539127967e2ee10eb46d62bd052957583127d12185e3fed41d1100924b929201c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc0892019101",
+          "content": {
+            "setting": {
+              "scope": { "conversation": "$group" },
+              "setting": { "picture_format": "qoi" }
+            }
+          },
+          "label": "qoi",
+          "parents": ["@mute longer"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42057c763a12a4bc6e96dbe9f02a49ba89ef2a82936edbca7fd2d2cfae0723ff2501200924c929201c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc0801",
+          "content": {
+            "clear_setting": {
+              "kind": 1,
+              "scope": { "conversation": "$group" }
+            }
+          },
+          "label": "cleared",
+          "parents": ["@qoi"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42038ad74016d54845e5f9518a6a0c68a2ab30ecfb8cda8db742df0c4fbac612b8e1300924c920000",
+          "content": { "clear_setting": { "kind": 0, "scope": "account" } },
+          "label": "cleared nothing",
+          "parents": ["@cleared"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420617405abf95f62b9e077999e261164a87bd3cb35d3846444f620703e763e82811400924b920092009290c3",
+          "content": {
+            "setting": {
+              "scope": "account",
+              "setting": { "mute": { "mentions": true, "until": null } }
+            }
+          },
+          "label": "account muted",
+          "parents": ["@cleared nothing"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4209be62d26f141fe6f79e4b31b3bec2157083b46b38c09102514ee636f6feab6401500924293c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc08c420f6cbaf4fa8bbe0e86352f0dd5de5119e61ba561f32163bcbd771ccc90e8efbe806",
+          "content": {
+            "read_up_to": { "event": "@renamed", "graph": "$group", "rank": 6 }
+          },
+          "label": "read",
+          "parents": ["@account muted"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420737b489c8380ad7f509bd2e5c074e51bed215d32307075b1a9467ac452d390541600924293c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc08c4207b82fc809725cc11861ac0399927be7441256624ca0acd5bf290c72463a20eed05",
+          "content": {
+            "read_up_to": { "event": "@name", "graph": "$group", "rank": 5 }
+          },
+          "label": "read less",
+          "parents": ["@read"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4207f8efe980b83efdbf0b5cf80923ad0ed058af8e8b6897e0e2f184c097fb8a97517009204b26e6f74206f6620746865206163636f756e74",
+          "content": { "notice": { "text": "not of the account" } },
+          "label": "notice",
+          "parents": ["@read less"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420a830a37c35087ba4ae6fc659a625872bb652aecf4dd674c89d9fb617dcd88a7a1800924792009200a24d65",
+          "content": {
+            "want": { "subject": "account", "value": { "name": "Me" } }
+          },
+          "label": "wish",
+          "parents": ["@notice"]
+        }
+      ],
+      "name": "the last writer wins",
+      "state": {
+        "chats_joined": [],
+        "devices": [],
+        "facts": [
+          [{ "chat": "&chat" }, { "joined": false }],
+          [{ "friend": "%bob" }, { "name": "Bob" }],
+          [{ "friend": "%bob" }, { "status_message": "busy" }]
+        ],
+        "friends": [
+          { "pk": "%bob", "request": null, "wanted": true },
+          { "pk": "%carol", "request": "again", "wanted": false }
+        ],
+        "invites": [],
+        "merges": [
+          {
+            "bot": "%bob",
+            "chat": "&other",
+            "into": "&into",
+            "into_bot": "%device"
+          }
+        ],
+        "read": [{ "event": "@renamed", "graph": "$group", "rank": 6 }],
+        "relay_bots": [{ "bot": "%bob", "chat": "&other" }],
+        "settings": [
+          {
+            "bytes": "92009290c3",
+            "kind": 0,
+            "scope": "account",
+            "setting": { "mute": { "mentions": true, "until": null } }
+          },
+          {
+            "bytes": "9200929102c2",
+            "kind": 0,
+            "scope": { "conversation": "$group" },
+            "setting": { "mute": { "mentions": false, "until": 2 } }
+          }
+        ]
+      }
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a0",
+          "content": { "notice": { "text": "" } },
+          "label": "root"
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb0100924b920092009290c3",
+          "content": {
+            "setting": {
+              "scope": "account",
+              "setting": { "mute": { "mentions": true, "until": null } }
+            }
+          },
+          "label": "a",
+          "parents": ["@root"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb0100924b920092009290c2",
+          "content": {
+            "setting": {
+              "scope": "account",
+              "setting": { "mute": { "mentions": false, "until": null } }
+            }
+          },
+          "label": "b",
+          "parents": ["@root"]
+        }
+      ],
+      "name": "of concurrent settings, the higher event ID wins",
+      "state": {
+        "chats_joined": [],
+        "devices": [],
+        "facts": [],
+        "friends": [],
+        "invites": [],
+        "merges": [],
+        "read": [],
+        "relay_bots": [],
+        "settings": [
+          {
+            "bytes": "92009290c3",
+            "kind": 0,
+            "scope": "account",
+            "setting": { "mute": { "mentions": true, "until": null } }
+          }
+        ]
+      }
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a0",
+          "content": { "notice": { "text": "" } },
+          "label": "root"
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb0100924b920092009290c3",
+          "content": {
+            "setting": {
+              "scope": "account",
+              "setting": { "mute": { "mentions": true, "until": null } }
+            }
+          },
+          "label": "a",
+          "parents": ["@root"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb0100924c920000",
+          "content": { "clear_setting": { "kind": 0, "scope": "account" } },
+          "label": "b",
+          "parents": ["@root"]
+        }
+      ],
+      "name": "a setting and a clearing at once",
+      "state": {
+        "chats_joined": [],
+        "devices": [],
+        "facts": [],
+        "friends": [],
+        "invites": [],
+        "merges": [],
+        "read": [],
+        "relay_bots": [],
+        "settings": [
+          {
+            "bytes": "92009290c3",
+            "kind": 0,
+            "scope": "account",
+            "setting": { "mute": { "mentions": true, "until": null } }
+          }
+        ]
+      }
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009204a0",
+          "content": { "notice": { "text": "" } },
+          "label": "root"
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb0100924093c42002020202020202020202020202020202020202020202020202020202020202029090",
+          "content": {
+            "want_friend": {
+              "nospam": null,
+              "pk": "%bob",
+              "request_message": null
+            }
+          },
+          "label": "a",
+          "parents": ["@root"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb01009241c4200202020202020202020202020202020202020202020202020202020202020202",
+          "content": { "unwant_friend": { "pk": "%bob" } },
+          "label": "b",
+          "parents": ["@root"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb0100924293c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc08c4209b116db32d8978caa617973d3ae993662224abdaf3fb5aface572c9a0c995d4803",
+          "content": {
+            "read_up_to": { "event": "@a", "graph": "$group", "rank": 3 }
+          },
+          "label": "c",
+          "parents": ["@root"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c42060cfafd6e7319cff9e5a427cee90614230e9244617b489fcc21ae979efb71ceb0100924293c4202b837ef30b5e027a5d7ccb1721e1d4396d1039b2fe4eac033aa1af841400bc08c42056bc12cd72decb200442beafa562470970cefed9c355afeca631db55982e1d3403",
+          "content": {
+            "read_up_to": { "event": "@b", "graph": "$group", "rank": 3 }
+          },
+          "label": "d",
+          "parents": ["@root"]
+        }
+      ],
+      "name": "concurrent friends and reads",
+      "state": {
+        "chats_joined": [],
+        "devices": [],
+        "facts": [],
+        "friends": [{ "pk": "%bob", "request": null, "wanted": true }],
+        "invites": [],
+        "merges": [],
+        "read": [{ "event": "@a", "graph": "$group", "rank": 3 }],
+        "relay_bots": [],
+        "settings": []
+      }
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc4200101010101010101010101010101010101010101010101010101010101010101900000924894c420020202020202020202020202020202020202020202020202020202020202020201a772656675736564c403010203",
+          "content": {
+            "chat_invite": {
+              "from": "%bob",
+              "invite": "010203",
+              "kind": "conference",
+              "name": "refused"
+            }
+          },
+          "label": "refused"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4204980b36bb5ce32a6f01adc560f4a3a139488d44873120a84df88f42b003bd00d0100924894c420020202020202020202020202020202020202020202020202020202020202020200a86465636c696e6564c403010203",
+          "content": {
+            "chat_invite": {
+              "from": "%bob",
+              "invite": "010203",
+              "kind": "group",
+              "name": "declined"
+            }
+          },
+          "label": "declined",
+          "parents": ["@refused"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42053b0e89160a79422a136320699930eee2cace712664d7bdb50941bc694b241080200924894c420020202020202020202020202020202020202020202020202020202020202020201a770656e64696e67c403010203",
+          "content": {
+            "chat_invite": {
+              "from": "%bob",
+              "invite": "010203",
+              "kind": "conference",
+              "name": "pending"
+            }
+          },
+          "label": "pending",
+          "parents": ["@declined"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4209dab0ba27d07a1a5f40d57b75729152ab6ae701f74b2f6896ad6d9c82ee17c2b0300924894c420020202020202020202020202020202020202020202020202020202020202020200a76a6f696e696e67c403010203",
+          "content": {
+            "chat_invite": {
+              "from": "%bob",
+              "invite": "010203",
+              "kind": "group",
+              "name": "joining"
+            }
+          },
+          "label": "joining",
+          "parents": ["@pending"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42067005cb0babb64c5d1d9efcf9f301ef97bdb192045afaf755e0acef808bcdf960400924894c420020202020202020202020202020202020202020202020202020202020202020200ae77726f6e672070617373776f7264c403010203",
+          "content": {
+            "chat_invite": {
+              "from": "%bob",
+              "invite": "010203",
+              "kind": "group",
+              "name": "wrong password"
+            }
+          },
+          "label": "wrong password",
+          "parents": ["@joining"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c420bda61ef6a57fbafe0313e86b91ea34c7de86194bd58ffffd3548cd2d0a9a7c5b0500924993c4204980b36bb5ce32a6f01adc560f4a3a139488d44873120a84df88f42b003bd00dc391a6736563726574",
+          "content": {
+            "answer_invite": {
+              "invite": "@refused",
+              "join": true,
+              "password": "secret"
+            }
+          },
+          "label": "join",
+          "parents": ["@wrong password"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c4200c1eb6ef64bd5452ea66e78b1a94699edead06a09b3e133a49ef364dfa879feb0600924993c42053b0e89160a79422a136320699930eee2cace712664d7bdb50941bc694b24108c290",
+          "content": {
+            "answer_invite": {
+              "invite": "@declined",
+              "join": false,
+              "password": null
+            }
+          },
+          "label": "decline",
+          "parents": ["@join"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c4200448eb6a10fbe8193f87b89494978c0eaf185ba00b0e2ed1e7cb73943c7c468a0700924993c42067005cb0babb64c5d1d9efcf9f301ef97bdb192045afaf755e0acef808bcdf96c390",
+          "content": {
+            "answer_invite": {
+              "invite": "@joining",
+              "join": true,
+              "password": null
+            }
+          },
+          "label": "join too",
+          "parents": ["@decline"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c420328151fecc2d6ee8de4ca2e1815add296953cbf977279ce76b2833b9e99f96a90800924993c420bda61ef6a57fbafe0313e86b91ea34c7de86194bd58ffffd3548cd2d0a9a7c5bc391a56775657373",
+          "content": {
+            "answer_invite": {
+              "invite": "@wrong password",
+              "join": true,
+              "password": "guess"
+            }
+          },
+          "label": "guess",
+          "parents": ["@join too"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4208209154f5195c867e44cc4e32d2112b48f681edb3d4405633d8e2e5cc2dc77a60900924a93c4204980b36bb5ce32a6f01adc560f4a3a139488d44873120a84df88f42b003bd00d919201c4200404040404040404040404040404040404040404040404040404040404040404c2",
+          "content": {
+            "invite_joined": {
+              "chat": "&conference",
+              "invite": "@refused",
+              "needs_password": false
+            }
+          },
+          "label": "joined",
+          "parents": ["@guess"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420665dd7b2f0244b1f31df83307e5a608b5ecdc58e25a241b944548580c138d81d0a00924a93c4204980b36bb5ce32a6f01adc560f4a3a139488d44873120a84df88f42b003bd00d90c3",
+          "content": {
+            "invite_joined": {
+              "chat": null,
+              "invite": "@refused",
+              "needs_password": true
+            }
+          },
+          "label": "turned away",
+          "parents": ["@joined"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420f0e80fbaa43cdcca2e42c5e134971e3f551abd127da76d25ba305ae3c7eca2330b00924a93c420bda61ef6a57fbafe0313e86b91ea34c7de86194bd58ffffd3548cd2d0a9a7c5b90c3",
+          "content": {
+            "invite_joined": {
+              "chat": null,
+              "invite": "@wrong password",
+              "needs_password": true
+            }
+          },
+          "label": "refused password",
+          "parents": ["@turned away"]
+        },
+        {
+          "author": "%device",
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420030303030303030303030303030303030303030303030303030303030303030391c4208b277cf5e8eda493ce1691d22512a0a529de2c3930036dc4e187a3ad286760ed0c00924993c4200909090909090909090909090909090909090909090909090909090909090909c390",
+          "content": {
+            "answer_invite": {
+              "invite": "0909090909090909090909090909090909090909090909090909090909090909",
+              "join": true,
+              "password": null
+            }
+          },
+          "label": "no such invite",
+          "parents": ["@refused password"]
+        }
+      ],
+      "name": "invites follow their last answer",
+      "state": {
+        "chats_joined": [],
+        "devices": [],
+        "facts": [],
+        "friends": [],
+        "invites": [
+          {
+            "chat": null,
+            "from": "%bob",
+            "invite": "@declined",
+            "kind": "group",
+            "name": "declined",
+            "needs_password": false,
+            "status": "declined"
+          },
+          {
+            "chat": null,
+            "from": "%bob",
+            "invite": "@joining",
+            "kind": "group",
+            "name": "joining",
+            "needs_password": false,
+            "status": "joining"
+          },
+          {
+            "chat": null,
+            "from": "%bob",
+            "invite": "@pending",
+            "kind": "conference",
+            "name": "pending",
+            "needs_password": false,
+            "status": "pending"
+          },
+          {
+            "chat": null,
+            "from": "%bob",
+            "invite": "@wrong password",
+            "kind": "group",
+            "name": "wrong password",
+            "needs_password": true,
+            "status": "failed"
+          },
+          {
+            "chat": "&conference",
+            "from": "%bob",
+            "invite": "@refused",
+            "kind": "conference",
+            "name": "refused",
+            "needs_password": true,
+            "status": "failed"
+          }
+        ],
+        "merges": [],
+        "read": [],
+        "relay_bots": [],
+        "settings": []
+      }
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc42001010101010101010101010101010101010101010101010101010101010101019000009246929201c4200202020202020202020202020202020202020202020202020202020202020202921391c4200505050505050505050505050505050505050505050505050505050505050505",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": {
+                "avatar": "0505050505050505050505050505050505050505050505050505050505050505"
+              }
+            }
+          },
+          "label": "avatar"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4204f9168f268ee2efa0552849d8b144e1555fb7dae4e33d6d9e3d70ca41a41390601009246929201c4200202020202020202020202020202020202020202020202020202020202020202921390",
+          "content": {
+            "fact": {
+              "subject": { "friend": "%bob" },
+              "value": { "avatar": null }
+            }
+          },
+          "label": "removed",
+          "parents": ["@avatar"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420dbe819c470c5c4f11e520489fc1da481f13e7cb0142affb3cd54cb5773dd4721020092469200921391c4200606060606060606060606060606060606060606060606060606060606060606",
+          "content": {
+            "fact": {
+              "subject": "account",
+              "value": {
+                "avatar": "0606060606060606060606060606060606060606060606060606060606060606"
+              }
+            }
+          },
+          "label": "ours",
+          "parents": ["@removed"]
+        }
+      ],
+      "name": "avatars are kept, the last one wins",
+      "state": {
+        "chats_joined": [],
+        "devices": [],
+        "facts": [
+          [
+            "account",
+            {
+              "avatar": "0606060606060606060606060606060606060606060606060606060606060606"
+            }
+          ],
+          [{ "friend": "%bob" }, { "avatar": null }]
+        ],
+        "friends": [],
+        "invites": [],
+        "merges": [],
+        "read": [],
+        "relay_bots": [],
+        "settings": []
+      }
+    },
+    {
+      "events": [
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc4200101010101010101010101010101010101010101010101010101010101010101900000924d92c4200202020202020202020202020202020202020202020202020202020202020202a550686f6e65",
+          "content": { "device": { "name": "Phone", "pk": "%bob" } },
+          "label": "phone"
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4202aa9aa126112037c862c21eda87c983c8ea3e78ca3d6433281d02905fb0a1fd90100924d92c4200707070707070707070707070707070707070707070707070707070707070707a64c6170746f70",
+          "content": { "device": { "name": "Laptop", "pk": "%carol" } },
+          "label": "laptop",
+          "parents": ["@phone"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420a6a0488d5c0a5c37ad0a50cfa8fdf08ba719ff8b4928ca5f00ac08cccc31ef8d0200924d92c4200202020202020202020202020202020202020202020202020202020202020202a94f6c642070686f6e65",
+          "content": { "device": { "name": "Old phone", "pk": "%bob" } },
+          "label": "renamed",
+          "parents": ["@laptop"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42016752eeee1da86e4db04199a7d53ddcdab35acff5735c1be533b69c7998423ac0300924ec4200707070707070707070707070707070707070707070707070707070707070707",
+          "content": { "device_gone": { "pk": "%carol" } },
+          "label": "gone",
+          "parents": ["@renamed"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420eb1c58cfb0a83aacba19b02a8e100585f801cc828c98ca4f8699a246afb17c7d0400924f9300a34c616200",
+          "content": {
+            "new_chat": { "kind": "group", "name": "Lab", "privacy": "public" }
+          },
+          "label": "found",
+          "parents": ["@gone"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c420049428d6667639123788af7a325a6bff3a2cc7f40fce46dec54058682823ce1b0500925292c420049428d6667639123788af7a325a6bff3a2cc7f40fce46dec54058682823ce1b919200c4200404040404040404040404040404040404040404040404040404040404040404",
+          "content": { "chat_joined": { "chat": "&chat", "intent": "@found" } },
+          "label": "founded",
+          "parents": ["@found"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c42041f05c23172ed88cb0e52c4e04dd09058ff7918ed9c9d6535369a8ab9aa8b1cc0600925092c420090909090909090909090909090909090909090909090909090909090909090990",
+          "content": {
+            "join_chat": {
+              "chat_id": "0909090909090909090909090909090909090909090909090909090909090909",
+              "password": null
+            }
+          },
+          "label": "join",
+          "parents": ["@founded"]
+        },
+        {
+          "bytes": "920396c4206fcb85e59b8be9d9e8851d580aaa9237821cddedab6214ee43b0a08ccafbaadfc420010101010101010101010101010101010101010101010101010101010101010191c4208b3cbf0144b794128e0f5873480a84f7dceec10645c5a5e5eabcc25dc882b5fa0700925292c4208b3cbf0144b794128e0f5873480a84f7dceec10645c5a5e5eabcc25dc882b5fa90",
+          "content": { "chat_joined": { "chat": null, "intent": "@join" } },
+          "label": "refused",
+          "parents": ["@join"]
+        }
+      ],
+      "name": "the account's devices, and the chats founded for it",
+      "state": {
+        "chats_joined": [
+          { "chat": null, "intent": "@join" },
+          { "chat": "&chat", "intent": "@found" }
+        ],
+        "devices": [{ "name": "Old phone", "pk": "%bob" }],
+        "facts": [],
+        "friends": [],
+        "invites": [],
+        "merges": [],
+        "read": [],
+        "relay_bots": [],
+        "settings": []
+      }
+    }
+  ],
+  "chats": {
+    "chat": {
+      "group": "0404040404040404040404040404040404040404040404040404040404040404"
+    },
+    "conference": {
+      "conference": "0404040404040404040404040404040404040404040404040404040404040404"
+    },
+    "into": {
+      "group": "0606060606060606060606060606060606060606060606060606060606060606"
+    },
+    "other": {
+      "group": "0505050505050505050505050505050505050505050505050505050505050505"
+    }
+  },
+  "defaults": { "author": "%alice", "graph": "$account", "time": 0 },
+  "graphs": {
+    "account": { "account": "%alice" },
+    "group": {
+      "group": "0404040404040404040404040404040404040404040404040404040404040404"
+    }
+  },
+  "keys": {
+    "alice": "0101010101010101010101010101010101010101010101010101010101010101",
+    "bob": "0202020202020202020202020202020202020202020202020202020202020202",
+    "carol": "0707070707070707070707070707070707070707070707070707070707070707",
+    "dave": "0808080808080808080808080808080808080808080808080808080808080808",
+    "device": "0303030303030303030303030303030303030303030303030303030303030303"
+  },
+  "live_facts": [
+    {
+      "after": [
+        [{ "friend": "%bob" }, { "connection": "udp" }],
+        [{ "peer": { "chat": "&chat", "pk": "%device" } }, { "name": "Dev" }]
+      ],
+      "before": [
+        [{ "friend": "%bob" }, { "connection": "tcp" }],
+        [{ "peer": { "chat": "&chat", "pk": "%alice" } }, { "name": "Alice" }],
+        [{ "peer": { "chat": "&chat", "pk": "%alice" } }, { "role": "user" }]
+      ],
+      "name": "a peer leaving drops its facts",
+      "update": [
+        [{ "friend": "%bob" }, { "connection": "udp" }],
+        [{ "peer": { "chat": "&chat", "pk": "%device" } }, { "name": "Dev" }],
+        [{ "peer": { "chat": "&chat", "pk": "%alice" } }, { "present": false }]
+      ]
+    },
+    {
+      "after": [
+        ["account", { "call_relay": true }],
+        [{ "friend": "%bob" }, { "status": "busy" }],
+        [{ "friend": "%bob" }, { "typing": false }]
+      ],
+      "before": [[{ "friend": "%bob" }, { "typing": true }]],
+      "name": "a value of each kind",
+      "update": [
+        [{ "friend": "%bob" }, { "typing": false }],
+        [{ "friend": "%bob" }, { "status": "away" }],
+        [{ "friend": "%bob" }, { "status": "busy" }],
+        ["account", { "call_relay": true }]
+      ]
+    }
+  ]
+}

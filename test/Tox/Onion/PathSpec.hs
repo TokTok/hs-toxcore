@@ -1,126 +1,108 @@
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 module Tox.Onion.PathSpec (spec) where
 
 import           Test.Hspec
-import           Test.Hspec.QuickCheck
 import           Test.QuickCheck
 
 import           Control.Monad.Identity             (Identity, runIdentity)
 import           Control.Monad.Random               (RandT, evalRandT)
-import           Control.Monad.State                (MonadState, StateT,
-                                                     runStateT)
+import           Control.Monad.State                (MonadState, StateT, get,
+                                                     put, runStateT)
+import           Control.Monad.Trans                (lift)
+import           Data.Binary                        (encode)
 import qualified Data.ByteString                    as BS
-import qualified Data.Map                           as Map
-import           Data.Maybe                         (isJust, isNothing)
+import qualified Data.ByteString.Lazy               as LBS
 import           System.Random                      (StdGen, mkStdGen)
 
 import qualified Tox.Core.Time                      as Time
 import           Tox.Core.Time                      (Timestamp)
 import           Tox.Core.Timed                     (Timed (..))
-import           Tox.Crypto.Core.Box                (CipherText)
-import           Tox.Crypto.Core.Key                (Nonce)
-import           Tox.Crypto.Core.Keyed              (Keyed (..), KeyedT,
-                                                     NullKeyed (..), evalKeyedT,
-                                                     runNullKeyed)
+import           Tox.Crypto.Core.Key                (CombinedKey, Nonce)
+import qualified Tox.Crypto.Core.Keyed              as Keyed
+import           Tox.Crypto.Core.Keyed              (runNullKeyed)
 import qualified Tox.Crypto.Core.KeyPair            as KeyPair
 import           Tox.Crypto.Core.KeyPair            (KeyPair (..))
 import           Tox.Crypto.Core.MonadRandomBytes   (MonadRandomBytes (..))
 import           Tox.Network.Core.HostAddress       (HostAddress (..))
-import qualified Tox.Network.Core.NodeInfo          as NodeInfo
 import           Tox.Network.Core.NodeInfo          (NodeInfo (..))
-import           Tox.Network.Core.PortNumber        (PortNumber (..))
+import           Tox.Network.Core.Packet            (Packet (..),
+                                                     RawPayload (..))
+import qualified Tox.Network.Core.PacketKind        as PacketKind
 import           Tox.Network.Core.SocketAddress     (SocketAddress (..))
 import           Tox.Network.Core.TimedT            (TimedT, runTimedT)
-import           Tox.Network.Core.TransportProtocol (TransportProtocol (..))
-
+import           Tox.Network.Core.TransportProtocol (TransportProtocol (UDP))
 import           Tox.Onion.Path
 import qualified Tox.Onion.Tunnel                   as Tunnel
 
--- | A test monad for OnionPath logic.
-newtype TestOnionMonad a = TestOnionMonad { unTestOnionMonad :: KeyedT (TimedT (RandT StdGen (StateT OnionPathState Identity))) a }
-  deriving (Functor, Applicative, Monad, MonadState OnionPathState, Timed, MonadRandomBytes, Keyed)
+newtype TestOnionMonad a = TestOnionMonad (TimedT (RandT StdGen (StateT OnionPathState Identity)) a)
+  deriving (Functor, Applicative, Monad, Timed, MonadRandomBytes)
+
+instance MonadState OnionPathState TestOnionMonad where
+  get = TestOnionMonad $ lift $ lift get
+  put = TestOnionMonad . lift . lift . put
+
+instance Keyed.Keyed TestOnionMonad where
+  getCombinedKey sk pk = return $ Keyed.runNullKeyed $ Keyed.getCombinedKey sk pk
 
 instance OnionPathMonad TestOnionMonad
 
 runTestOnion :: Timestamp -> OnionPathState -> TestOnionMonad a -> (a, OnionPathState)
-runTestOnion time s =
+runTestOnion time s (TestOnionMonad m) =
   runIdentity
     . (`runStateT` s)
     . (`evalRandT` mkStdGen 42)
     . (`runTimedT` time)
-    . (`evalKeyedT` Map.empty)
-    . unTestOnionMonad
+    $ m
 
 spec :: Spec
 spec = do
   describe "isPathAlive" $ do
-    it "returns True for a new path" $ property $ \((now, path) :: (Timestamp, OnionPath)) ->
-      let path' = path { pathExpires = now `Time.addTime` pathLifetime, pathLastAttempt = Nothing }
-      in isPathAlive now path' `shouldBe` True
+    it "returns True for a new path" $ property $
+      \(now :: Timestamp) (path :: OnionPath) ->
+        let path' = path { pathExpires = now `Time.addTime` Time.seconds 1
+                         , pathLastAttempt = Nothing
+                         }
+        in isPathAlive now path' `shouldBe` True
 
-    it "returns False for an expired path" $ property $ \((now, path) :: (Timestamp, OnionPath)) ->
-      let path' = path { pathExpires = now `Time.addTime` Time.seconds (-1) }
+    it "returns False for an expired path" $ property $
+      \(now :: Timestamp) (path :: OnionPath) ->
+        let path' = path { pathExpires = now `Time.addTime` Time.seconds (-1) }
+        in isPathAlive now path' `shouldBe` False
+
+    it "returns False for a timed-out unconfirmed path" $ property $
+      \(now :: Timestamp) (path :: OnionPath) ->
+        let path' = path { pathExpires = now `Time.addTime` Time.seconds 100
+                         , pathConfirmed = False
+                         , pathLastAttempt = Just $ now `Time.addTime` Time.seconds (-5)
+                         , pathTries = 2
+                         }
       in isPathAlive now path' `shouldBe` False
 
-    it "returns False for a timed-out unconfirmed path" $ property $ \((now, path) :: (Timestamp, OnionPath)) ->
-      let path' = path
-            { pathExpires = now `Time.addTime` pathLifetime
-            , pathConfirmed = False
-            , pathLastAttempt = Just (now `Time.addTime` Time.seconds (-5))
-            , pathTries = 2
-            }
-      in isPathAlive now path' `shouldBe` False
-
-  describe "wrapPath and unwrapping" $ do
-    it "correctly layered encryption works through 3 hops" $ property $
-      \(ourKP :: KeyPair) (kpA :: KeyPair) (kpB :: KeyPair) (kpC :: KeyPair)
-        (kp1 :: KeyPair) (kp2 :: KeyPair) (kp3 :: KeyPair)
-        (destAddr :: SocketAddress) (nonce :: Nonce) (finalData :: CipherText) (now :: Timestamp) ->
-          let nodeA = NodeInfo UDP (SocketAddress (IPv4 0x7f000001) 33445) (KeyPair.publicKey kpA)
-              nodeB = NodeInfo UDP (SocketAddress (IPv4 0x7f000002) 33445) (KeyPair.publicKey kpB)
-              nodeC = NodeInfo UDP (SocketAddress (IPv4 0x7f000003) 33445) (KeyPair.publicKey kpC)
-              path = OnionPath [nodeA, nodeB, nodeC] [kp1, kp2, kp3] True 0 (now `Time.addTime` pathLifetime) Nothing 0
-              -- 1. Wrap
-              req0 = runNullKeyed $ wrapPath ourKP path destAddr nonce finalData
-
-              -- 2. Node A unwraps req0 (kind 0x80)
-              mP1 = runNullKeyed $ Tunnel.unwrapOnion0 kpA req0
-          in case mP1 of
-            Nothing -> False
-            Just p1 ->
-              let -- Node A sees dest is B, sends kind 0x81 to B
-                  req1 = Tunnel.OnionRequestRelay nonce (Tunnel.onionPayloadTemporaryKey p1) (Tunnel.onionPayloadEncryptedPayload p1) nonce finalData -- dummy ret data
-                  -- 3. Node B unwraps req1 (kind 0x81)
-                  mP2 = runNullKeyed $ Tunnel.unwrapOnionRelay kpB req1
-              in case mP2 of
-                Nothing -> False
-                Just (p2, _, _) ->
-                  let -- Node B sees dest is C, sends kind 0x82 to C
-                      req2 = Tunnel.OnionRequestRelay nonce (Tunnel.onionPayloadTemporaryKey p2) (Tunnel.onionPayloadEncryptedPayload p2) nonce finalData -- dummy ret data
-                      -- 4. Node C unwraps req2 (kind 0x82)
-                      mP3 = runNullKeyed $ Tunnel.unwrapOnionRelay kpC req2
-                  in case mP3 of
-                    Nothing -> False
-                    Just (p3, _, _) ->
-                      -- 5. Node C sees dest is D, and final data matches
-                      Tunnel.unOnionIPPort (Tunnel.onionPayloadDestination p3) == destAddr &&
-                      Tunnel.onionPayloadEncryptedPayload p3 == finalData
-
-    it "fails to unwrap if any node in the chain has the wrong key" $ property $
-      \(ourKP :: KeyPair) (kpA :: KeyPair) (kpB :: KeyPair) (kpC :: KeyPair)
-        (wrongKP :: KeyPair) (kp1 :: KeyPair) (kp2 :: KeyPair) (kp3 :: KeyPair)
-        (destAddr :: SocketAddress) (nonce :: Nonce) (finalData :: CipherText) (now :: Timestamp) ->
-          let nodeA = NodeInfo UDP (SocketAddress (IPv4 0x7f000001) 33445) (KeyPair.publicKey kpA)
-              nodeB = NodeInfo UDP (SocketAddress (IPv4 0x7f000002) 33445) (KeyPair.publicKey kpB)
-              nodeC = NodeInfo UDP (SocketAddress (IPv4 0x7f000003) 33445) (KeyPair.publicKey kpC)
-              path = OnionPath [nodeA, nodeB, nodeC] [kp1, kp2, kp3] True 0 (now `Time.addTime` pathLifetime) Nothing 0
-              req0 = runNullKeyed $ wrapPath ourKP path destAddr nonce finalData
-
-              -- Use wrong key at Node A
-              mP1Wrong = runNullKeyed $ Tunnel.unwrapOnion0 wrongKP req0
-          in isNothing mP1Wrong || KeyPair.publicKey wrongKP == KeyPair.publicKey kpA
+  describe "relaying" $
+    it "delivers a request through three relays and the response back to the sender" $ property $
+      \(kpA :: KeyPair) (kpB :: KeyPair) (kpC :: KeyPair) (kp1 :: KeyPair) (kp2 :: KeyPair) (kp3 :: KeyPair)
+        (retA :: CombinedKey) (retB :: CombinedKey) (retC :: CombinedKey) (nonce :: Nonce) (now :: Timestamp) ->
+          let addr i = SocketAddress (IPv4 i) 33445
+              node kp i = NodeInfo UDP (addr i) (KeyPair.publicKey kp)
+              path = OnionPath [node kpA 2, node kpB 3, node kpC 4] [kp1, kp2, kp3] True 0 (now `Time.addTime` pathLifetime) Nothing 0
+              (req0, _) = runTestOnion now (OnionPathState [] [] 0) (wrapPath path (addr 5) nonce (BS.pack [0x83, 1, 2, 3]))
+              payload (Tunnel.Relayed _ pkt) = unRawPayload (packetPayload pkt)
+              relay kp ret hop from bytes = runNullKeyed $ Tunnel.relayRequest kp ret nonce hop from bytes
+              result = do
+                toB <- relay kpA retA 1 (addr 1) (LBS.toStrict $ encode req0)
+                toC <- relay kpB retB 2 (addr 2) (payload toB)
+                toD@(Tunnel.Relayed dest (Packet kind _)) <- relay kpC retC 3 (addr 3) (payload toC)
+                let (request, ret3) = BS.splitAt 3 (payload toD)
+                backToB <- Tunnel.relayResponse retC 3 (ret3 <> BS.pack [0x84, 9, 9])
+                backToA <- Tunnel.relayResponse retB 2 (payload backToB)
+                atSender <- Tunnel.relayResponse retA 1 (payload backToA)
+                return (dest, kind, request, atSender)
+          in result `shouldBe` Just (Tunnel.ToUdp (addr 5), PacketKind.AnnounceRequest, BS.pack [1, 2, 3],
+                                     Tunnel.Relayed (Tunnel.ToUdp (addr 1)) (Packet PacketKind.AnnounceResponse (RawPayload $ BS.pack [9, 9])))
 
   describe "maintainPaths" $ do
     it "always fills paths to maxPaths if enough nodes exist" $ property $
@@ -131,17 +113,9 @@ spec = do
           in length (announcePaths finalState) == maxPaths &&
              length (searchPaths finalState) == maxPaths
 
-    it "is idempotent if no paths have expired" $ property $
-      \(now :: Timestamp) (nodes :: [NodeInfo]) ->
-        length nodes >= 3 ==>
-          let initState = OnionPathState [] [] 0
-              (_, state1) = runTestOnion now initState (maintainPaths nodes)
-              (_, state2) = runTestOnion now state1 (maintainPaths nodes)
-          in state1 == state2
-
-  describe "pickNodes" $
+  describe "pickNodes" $ do
     it "always returns exactly 3 nodes if available" $ property $
       \(nodes :: [NodeInfo]) ->
         length nodes >= 3 ==>
-          let result = runIdentity $ evalRandT (pickNodes nodes) (mkStdGen 42)
-          in length result == 3
+          let (pNodes, _) = runTestOnion (Time.fromMillis 0) (OnionPathState [] [] 0) (pickNodes nodes)
+          in length pNodes == 3

@@ -18,6 +18,14 @@ timestampToMicroseconds :: Timestamp -> Word64
 timestampToMicroseconds (Timestamp ts) =
   (fromIntegral (Clock.sec ts) * 1000000) + (fromIntegral (Clock.nsec ts) `div` 1000)
 
+fromSeconds :: Integer -> Timestamp
+fromSeconds s = Timestamp $ Clock.TimeSpec (fromIntegral s) 0
+
+fromMillis :: Integer -> Timestamp
+fromMillis ms =
+  let (s, ns) = ms `divMod` 1000
+  in Timestamp $ Clock.TimeSpec (fromIntegral s) (fromIntegral ns * 1000000)
+
 newtype TimeDiff = TimeDiff Clock.TimeSpec
   deriving (Eq, Ord, Show, Read)
 
@@ -36,6 +44,9 @@ seconds s = TimeDiff $ Clock.TimeSpec (fromIntegral s) 0
 milliseconds :: Integer -> TimeDiff
 milliseconds = TimeDiff . Clock.TimeSpec 0 . (*10^(6::Integer)) . fromIntegral
 
+toMilliseconds :: TimeDiff -> Integer
+toMilliseconds (TimeDiff t) = Clock.toNanoSecs t `div` 1000000
+
 getTime :: IO Timestamp
 getTime = Timestamp <$> Clock.getTime Clock.Monotonic
 
@@ -44,6 +55,10 @@ diffTime (Timestamp t) (Timestamp t') = TimeDiff $ t - t'
 
 addTime :: Timestamp -> TimeDiff -> Timestamp
 addTime (Timestamp t) (TimeDiff t') = Timestamp $ t + t'
+
+-- | Whether the interval has passed since the time, or there was none.
+due :: Timestamp -> TimeDiff -> Maybe Timestamp -> Bool
+due now interval = maybe True (\t -> addTime t interval <= now)
 
 {-------------------------------------------------------------------------------
  -

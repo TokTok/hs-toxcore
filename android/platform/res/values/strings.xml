@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">hTox</string>
+    <string name="connection_channel">Connection</string>
+    <string name="connection_running">Staying connected to Tox</string>
+</resources>

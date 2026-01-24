@@ -18,7 +18,7 @@ getList = go []
         isEmpty <- Get.isEmpty
         if isEmpty
             then return $ reverse xs
-            else go =<< (: xs) <$> get
+            else go . (: xs) =<< get
 
 getSectionHeader :: Word16 -> Get (Int, Word16)
 getSectionHeader sectionMagic = do

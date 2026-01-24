@@ -3,6 +3,7 @@
 
 module Tox.Crypto.Core.MonadRandomBytes where
 
+import           Control.Monad.Logger      (LoggingT)
 import           Control.Monad.Random      (RandT, getRandoms)
 import           Control.Monad.Reader      (ReaderT)
 import           Control.Monad.RWS         (RWST)
@@ -40,6 +41,9 @@ instance MonadRandomBytes IO where
   newKeyPair = KeyPair.newKeyPair
 
 instance MonadRandomBytes m => MonadRandomBytes (ReaderT r m) where
+  randomBytes = lift . randomBytes
+  newKeyPair = lift newKeyPair
+instance MonadRandomBytes m => MonadRandomBytes (LoggingT m) where
   randomBytes = lift . randomBytes
   newKeyPair = lift newKeyPair
 instance (Monoid w, MonadRandomBytes m) => MonadRandomBytes (WriterT w m) where

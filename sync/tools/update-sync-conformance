@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Copies the sync conformance cases from an rs-toxcore-c checkout, by default
+# the one next to hs-toxcore, into test/conformance.
+
+set -euo pipefail
+
+SYNC="$(dirname "$0")/.."
+SOURCE="${1:-$SYNC/../../rs-toxcore-c}"
+
+rm -f "$SYNC"/test/conformance/*.json
+cp "$SOURCE"/sync/conformance/{*.json,README.md} "$SYNC"/test/conformance/

@@ -32,6 +32,10 @@ library
     Tox.Application.GroupChat
     Tox.Application.GroupChatPackets
     Tox.Application.LegacyGroup
+    Tox.Application.Proxy
+    Tox.Application.Save
+    Tox.Application.State
+    Tox.Application.Tox
     Tox.Conduit.DHT
     Tox.Conduit.Encoding
     Tox.Conduit.Network
@@ -51,6 +55,7 @@ library
     Tox.Crypto.Core.Keyed
     Tox.Crypto.Core.MonadRandomBytes
     Tox.Crypto.Core.Nonce
+    Tox.Crypto.Core.Sign
     Tox.DHT
     Tox.DHT.ClientList
     Tox.DHT.ClientNode
@@ -59,6 +64,7 @@ library
     Tox.DHT.DhtState
     Tox.DHT.Distance
     Tox.DHT.KBuckets
+    Tox.DHT.Nat
     Tox.DHT.Node
     Tox.DHT.NodeList
     Tox.DHT.NodesRequest
@@ -85,6 +91,7 @@ library
     Tox.Network.TCP.Client
     Tox.Network.TCP.Connections
     Tox.Network.TCP.Server
+    Tox.Onion.Operation
     Tox.Onion.Path
     Tox.Onion.RPC
     Tox.Onion.Tunnel
@@ -101,7 +108,6 @@ library
     Tox.Toxcore
     Tox.Transport.Reliability
     Tox.Transport.SecureSession
-    Tox.Transport.SecureSession.Manager
     Tox.Transport.Stream
 
   build-depends:
@@ -117,6 +123,7 @@ library
     , integer-gmp
     , iproute
     , lens-family
+    , monad-logger
     , monad-validate
     , MonadRandom
     , msgpack-arbitrary
@@ -127,6 +134,8 @@ library
     , QuickCheck         >=2.9.1
     , random             <1.3
     , saltine            >=0.2
+    , stm
+    , text
     , transformers
 
 executable toxsave-convert
@@ -174,9 +183,12 @@ test-suite testsuite
   main-is:            testsuite.hs
   other-modules:
     Data.Result
+    Tox.Application.ProxySpec
+    Tox.Application.ToxSpec
     Tox.Core.Bits.GetSpec
     Tox.Core.Bits.PutSpec
     Tox.Core.BitsSpec
+    Tox.Core.PingArraySpec
     Tox.Core.TimeSpec
     Tox.Crypto.Core.BoxSpec
     Tox.Crypto.Core.CombinedKeySpec
@@ -184,6 +196,7 @@ test-suite testsuite
     Tox.Crypto.Core.KeySpec
     Tox.Crypto.Core.MonadRandomBytesSpec
     Tox.Crypto.Core.NonceSpec
+    Tox.Crypto.Core.SignSpec
     Tox.Crypto.CoreSpec
     Tox.DHT.ClientListSpec
     Tox.DHT.ClientNodeSpec
@@ -210,7 +223,11 @@ test-suite testsuite
     Tox.Network.Core.PortNumberSpec
     Tox.Network.Core.ProtocolSpec
     Tox.Network.Core.SocketAddressSpec
+    Tox.Network.Core.TestStack
     Tox.Network.Core.TransportProtocolSpec
+    Tox.Network.TCP.ClientSpec
+    Tox.Network.TCP.ServerSpec
+    Tox.Onion.OperationSpec
     Tox.Onion.PathSpec
     Tox.Onion.RPCSpec
     Tox.Onion.TunnelSpec
@@ -221,6 +238,8 @@ test-suite testsuite
     Tox.Persistence.GroupsSpec
     Tox.Persistence.NodesSpec
     Tox.PersistenceSpec
+    Tox.Session.FriendSpec
+    Tox.SpecComplianceSpec
     Tox.Transport.ReliabilitySpec
     Tox.Transport.SecureSessionSpec
     Tox.Transport.StreamSpec
@@ -234,11 +253,13 @@ test-suite testsuite
     , clock
     , containers
     , hspec
+    , monad-logger
     , monad-validate
     , MonadRandom
     , msgpack-binary
     , msgpack-types   >=0.2 && <0.4
     , mtl
+    , network
     , QuickCheck
     , random
     , saltine

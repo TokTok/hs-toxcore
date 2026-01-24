@@ -1,9 +1,9 @@
 \subsection{DHT (0x02)}
 
 \begin{code}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE StrictData                 #-}
-module Tox.Persistence.DHT (DHT) where
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE StrictData    #-}
+module Tox.Persistence.DHT (DHT (..), DhtSection (..)) where
 
 import           Control.Arrow             (second)
 import           Control.Monad             (when)

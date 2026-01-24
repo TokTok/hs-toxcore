@@ -6,12 +6,9 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import           Control.Monad.Identity      (runIdentity)
+import           Control.Monad.Logger        (runNoLoggingT)
 import           Control.Monad.Random        (evalRandT)
 import           Control.Monad.State         (runStateT)
-import           Data.Binary                 (Binary, encode)
-import qualified Data.ByteString             as BS
-import qualified Data.ByteString.Lazy        as LBS
-import           Data.List                   (isInfixOf)
 import qualified Data.Map                    as Map
 
 import           Tox.Core.Time
@@ -54,6 +51,7 @@ spec = do
             ((_, _), events) = runIdentity
               . Networked.runNetworkLogged
               . (`runStateT` dhtState)
+              . runNoLoggingT
               . (`evalRandT` unwrapArbStdGen seed)
               . (`TimedT.runTimedT` time)
               . (`KeyedT.evalKeyedT` Map.empty)

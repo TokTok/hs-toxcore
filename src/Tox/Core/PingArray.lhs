@@ -1,6 +1,52 @@
 \begin{code}
 {-# LANGUAGE StrictData #-}
 module Tox.Core.PingArray where
+
+import           Data.Map      (Map)
+import qualified Data.Map      as Map
+import           Data.Word     (Word64)
+import qualified Tox.Core.Time as Time
+import           Tox.Core.Time (TimeDiff, Timestamp)
+
+-- | A Ping Array stores data for a limited time, indexed by a 64-bit ID.
+data PingArray a = PingArray
+  { paSize    :: Int
+  , paTimeout :: TimeDiff
+  , paEntries :: Map Word64 (Word64, Timestamp, a) -- ^ By index: the ID, when it was added and the data.
+  , paLastId  :: Word64
+  } deriving (Eq, Show)
+
+-- | Initialise a new Ping Array.
+empty :: Int -> TimeDiff -> PingArray a
+empty size timeout = PingArray
+  { paSize    = size
+  , paTimeout = timeout
+  , paEntries = Map.empty
+  , paLastId  = 0
+  }
+
+-- | Add an entry to the array, over the oldest one when it is full. Returns
+-- the ID and the updated array.
+addEntry :: Timestamp -> a -> Word64 -> PingArray a -> (Word64, PingArray a)
+addEntry now val seed state =
+  let
+    size = fromIntegral (paSize state)
+    idx = (paLastId state + 1) `mod` size
+    pingId = seed `div` size * size + idx
+  in
+    (pingId, state { paEntries = Map.insert idx (pingId, now, val) (paEntries state), paLastId = idx })
+
+-- | Attempt to retrieve and remove an entry by its ID.
+-- Validates that the entry exists and hasn't timed out.
+takeEntry :: Timestamp -> Word64 -> PingArray a -> (Maybe a, PingArray a)
+takeEntry now pingId state =
+  case Map.lookup idx (paEntries state) of
+    Just (stored, timestamp, val) | stored == pingId ->
+      let found = if now `Time.diffTime` timestamp > paTimeout state then Nothing else Just val in
+      (found, state { paEntries = Map.delete idx (paEntries state) })
+    _ -> (Nothing, state)
+  where
+    idx = pingId `mod` fromIntegral (paSize state)
 \end{code}
 
 \chapter{Ping array}

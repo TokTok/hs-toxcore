@@ -1,6 +1,311 @@
 \begin{code}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StrictData        #-}
 module Tox.Network.TCP.Server where
+
+import           Control.Monad                    (forM_, guard, unless, when)
+import           Control.Monad.Logger             (MonadLogger, logInfoN)
+import qualified Crypto.Saltine.Class             as Sodium
+import           Data.Binary.Get                  (getWord64be, runGet)
+import           Data.ByteString                  (ByteString)
+import qualified Data.ByteString                  as BS
+import qualified Data.ByteString.Lazy             as LBS
+import           Data.List                        (find, sortOn)
+import           Data.Map                         (Map)
+import qualified Data.Map                         as Map
+import           Data.Maybe                       (isNothing, listToMaybe)
+import           Data.Text                        (pack)
+import           Data.Word                        (Word64, Word8)
+
+import qualified Tox.Core.Time                    as Time
+import           Tox.Core.Time                    (TimeDiff, Timestamp)
+import           Tox.Core.Timed                   (Timed (..))
+import qualified Tox.Crypto.Core.Box              as Box
+import           Tox.Crypto.Core.Box              (PlainText (..))
+import qualified Tox.Crypto.Core.CombinedKey      as CombinedKey
+import           Tox.Crypto.Core.Key              (Key (..), Nonce, PublicKey,
+                                                   unKey)
+import           Tox.Crypto.Core.KeyPair          (KeyPair (..))
+import           Tox.Crypto.Core.MonadRandomBytes (MonadRandomBytes (..),
+                                                   randomNonce, randomWord64)
+import           Tox.Network.TCP.Client           (Keys (..), cipher, encodeKey,
+                                                   numReservedPorts, openFrame,
+                                                   packetConnectNotification,
+                                                   packetDisconnectNotification,
+                                                   packetOnionRequest,
+                                                   packetOnionResponse,
+                                                   packetOobRecv, packetOobSend,
+                                                   packetPing, packetPong,
+                                                   packetRoutingRequest,
+                                                   packetRoutingResponse,
+                                                   pingInterval, pingPacket,
+                                                   pingTimeout, sealFrame)
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: State.
+ -
+ ------------------------------------------------------------------------------}
+
+-- | A connection accepted by the server, numbered by the application.
+type ClientId = Word64
+
+clientHandshakeLength, maxRoutes, minOnionRequestLength :: Int
+clientHandshakeLength = 32 + 24 + 32 + 24 + 16
+maxRoutes = 256 - fromIntegral numReservedPorts
+-- | A nonce and two onion layers.
+minOnionRequestLength = 24 + 2 * (32 + 19 + 16)
+
+-- | How long a client has to send its handshake and first packet.
+confirmTimeout :: TimeDiff
+confirmTimeout = Time.seconds 10
+
+-- | A peer a client asked for: once the peer asked for the client too, the
+-- peer's connection and its route id for the client.
+data Route = Route
+  { routePeer :: PublicKey
+  , routeLink :: Maybe (ClientId, Word8)
+  } deriving (Eq, Show)
+
+data Client = Client
+  { clPk          :: Maybe PublicKey -- ^ Set by the handshake.
+  , clKeys        :: Maybe Keys
+  , clConfirmed   :: Bool
+  , clBuffer      :: ByteString
+  , clRoutes      :: Map Word8 Route -- ^ By route id.
+  , clLastPinged  :: Timestamp       -- ^ When accepted, until the first ping.
+  , clPendingPing :: Maybe Word64
+  } deriving (Eq, Show)
+
+data TcpServer = TcpServer
+  { tsKeys    :: KeyPair -- ^ Our DHT keys.
+  , tsClients :: Map ClientId Client
+  }
+
+-- | An onion request a client sent: the nonce and the first layer, already
+-- decrypted.
+data ServerEvent = ServerOnionRequest ClientId ByteString
+  deriving (Eq, Show)
+
+class (Timed m, MonadRandomBytes m, MonadLogger m) => TcpServerMonad m where
+  getTcpServer :: m TcpServer
+  putTcpServer :: TcpServer -> m ()
+  serverSend   :: ClientId -> ByteString -> m ()
+  serverClose  :: ClientId -> m ()
+
+newTcpServer :: KeyPair -> TcpServer
+newTcpServer keys = TcpServer keys Map.empty
+
+getClient :: TcpServerMonad m => ClientId -> m (Maybe Client)
+getClient cid = Map.lookup cid . tsClients <$> getTcpServer
+
+modifyClient :: TcpServerMonad m => ClientId -> (Client -> Client) -> m ()
+modifyClient cid f = getTcpServer >>= \s -> putTcpServer s { tsClients = Map.adjust f cid (tsClients s) }
+
+-- | The confirmed client with a key.
+clientWithKey :: TcpServer -> PublicKey -> Maybe ClientId
+clientWithKey s pk =
+  listToMaybe [ cid | (cid, cl) <- Map.toList (tsClients s), clConfirmed cl, clPk cl == Just pk ]
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Connections.
+ -
+ ------------------------------------------------------------------------------}
+
+-- | A new client. As in toxcore, at most 256 wait to finish their
+-- handshake, and the oldest waiting one makes room for a new one.
+clientAccepted :: TcpServerMonad m => ClientId -> m ()
+clientAccepted cid = do
+  now <- askTime
+  s <- getTcpServer
+  let waiting = [ (clLastPinged cl, c) | (c, cl) <- Map.toList (tsClients s), not (clConfirmed cl) ]
+  when (length waiting >= maxIncoming) $ mapM_ (killClient . snd) (take 1 $ sortOn fst waiting)
+  s' <- getTcpServer
+  putTcpServer s' { tsClients = Map.insert cid (Client Nothing Nothing False BS.empty Map.empty now Nothing) (tsClients s') }
+
+maxIncoming :: Int
+maxIncoming = 256
+
+-- | Close a client's connection and tell the peers routed to it.
+killClient :: TcpServerMonad m => ClientId -> m ()
+killClient cid = getClient cid >>= mapM_ (\cl -> do
+  mapM_ (removeRoute cid) (Map.keys $ clRoutes cl)
+  s <- getTcpServer
+  putTcpServer s { tsClients = Map.delete cid (tsClients s) }
+  serverClose cid)
+
+sendToClient :: TcpServerMonad m => ClientId -> ByteString -> m ()
+sendToClient cid bytes = getClient cid >>= mapM_ (\cl ->
+  forM_ (clKeys cl >>= sealFrame bytes) $ \(frame, keys) -> do
+    modifyClient cid $ \c -> c { clKeys = Just keys }
+    serverSend cid frame)
+
+sendOnionResponse :: TcpServerMonad m => ClientId -> ByteString -> m ()
+sendOnionResponse cid = sendToClient cid . BS.cons packetOnionResponse
+
+clientBytes :: TcpServerMonad m => ClientId -> ByteString -> m [ServerEvent]
+clientBytes cid bytes = do
+  modifyClient cid $ \cl -> cl { clBuffer = clBuffer cl <> bytes }
+  getClient cid >>= maybe (return []) go
+  where
+    go cl = case clKeys cl of
+      Nothing
+        | BS.length (clBuffer cl) < clientHandshakeLength -> return []
+        | otherwise -> do
+            let (handshake, rest) = BS.splitAt clientHandshakeLength (clBuffer cl)
+            ourKeys <- tsKeys <$> getTcpServer
+            case openClientHandshake ourKeys handshake of
+              Nothing -> [] <$ killClient cid
+              Just (pk, tempPk, recvNonce) -> do
+                tempKeys <- newKeyPair
+                sentNonce <- randomNonce
+                nonce <- randomNonce
+                let shared = CombinedKey.precompute (secretKey ourKeys) pk
+                    hello = encodeKey (publicKey tempKeys) <> Sodium.encode (unKey sentNonce)
+                    keys = Keys (CombinedKey.precompute (secretKey tempKeys) tempPk) sentNonce recvNonce
+                serverSend cid $ Sodium.encode (unKey nonce) <> Box.unCipherText (Box.encrypt shared nonce $ PlainText hello)
+                let cl' = cl { clPk = Just pk, clKeys = Just keys, clBuffer = rest }
+                modifyClient cid (const cl')
+                go cl'
+      Just keys -> case openFrame (clBuffer cl) keys of
+        Left () -> [] <$ killClient cid
+        Right Nothing -> return []
+        Right (Just (plain, keys', rest)) -> do
+          modifyClient cid $ \c -> c { clKeys = Just keys', clBuffer = rest }
+          unless (clConfirmed cl) $ confirmClient cid
+          handled <- handlePacket cid plain
+          case handled of
+            Nothing -> [] <$ killClient cid
+            Just events -> (events ++) <$> (getClient cid >>= maybe (return []) go)
+
+-- | The client's handshake: its DHT key, its temporary key and its first
+-- nonce.
+openClientHandshake :: KeyPair -> ByteString -> Maybe (PublicKey, PublicKey, Nonce)
+openClientHandshake ourKeys handshake = do
+  let (pkBytes, rest) = BS.splitAt 32 handshake
+      (nonceBytes, sealed) = BS.splitAt 24 rest
+  pk <- Key <$> Sodium.decode pkBytes
+  nonce <- Key <$> Sodium.decode nonceBytes
+  PlainText plain <- cipher sealed >>= Box.decrypt (CombinedKey.precompute (secretKey ourKeys) pk) nonce
+  guard $ BS.length plain == 32 + 24
+  tempPk <- Key <$> Sodium.decode (BS.take 32 plain)
+  recvNonce <- Key <$> Sodium.decode (BS.drop 32 plain)
+  return (pk, tempPk, recvNonce)
+
+-- | The client's first packet shows it took our handshake.  A client
+-- reconnecting with the same key replaces its old connection.
+confirmClient :: TcpServerMonad m => ClientId -> m ()
+confirmClient cid = do
+  now <- askTime
+  s <- getTcpServer
+  forM_ (Map.lookup cid (tsClients s) >>= clPk) $ \pk -> do
+    forM_ (clientWithKey s pk) killClient
+    modifyClient cid $ \cl -> cl { clConfirmed = True, clLastPinged = now }
+    logInfoN $ "TCP client connected: " <> pack (show pk)
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Packets.
+ -
+ ------------------------------------------------------------------------------}
+
+-- | Handle a decrypted packet, or 'Nothing' if the client must be dropped.
+handlePacket :: TcpServerMonad m => ClientId -> ByteString -> m (Maybe [ServerEvent])
+handlePacket cid plain = case BS.uncons plain of
+  Nothing -> return Nothing
+  Just (ident, rest)
+    | ident == packetRoutingRequest -> case Key <$> Sodium.decode rest of
+        Just pk -> Just [] <$ handleRoutingRequest cid pk
+        Nothing -> return Nothing
+    | ident == packetConnectNotification -> return $ [] <$ guard (BS.length rest == 1)
+    | ident == packetDisconnectNotification, [wireId] <- BS.unpack rest -> do
+        let routeId = wireId - numReservedPorts
+        routes <- maybe Map.empty clRoutes <$> getClient cid
+        if Map.member routeId routes
+          then Just [] <$ removeRoute cid routeId
+          else return Nothing
+    | ident == packetPing, BS.length rest == 8 -> Just [] <$ sendToClient cid (BS.cons packetPong rest)
+    | ident == packetPong, BS.length rest == 8 -> case runGet getWord64be (LBS.fromStrict rest) of
+        0 -> return Nothing
+        pingId -> do
+          modifyClient cid $ \cl -> if clPendingPing cl == Just pingId then cl { clPendingPing = Nothing } else cl
+          return $ Just []
+    | ident == packetOobSend, BS.length rest > 32, BS.length rest <= 32 + 1024 -> do
+        s <- getTcpServer
+        let sender = Map.lookup cid (tsClients s) >>= clPk
+        forM_ ((,) <$> sender <*> (Sodium.decode (BS.take 32 rest) >>= clientWithKey s . Key)) $ \(pk, other) ->
+          sendToClient other $ BS.cons packetOobRecv (encodeKey pk) <> BS.drop 32 rest
+        return $ Just []
+    | ident == packetOnionRequest, BS.length rest > minOnionRequestLength ->
+        return $ Just [ServerOnionRequest cid rest]
+    | ident >= numReservedPorts, fromIntegral (ident - numReservedPorts) < maxRoutes -> do
+        route <- (>>= Map.lookup (ident - numReservedPorts) . clRoutes) <$> getClient cid
+        case route of
+          Nothing -> return Nothing
+          Just r -> do
+            forM_ (routeLink r) $ \(other, otherId) ->
+              sendToClient other $ BS.cons (otherId + numReservedPorts) rest
+            return $ Just []
+  _ -> return Nothing
+
+-- | A client asks to be connected to a peer.  Once both asked for each other,
+-- both are told they are connected.
+handleRoutingRequest :: TcpServerMonad m => ClientId -> PublicKey -> m ()
+handleRoutingRequest cid pk = do
+  s <- getTcpServer
+  forM_ (Map.lookup cid $ tsClients s) $ \cl -> do
+    let respond routeId = sendToClient cid $ BS.pack [packetRoutingResponse, routeId] <> encodeKey pk
+        existing = find ((== pk) . routePeer . snd) (Map.toList $ clRoutes cl)
+        free = find (`Map.notMember` clRoutes cl) [0 .. fromIntegral maxRoutes - 1]
+    case (clPk cl == Just pk, existing, free) of
+      (True, _, _) -> respond 0
+      (_, Just (routeId, _), _) -> respond (routeId + numReservedPorts)
+      (_, _, Nothing) -> respond 0
+      (_, _, Just routeId) -> do
+        respond (routeId + numReservedPorts)
+        let waiting = do
+              other <- clientWithKey s pk
+              ocl <- Map.lookup other (tsClients s)
+              (otherId, r) <- find (\(_, r) -> Just (routePeer r) == clPk cl && isNothing (routeLink r)) (Map.toList $ clRoutes ocl)
+              return (other, otherId, r)
+        case waiting of
+          Nothing -> setRoute cid routeId (Route pk Nothing)
+          Just (other, otherId, r) -> do
+            setRoute cid routeId (Route pk (Just (other, otherId)))
+            setRoute other otherId r { routeLink = Just (cid, routeId) }
+            sendToClient cid $ BS.pack [packetConnectNotification, routeId + numReservedPorts]
+            sendToClient other $ BS.pack [packetConnectNotification, otherId + numReservedPorts]
+  where
+    setRoute c routeId r = modifyClient c $ \cl -> cl { clRoutes = Map.insert routeId r (clRoutes cl) }
+
+-- | Drop a client's route, and tell the peer at the other end.
+removeRoute :: TcpServerMonad m => ClientId -> Word8 -> m ()
+removeRoute cid routeId = do
+  route <- (>>= Map.lookup routeId . clRoutes) <$> getClient cid
+  forM_ (route >>= routeLink) $ \(other, otherId) -> do
+    modifyClient other $ \cl -> cl { clRoutes = Map.adjust (\r -> r { routeLink = Nothing }) otherId (clRoutes cl) }
+    sendToClient other $ BS.pack [packetDisconnectNotification, otherId + numReservedPorts]
+  modifyClient cid $ \cl -> cl { clRoutes = Map.delete routeId (clRoutes cl) }
+
+-- | Periodic work: ping clients and drop the ones that stopped answering or
+-- never confirmed.
+doTcpServer :: TcpServerMonad m => m ()
+doTcpServer = do
+  now <- askTime
+  clients <- Map.toList . tsClients <$> getTcpServer
+  forM_ clients $ \(cid, cl) -> if
+    | not (clConfirmed cl) -> when (Time.addTime (clLastPinged cl) confirmTimeout < now) $ killClient cid
+    | Just _ <- clPendingPing cl, Time.addTime (clLastPinged cl) pingTimeout < now -> killClient cid
+    | Time.addTime (clLastPinged cl) pingInterval <= now -> do
+        pingId <- max 1 <$> randomWord64
+        modifyClient cid $ \c -> c { clLastPinged = now, clPendingPing = Just pingId }
+        sendToClient cid $ pingPacket packetPing pingId
+    | otherwise -> return ()
 \end{code}
 
 \chapter{TCP server}

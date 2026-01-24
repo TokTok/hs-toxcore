@@ -24,8 +24,11 @@ import qualified Data.Binary.Put           as Bytes
 import qualified Data.IP                   as IP
 import           Data.MessagePack          (MessagePack)
 import           Data.Typeable             (Typeable)
+import           Data.Word                 (Word8)
 import           GHC.Generics              (Generic)
-import qualified Network.Socket            as Socket (HostAddress, HostAddress6)
+import qualified Network.Socket            as Socket (HostAddress, HostAddress6,
+                                                      hostAddressToTuple,
+                                                      tupleToHostAddress)
 import           Test.QuickCheck.Arbitrary (Arbitrary, arbitrary)
 import qualified Test.QuickCheck.Gen       as Gen
 import           Text.Read                 (readMaybe, readPrec)
@@ -66,7 +69,7 @@ instance Read HostAddress where
 getHostAddressGetter :: Bits.BitGet (Bytes.Get HostAddress)
 getHostAddressGetter =
   Bits.getWord8 7 >>= \case
-    2  -> return $ IPv4 <$> Binary.get
+    2  -> return $ IPv4 <$> getIPv4
     10 -> return $ IPv6 <$> Binary.get
     n  -> fail $ "Invalid address family: " ++ show n
 
@@ -77,8 +80,51 @@ putAddressFamily (IPv6 _) = Bits.putWord8 7 10
 
 
 putHostAddressValue :: HostAddress -> Bytes.Put
-putHostAddressValue (IPv4 addr) = Binary.put addr
+putHostAddressValue (IPv4 addr) = putIPv4 addr
 putHostAddressValue (IPv6 addr) = Binary.put addr
+
+-- | Whether the address is this machine's: 127.0.0.0/8 or ::1, also as an
+-- IPv4-mapped IPv6 address.
+isLoopback :: HostAddress -> Bool
+isLoopback (IPv4 addr) = let (a, _, _, _) = Socket.hostAddressToTuple addr in a == 127
+isLoopback (IPv6 (0, 0, 0, 1)) = True
+isLoopback (IPv6 (0, 0, 0xffff, v4)) = v4 `div` 0x1000000 == 127
+isLoopback (IPv6 _) = False
+
+-- | Whether the address is on a local network, as toxcore decides which LAN
+-- discovery packets to take.
+isLan :: HostAddress -> Bool
+isLan addr | isLoopback addr = True
+isLan (IPv4 addr) = isLanIPv4 $ Socket.hostAddressToTuple addr
+isLan (IPv6 (a, _, _, d))
+  | a `div` 0x1000000 == 0xff && (a `div` 0x10000) `mod` 0x100 < 3 && d `mod` 0x100 == 1 = True
+  | a `div` 0x400000 == 0xfe80 `div` 0x40 = True
+isLan (IPv6 (0, 0, 0xffff, v4)) =
+  isLanIPv4 (fromIntegral $ v4 `div` 0x1000000, fromIntegral $ v4 `div` 0x10000, fromIntegral $ v4 `div` 0x100, fromIntegral v4)
+isLan (IPv6 _) = False
+
+isLanIPv4 :: (Word8, Word8, Word8, Word8) -> Bool
+isLanIPv4 (a, b, c, _) =
+  a == 10
+    || (a == 172 && b >= 16 && b <= 31)
+    || (a == 192 && b == 168)
+    || (a == 169 && b == 254 && c /= 0 && c /= 255)
+    || (a == 100 && b >= 64 && b < 128)
+
+-- | IPv4 addresses are sent as their four octets in order.  A
+-- 'Socket.HostAddress' holds them in memory order, not as a number.
+putIPv4 :: Socket.HostAddress -> Bytes.Put
+putIPv4 addr = mapM_ Bytes.putWord8 [a, b, c, d]
+  where
+    (a, b, c, d) = Socket.hostAddressToTuple addr
+
+getIPv4 :: Bytes.Get Socket.HostAddress
+getIPv4 = do
+  a <- Bytes.getWord8
+  b <- Bytes.getWord8
+  c <- Bytes.getWord8
+  d <- Bytes.getWord8
+  return $ Socket.tupleToHostAddress (a, b, c, d)
 
 
 putHostAddress :: HostAddress -> (Bits.BitPut (), Bytes.Put)

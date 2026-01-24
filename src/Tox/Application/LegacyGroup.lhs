@@ -1,6 +1,851 @@
 \begin{code}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE MultiWayIf        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StrictData        #-}
 module Tox.Application.LegacyGroup where
+
+import           Control.Monad                    (forM, forM_, unless, void,
+                                                   when)
+import qualified Crypto.Saltine.Class             as Sodium
+import qualified Data.Binary                      as Binary
+import           Data.Binary.Get                  (Get, getWord16be,
+                                                   getWord32be, getWord8,
+                                                   runGet)
+import           Data.Binary.Put                  (putWord16be, putWord32be,
+                                                   runPut)
+import           Data.Bits                        (shiftL, (.|.))
+import           Data.ByteString                  (ByteString)
+import qualified Data.ByteString                  as BS
+import qualified Data.ByteString.Lazy             as LBS
+import           Data.List                        (find, foldl', sortOn)
+import           Data.Map                         (Map)
+import qualified Data.Map                         as Map
+import           Data.Maybe                       (isJust)
+import           Data.Set                         (Set)
+import qualified Data.Set                         as Set
+import           Data.Word                        (Word16, Word32, Word64,
+                                                   Word8)
+
+import           Tox.Application.GroupChatPackets (runGetRest)
+import qualified Tox.Core.Time                    as Time
+import           Tox.Core.Time                    (TimeDiff, Timestamp)
+import           Tox.Core.Timed                   (Timed (..))
+import           Tox.Crypto.Core.Key              (Key (..), PublicKey, unKey)
+import qualified Tox.Crypto.Core.KeyPair          as KeyPair
+import           Tox.Crypto.Core.MonadRandomBytes (randomBytes, randomWord16)
+import qualified Tox.DHT.Operation                as DHT
+import qualified Tox.Onion.Operation              as Onion
+import qualified Tox.Persistence.Conferences      as PC
+import qualified Tox.Session.Connection           as Connection
+import           Tox.Session.Connection           (ConnectionEvent (..))
+import qualified Tox.Session.Friend               as Messenger
+import qualified Tox.Transport.Reliability        as Reliability
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Packets.
+ -
+ ------------------------------------------------------------------------------}
+
+packetIdInvite, packetIdOnline, packetIdDirect, packetIdMessage, packetIdRejoin :: Word8
+packetIdInvite  = 0x60
+packetIdOnline  = 0x61
+packetIdDirect  = 0x62
+packetIdMessage = 0x63
+packetIdRejoin  = 0x64
+
+packetIds :: [Word8]
+packetIds = [packetIdInvite, packetIdOnline, packetIdDirect, packetIdMessage, packetIdRejoin]
+
+inviteId, inviteAcceptId, inviteMemberId :: Word8
+inviteId       = 0
+inviteAcceptId = 1
+inviteMemberId = 2
+
+peerIntroducedId, peerQueryId, peerResponseId, peerTitleId :: Word8
+peerIntroducedId = 1
+peerQueryId      = 8
+peerResponseId   = 9
+peerTitleId      = 10
+
+messagePing, messageNewPeer, messageKillPeer, messageFreezePeer, messageName,
+  messageTitle, messageChat, messageAction :: Word8
+messagePing       = 0
+messageNewPeer    = 16
+messageKillPeer   = 17
+messageFreezePeer = 18
+messageName       = 48
+messageTitle      = 49
+messageChat       = 64
+messageAction     = 65
+
+typeText, typeAv :: Word8
+typeText = 0
+typeAv   = 1
+
+groupIdLength, desiredClosest, maxConnections, maxMessageInfos, maxFrozen, maxNameLength :: Int
+groupIdLength   = 32
+desiredClosest  = 4
+maxConnections  = 16
+maxMessageInfos = 8
+maxFrozen       = 128
+maxNameLength   = 128
+
+-- | The most data a message can carry: a friend connection packet less our
+-- headers.
+maxMessageData :: Int
+maxMessageData = Reliability.maxCryptoDataSize - (1 + 2 + 2 + 4 + 1)
+
+pingInterval, freezeTimeout :: TimeDiff
+pingInterval  = Time.seconds 20
+freezeTimeout = Time.seconds 60
+
+word16 :: Word16 -> ByteString
+word16 = LBS.toStrict . runPut . putWord16be
+
+word32 :: Word32 -> ByteString
+word32 = LBS.toStrict . runPut . putWord32be
+
+getW16 :: ByteString -> Word16
+getW16 = runGet getWord16be . LBS.fromStrict . BS.take 2
+
+getW32 :: ByteString -> Word32
+getW32 = runGet getWord32be . LBS.fromStrict . BS.take 4
+
+keyBytes :: PublicKey -> ByteString
+keyBytes = Sodium.encode . unKey
+
+decodeKey :: ByteString -> Maybe PublicKey
+decodeKey = fmap Key . Sodium.decode
+
+-- | A peer's number, real key and DHT key, as peer lists and new peer
+-- messages carry them.
+getPeerKeys :: Get (Word16, PublicKey, PublicKey)
+getPeerKeys = (,,) <$> getWord16be <*> Binary.get <*> Binary.get
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: State.
+ -
+ ------------------------------------------------------------------------------}
+
+type GroupNumber = Word16
+type PeerNumber = Word16
+
+-- | Why we keep a connection to a peer.
+data Reason = Closest | Introducing | Introducer
+  deriving (Eq, Ord, Show)
+
+data GroupConn = GroupConn
+  { gcOnline      :: Bool
+  , gcGroupNumber :: GroupNumber -- ^ The peer's number for the conference, once online.
+  , gcReasons     :: Set Reason
+  } deriving (Eq, Show)
+
+data Peer = Peer
+  { peerRealPk      :: PublicKey
+  , peerDhtPk       :: PublicKey
+  , peerDhtUpdated  :: Bool
+  , peerName        :: ByteString
+  , peerNameUpdated :: Bool
+  , peerLastActive  :: Timestamp
+  , peerSeen        :: [(Word32, Word8)] -- ^ Recent message numbers and ids, newest first.
+  } deriving (Eq, Show)
+
+data Conference = Conference
+  { cfType          :: Word8
+  , cfId            :: ByteString
+  , cfConnected     :: Bool        -- ^ We know our peer number.
+  , cfSelf          :: PeerNumber
+  , cfPeers         :: Map PeerNumber Peer -- ^ Including us.
+  , cfFrozen        :: Map PeerNumber Peer
+  , cfTitle         :: ByteString
+  , cfTitleFresh    :: Bool
+  , cfConns         :: Map PublicKey GroupConn -- ^ By the peer's real key.
+  , cfMessageNumber :: Word32
+  , cfLastPing      :: Maybe Timestamp
+  , cfNeedSendName  :: Bool
+  } deriving (Eq, Show)
+
+newtype Conferences = Conferences { conferences :: Map GroupNumber Conference }
+
+emptyConferences :: Conferences
+emptyConferences = Conferences Map.empty
+
+data ConferenceEvent
+  = ConferenceInvited PublicKey Word8 ByteString -- ^ Friend, type, and the cookie to join with.
+  | ConferenceConnected GroupNumber
+  | ConferenceMessage GroupNumber PeerNumber Messenger.MessageType ByteString
+  | ConferenceTitle GroupNumber (Maybe PeerNumber) ByteString
+  | ConferencePeerName GroupNumber PeerNumber ByteString
+  | ConferencePeerListChanged GroupNumber
+  deriving (Eq, Show)
+
+class (Messenger.MessengerMonad m, Onion.OnionNodeMonad m, DHT.DhtNodeMonad m) => ConferenceMonad m where
+  getConferences :: m Conferences
+  putConferences :: Conferences -> m ()
+
+getConference :: ConferenceMonad m => GroupNumber -> m (Maybe Conference)
+getConference g = Map.lookup g . conferences <$> getConferences
+
+modifyConference :: ConferenceMonad m => GroupNumber -> (Conference -> Conference) -> m ()
+modifyConference g f = getConferences >>= \(Conferences cs) -> putConferences (Conferences $ Map.adjust f g cs)
+
+findConference :: ConferenceMonad m => Word8 -> ByteString -> m (Maybe GroupNumber)
+findConference ty gid = do
+  cs <- conferences <$> getConferences
+  return $ fst <$> find (\(_, c) -> cfType c == ty && cfId c == gid) (Map.toList cs)
+
+ourKeys :: ConferenceMonad m => m (PublicKey, PublicKey)
+ourKeys = Connection.getsConn $ \cm ->
+  (KeyPair.publicKey $ Connection.ourRealKeys cm, KeyPair.publicKey $ Connection.ourDhtKeys cm)
+
+identifier :: Conference -> ByteString
+identifier c = BS.cons (cfType c) (cfId c)
+
+onlineConns :: Conference -> [(PublicKey, GroupConn)]
+onlineConns = filter (gcOnline . snd) . Map.toList . cfConns
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Connections.
+ -
+ ------------------------------------------------------------------------------}
+
+-- | Keep a connection to a peer for a reason, connecting to the peer with a
+-- friend connection if we have none.
+addConn :: ConferenceMonad m => GroupNumber -> PublicKey -> PublicKey -> Reason -> m ()
+addConn g realPk dhtPk reason = getConference g >>= mapM_ (\c -> do
+  known <- Connection.getsConn (Map.member realPk . Connection.friends)
+  when (Map.member realPk (cfConns c) || Map.size (cfConns c) < maxConnections) $ do
+    unless known $ do
+      Connection.addFriend realPk
+      void $ Connection.setFriendDhtPk realPk dhtPk
+    let conn = Map.findWithDefault (GroupConn False 0 Set.empty) realPk (cfConns c)
+    modifyConference g $ \c' -> c' { cfConns = Map.insert realPk conn { gcReasons = Set.insert reason (gcReasons conn) } (cfConns c') }
+    online <- isFriendConnected realPk
+    when (online && not (gcOnline conn) && Map.notMember realPk (cfConns c)) $ sendOnline realPk g c)
+
+isFriendConnected :: ConferenceMonad m => PublicKey -> m Bool
+isFriendConnected pk = Connection.getsConn (maybe False Connection.fcOnline . Map.lookup pk . Connection.friends)
+
+-- | Drop a reason to keep a connection, and the connection with the last one.
+removeReason :: ConferenceMonad m => GroupNumber -> PublicKey -> Reason -> m ()
+removeReason g pk reason = getConference g >>= mapM_ (\c -> forM_ (Map.lookup pk (cfConns c)) $ \conn ->
+  when (Set.member reason (gcReasons conn)) $ do
+    let reasons = Set.delete reason (gcReasons conn)
+    when (reason == Introducer && gcOnline conn) $
+      sendDirect pk (gcGroupNumber conn) (BS.singleton peerIntroducedId)
+    if Set.null reasons
+      then dropConn g pk
+      else modifyConference g $ \c' -> c' { cfConns = Map.insert pk conn { gcReasons = reasons } (cfConns c') })
+
+dropConn :: ConferenceMonad m => GroupNumber -> PublicKey -> m ()
+dropConn g pk = do
+  modifyConference g $ \c -> c { cfConns = Map.delete pk (cfConns c) }
+  releaseFriendConnection pk
+
+-- | Stop the friend connection to a peer that no conference needs and that
+-- is not our friend.
+releaseFriendConnection :: ConferenceMonad m => PublicKey -> m ()
+releaseFriendConnection pk = do
+  friend <- Messenger.getsMessenger (Map.member pk . Messenger.messengerFriends)
+  used <- any (Map.member pk . cfConns) . Map.elems . conferences <$> getConferences
+  unless (friend || used) $ Connection.removeFriend pk
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Sending.
+ -
+ ------------------------------------------------------------------------------}
+
+sendOnline :: ConferenceMonad m => PublicKey -> GroupNumber -> Conference -> m ()
+sendOnline pk g c = void . Connection.sendFriendData pk $ BS.cons packetIdOnline (word16 g) <> identifier c
+
+sendDirect :: ConferenceMonad m => PublicKey -> GroupNumber -> ByteString -> m ()
+sendDirect pk theirs = void . Connection.sendFriendData pk . (BS.cons packetIdDirect (word16 theirs) <>)
+
+sendPeerQuery :: ConferenceMonad m => PublicKey -> GroupNumber -> m ()
+sendPeerQuery pk theirs = sendDirect pk theirs (BS.singleton peerQueryId)
+
+-- | Send a message to every online connection but one.
+relay :: ConferenceMonad m => Conference -> Maybe PublicKey -> ByteString -> m Int
+relay c except payload = do
+  sent <- forM [ (pk, conn) | (pk, conn) <- onlineConns c, Just pk /= except ] $ \(pk, conn) ->
+    Connection.sendFriendData pk (BS.cons packetIdMessage (word16 $ gcGroupNumber conn) <> payload)
+  return . length $ filter id sent
+
+-- | Send a message of a kind to the conference: how many peers it went to.
+sendMessage :: ConferenceMonad m => GroupNumber -> Word8 -> ByteString -> m Int
+sendMessage g ident bytes = getConference g >>= \case
+  Just c | cfConnected c, BS.length bytes <= maxMessageData, not (null $ onlineConns c) -> do
+    let number = if cfMessageNumber c + 1 == 0 then 1 else cfMessageNumber c + 1
+    modifyConference g $ \c' -> c' { cfMessageNumber = number }
+    relay c Nothing $ word16 (cfSelf c) <> word32 number <> BS.singleton ident <> bytes
+  _ -> return 0
+
+sendNewPeer :: ConferenceMonad m => GroupNumber -> PeerNumber -> PublicKey -> PublicKey -> m ()
+sendNewPeer g n realPk dhtPk = void $ sendMessage g messageNewPeer (word16 n <> keyBytes realPk <> keyBytes dhtPk)
+
+sendName :: ConferenceMonad m => GroupNumber -> m ()
+sendName g = do
+  name <- Messenger.getsMessenger Messenger.selfName
+  void $ sendMessage g messageName name
+
+-- | Our peer list in as few packets as fit, then the title.
+sendPeers :: ConferenceMonad m => PublicKey -> GroupNumber -> Conference -> m ()
+sendPeers pk theirs c = do
+  mapM_ (sendDirect pk theirs . BS.cons peerResponseId . BS.concat) (chunk [] 0 entries)
+  unless (BS.null $ cfTitle c) $ sendDirect pk theirs (BS.cons peerTitleId (cfTitle c))
+  where
+    entries = [ word16 n <> keyBytes (peerRealPk p) <> keyBytes (peerDhtPk p)
+                  <> BS.singleton (fromIntegral $ BS.length $ peerName p) <> peerName p
+              | (n, p) <- Map.toList (cfPeers c) ]
+    room = Reliability.maxCryptoDataSize - (1 + 2 + 1)
+    chunk acc _ [] = [reverse acc | not (null acc)]
+    chunk acc size (e : es)
+      | size + BS.length e > room && not (null acc) = reverse acc : chunk [e] (BS.length e) es
+      | otherwise = chunk (e : acc) (size + BS.length e) es
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Peers.
+ -
+ ------------------------------------------------------------------------------}
+
+-- | Mark a peer active, thawing it if it was frozen.
+notePeerActive :: ConferenceMonad m => GroupNumber -> PeerNumber -> m (Maybe Peer, [ConferenceEvent])
+notePeerActive g n = do
+  now <- askTime
+  mc <- getConference g
+  case mc of
+    Nothing -> return (Nothing, [])
+    Just c -> case (Map.lookup n (cfPeers c), Map.lookup n (cfFrozen c)) of
+      (Just p, _) -> do
+        let p' = p { peerLastActive = now }
+        modifyConference g $ \c' -> c' { cfPeers = Map.insert n p' (cfPeers c') }
+        return (Just p', [])
+      (Nothing, Just p) -> do
+        let p' = p { peerLastActive = now, peerDhtUpdated = False }
+        modifyConference g $ \c' -> c'
+          { cfPeers = Map.insert n p' (cfPeers c'), cfFrozen = Map.delete n (cfFrozen c'), cfNeedSendName = True }
+        return (Just p', [ConferencePeerListChanged g])
+      _ -> return (Nothing, [])
+
+-- | Add a peer or update a known one.  Fresh information is current, so it
+-- updates the DHT key and marks the peer active.
+addPeer :: ConferenceMonad m => GroupNumber -> PublicKey -> PublicKey -> PeerNumber -> Bool -> m (Maybe PeerNumber, [ConferenceEvent])
+addPeer g realPk dhtPk n fresh = do
+  (active, events) <- if fresh then notePeerActive g n else (\c -> (c >>= Map.lookup n . cfPeers, [])) <$> getConference g
+  mc <- getConference g
+  now <- askTime
+  case (mc, active) of
+    (Nothing, _) -> return (Nothing, [])
+    (Just _, Just p)
+      | peerRealPk p /= realPk -> return (Nothing, events)
+      | otherwise -> do
+          when (fresh || not (peerDhtUpdated p)) $
+            modifyConference g $ \c -> c { cfPeers = Map.adjust (\q -> q { peerDhtPk = dhtPk, peerDhtUpdated = True }) n (cfPeers c) }
+          return (Just n, events)
+    (Just c, Nothing)
+      | not fresh, Just f <- Map.lookup n (cfFrozen c) -> do
+          when (peerRealPk f == realPk) $
+            modifyConference g $ \c' -> c' { cfFrozen = Map.adjust (\q -> q { peerDhtPk = dhtPk }) n (cfFrozen c') }
+          return (Nothing, events)
+      | otherwise -> do
+          let others = Map.filter ((/= realPk) . peerRealPk)
+          modifyConference g $ \c' -> c'
+            { cfPeers = Map.insert n (Peer realPk dhtPk True "" False now []) (others $ cfPeers c')
+            , cfFrozen = others (cfFrozen c')
+            }
+          return (Just n, events ++ [ConferencePeerListChanged g])
+
+deletePeer :: ConferenceMonad m => GroupNumber -> PeerNumber -> m [ConferenceEvent]
+deletePeer g n = getConference g >>= \case
+  Just c | Just p <- Map.lookup n (cfPeers c) -> do
+    modifyConference g $ \c' -> c' { cfPeers = Map.delete n (cfPeers c') }
+    when (Map.member (peerRealPk p) (cfConns c)) $ dropConn g (peerRealPk p)
+    return [ConferencePeerListChanged g]
+  _ -> return []
+
+-- | A peer left for now: keep it among the frozen peers, and try to bring it
+-- back.
+freezePeer :: ConferenceMonad m => GroupNumber -> PeerNumber -> m [ConferenceEvent]
+freezePeer g n = getConference g >>= \case
+  Just c | Just p <- Map.lookup n (cfPeers c) -> do
+    events <- deletePeer g n
+    modifyConference g $ \c' -> c' { cfFrozen = keepNewest (Map.insert n p (cfFrozen c')) }
+    tryRejoin g (peerRealPk p)
+    return events
+  _ -> return []
+  where
+    keepNewest frozen
+      | Map.size frozen <= maxFrozen = frozen
+      | otherwise = Map.fromList . take maxFrozen . sortOn (negate . Time.timestampToMicroseconds . peerLastActive . snd) $ Map.toList frozen
+
+-- | Over a friend connection we have to a frozen peer, ask it to rejoin.
+tryRejoin :: ConferenceMonad m => GroupNumber -> PublicKey -> m ()
+tryRejoin g pk = do
+  mc <- getConference g
+  mFriend <- Connection.getsConn (Map.lookup pk . Connection.friends)
+  case (mc, mFriend) of
+    (Just c, Just f) -> do
+      sent <- Connection.sendFriendData pk (BS.cons packetIdRejoin (identifier c))
+      when sent $ forM_ (Connection.fcDhtPk f) $ \dhtPk -> addConn g pk dhtPk Introducer
+    _ -> return ()
+
+setName :: ConferenceMonad m => GroupNumber -> PeerNumber -> ByteString -> m (Bool, [ConferenceEvent])
+setName g n name
+  | BS.length name > maxNameLength = return (False, [])
+  | otherwise = getConference g >>= \case
+      Just c | Just p <- Map.lookup n (cfPeers c) -> do
+        modifyConference g $ \c' -> c' { cfPeers = Map.insert n p { peerName = name, peerNameUpdated = True } (cfPeers c') }
+        return (True, [ ConferencePeerName g n name | peerName p /= name ])
+      _ -> return (False, [])
+
+setTitle :: ConferenceMonad m => GroupNumber -> Maybe PeerNumber -> ByteString -> m (Bool, [ConferenceEvent])
+setTitle g by title
+  | BS.null title || BS.length title > maxNameLength = return (False, [])
+  | otherwise = getConference g >>= \case
+      Just c -> do
+        modifyConference g $ \c' -> c' { cfTitle = title, cfTitleFresh = True }
+        return (True, [ ConferenceTitle g by title | cfTitle c /= title ])
+      Nothing -> return (False, [])
+
+-- | The peers to keep connections to: the two closest on each side of us on
+-- a circle of the first 8 bytes of real keys.
+closestPeers :: PublicKey -> [Peer] -> [Peer]
+closestPeers ours peers = Map.elems . Map.fromList $
+  [ (keyBytes (peerRealPk p), p) | p <- take half (sortOn (distance ours . peerRealPk) others)
+                                 ++ take half (sortOn (\p -> distance (peerRealPk p) ours) others) ]
+  where
+    others = filter ((/= ours) . peerRealPk) peers
+    half = desiredClosest `div` 2
+    distance a b = prefix a - prefix b
+    prefix :: PublicKey -> Word64
+    prefix = foldl' (\acc b -> acc `shiftL` 8 .|. fromIntegral b) 0 . BS.unpack . BS.take 8 . keyBytes
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Commands.
+ -
+ ------------------------------------------------------------------------------}
+
+-- | A new text conference, with us as its founder and peer 0.
+newConference :: ConferenceMonad m => m (Maybe GroupNumber)
+newConference = do
+  gid <- randomBytes groupIdLength
+  (realPk, dhtPk) <- ourKeys
+  name <- Messenger.getsMessenger Messenger.selfName
+  now <- askTime
+  mg <- freeNumber
+  forM mg $ \g -> do
+    let self = Peer realPk dhtPk True name True now []
+    getConferences >>= \(Conferences cs) -> putConferences . Conferences $
+      Map.insert g (Conference typeText gid True 0 (Map.singleton 0 self) Map.empty "" False Map.empty 0 Nothing False) cs
+    return g
+
+freeNumber :: ConferenceMonad m => m (Maybe GroupNumber)
+freeNumber = do
+  cs <- conferences <$> getConferences
+  return $ find (`Map.notMember` cs) [0 .. maxBound]
+
+-- | Invite a friend: the friend gets a cookie to join with.
+invite :: ConferenceMonad m => PublicKey -> GroupNumber -> m Bool
+invite friend g = getConference g >>= \case
+  Just c | cfConnected c -> Messenger.sendPacketId friend packetIdInvite $ BS.singleton inviteId <> word16 g <> identifier c
+  _ -> return False
+
+data JoinError = JoinBadCookie | JoinWrongType | JoinFriendNotConnected | JoinAlreadyJoined | JoinTooMany
+  deriving (Eq, Show)
+
+-- | Join a conference a friend invited us to.
+join :: ConferenceMonad m => PublicKey -> ByteString -> m (Either JoinError GroupNumber)
+join friend cookie
+  | BS.length cookie /= 2 + 1 + groupIdLength = return $ Left JoinBadCookie
+  -- An audio conference is joined for its text: its audio comes in lossy
+  -- packets, which are the client's.
+  | BS.index cookie 2 `notElem` [typeText, typeAv] = return $ Left JoinWrongType
+  | otherwise = do
+      online <- Messenger.isFriendOnline friend
+      existing <- findConference (BS.index cookie 2) (BS.drop 3 cookie)
+      if | not online -> return $ Left JoinFriendNotConnected
+         | isJust existing -> return $ Left JoinAlreadyJoined
+         | otherwise -> freeNumber >>= maybe (return $ Left JoinTooMany) (\g -> do
+             getConferences >>= \(Conferences cs) -> putConferences . Conferences $
+               Map.insert g (Conference (BS.index cookie 2) (BS.drop 3 cookie) False 0 Map.empty Map.empty "" False Map.empty 0 Nothing False) cs
+             sent <- sendInviteResponse g friend cookie
+             if sent then return (Right g) else do
+               getConferences >>= \(Conferences cs) -> putConferences (Conferences $ Map.delete g cs)
+               return $ Left JoinFriendNotConnected)
+
+-- | Accept an invite, or tell the inviter we are already a member.
+sendInviteResponse :: ConferenceMonad m => GroupNumber -> PublicKey -> ByteString -> m Bool
+sendInviteResponse g friend cookie = getConference g >>= \case
+  Nothing -> return False
+  Just c -> do
+    let member = cfConnected c
+        response = BS.singleton (if member then inviteMemberId else inviteAcceptId) <> word16 g <> cookie
+          <> (if member then word16 (cfSelf c) else BS.empty)
+        theirs = getW16 cookie
+    sent <- Messenger.sendPacketId friend packetIdInvite response
+    mDht <- Connection.getsConn (\cm -> Map.lookup friend (Connection.friends cm) >>= Connection.fcDhtPk)
+    case mDht of
+      Just dhtPk | sent -> do
+        addConn g friend dhtPk Introducer
+        when member $ addConn g friend dhtPk Introducing
+        setOnline g friend theirs
+        sendPeerQuery friend theirs
+        return True
+      _ -> return False
+
+setOnline :: ConferenceMonad m => GroupNumber -> PublicKey -> GroupNumber -> m ()
+setOnline g pk theirs = modifyConference g $ \c -> c
+  { cfConns = Map.adjust (\conn -> conn { gcOnline = True, gcGroupNumber = theirs }) pk (cfConns c) }
+
+-- | Leave a conference: for good, or for now so we can come back.
+leave :: ConferenceMonad m => GroupNumber -> Bool -> m Bool
+leave g permanent = getConference g >>= \case
+  Nothing -> return False
+  Just c -> do
+    _ <- sendMessage g (if permanent then messageKillPeer else messageFreezePeer) (word16 $ cfSelf c)
+    getConferences >>= \(Conferences cs) -> putConferences (Conferences $ Map.delete g cs)
+    mapM_ releaseFriendConnection (Map.keys $ cfConns c)
+    return True
+
+sendText :: ConferenceMonad m => GroupNumber -> Messenger.MessageType -> ByteString -> m Bool
+sendText g ty msg
+  | BS.null msg = return False
+  | otherwise = (> 0) <$> sendMessage g (if ty == Messenger.MessageNormal then messageChat else messageAction) msg
+
+changeTitle :: ConferenceMonad m => GroupNumber -> ByteString -> m Bool
+changeTitle g title = getConference g >>= \case
+  Nothing -> return False
+  Just c -> do
+    (ok, _) <- setTitle g (Just $ cfSelf c) title
+    -- As in toxcore, an unchanged title, or one nobody else sees, needs no
+    -- message.
+    if | not ok -> return False
+       | cfTitle c == title || Map.size (cfPeers c) == 1 -> return True
+       | otherwise -> (> 0) <$> sendMessage g messageTitle title
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Receiving.
+ -
+ ------------------------------------------------------------------------------}
+
+handleConnectionEvent :: ConferenceMonad m => ConnectionEvent -> m [ConferenceEvent]
+handleConnectionEvent = \case
+  FriendOnline pk -> do
+    cs <- Map.toList . conferences <$> getConferences
+    forM_ cs $ \(g, c) -> do
+      when (Map.member pk (cfConns c)) $ sendOnline pk g c
+      when (any ((== pk) . peerRealPk) (cfFrozen c)) $ tryRejoin g pk
+    return []
+  FriendOffline pk -> do
+    cs <- Map.toList . conferences <$> getConferences
+    concat <$> forM cs (\(g, c) -> if Map.member pk (cfConns c) then do
+      modifyConference g $ \c' -> c' { cfConns = Map.adjust (\conn -> conn { gcOnline = False }) pk (cfConns c') }
+      checkDisconnected g
+      else return [])
+  FriendData pk bytes -> case BS.uncons bytes of
+    Just (ident, rest)
+      | ident == packetIdInvite -> do
+          friend <- Messenger.getsMessenger (Map.member pk . Messenger.messengerFriends)
+          if friend then handleInvite pk rest else return []
+      | ident == packetIdOnline -> [] <$ handleOnline pk rest
+      | ident == packetIdRejoin -> handleRejoin pk rest
+      | ident == packetIdDirect || ident == packetIdMessage, BS.length rest >= 3 -> do
+          let g = getW16 rest
+          mc <- getConference g
+          case mc of
+            Just c | Just conn <- Map.lookup pk (cfConns c) ->
+              if ident == packetIdDirect
+                then handleDirect g pk conn (BS.drop 2 rest)
+                else handleMessage g pk conn (BS.drop 2 rest)
+            _ -> return []
+    _ -> return []
+  _ -> return []
+
+-- | With no connection left online, every other peer is frozen.
+checkDisconnected :: ConferenceMonad m => GroupNumber -> m [ConferenceEvent]
+checkDisconnected g = getConference g >>= \case
+  Just c | null (onlineConns c) -> do
+    (ours, _) <- ourKeys
+    concat <$> mapM (freezePeer g) [ n | (n, p) <- Map.toList (cfPeers c), peerRealPk p /= ours ]
+  _ -> return []
+
+handleInvite :: ConferenceMonad m => PublicKey -> ByteString -> m [ConferenceEvent]
+handleInvite friend payload = case BS.unpack (BS.take 1 payload) of
+  [i] | i == inviteId, BS.length payload == 1 + 2 + 1 + groupIdLength -> do
+    let cookie = BS.drop 1 payload
+        ty = BS.index cookie 2
+    if ty /= typeText && ty /= typeAv then return [] else do
+      existing <- findConference ty (BS.drop 3 cookie)
+      case existing of
+        Nothing -> return [ConferenceInvited friend ty cookie]
+        Just g -> do
+          connected <- maybe False cfConnected <$> getConference g
+          when connected $ void $ sendInviteResponse g friend cookie
+          return []
+  [i] | (i == inviteAcceptId && BS.length payload == 1 + 2 + 2 + 1 + groupIdLength)
+        || (i == inviteMemberId && BS.length payload == 1 + 2 + 2 + 1 + groupIdLength + 2) -> do
+    let member = i == inviteMemberId
+        theirs = getW16 (BS.drop 1 payload)
+        g = getW16 (BS.drop 3 payload)
+        ident = BS.take (1 + groupIdLength) (BS.drop 5 payload)
+    mc <- getConference g
+    mDht <- Connection.getsConn (\cm -> Map.lookup friend (Connection.friends cm) >>= Connection.fcDhtPk)
+    case (mc, mDht) of
+      (Just c, Just dhtPk) | identifier c == ident -> do
+        n <- if member then return (Just $ getW16 (BS.drop (5 + 1 + groupIdLength) payload)) else newPeerNumber c
+        case n of
+          Nothing -> return []
+          Just peer -> do
+            (_, events) <- addPeer g friend dhtPk peer True
+            addConn g friend dhtPk Introducing
+            when member $ do
+              addConn g friend dhtPk Introducer
+              sendPeerQuery friend theirs
+            setOnline g friend theirs
+            sendNewPeer g peer friend dhtPk
+            return events
+      _ -> return []
+  _ -> return []
+  where
+    newPeerNumber c = go (32 :: Int)
+      where
+        go 0 = return Nothing
+        go tries = do
+          n <- randomWord16
+          if Map.member n (cfPeers c) || Map.member n (cfFrozen c) then go (tries - 1) else return (Just n)
+
+handleOnline :: ConferenceMonad m => PublicKey -> ByteString -> m ()
+handleOnline pk payload = when (BS.length payload == 2 + 1 + groupIdLength) $ do
+  mg <- findConference (BS.index payload 2) (BS.drop 3 payload)
+  forM_ mg $ \g -> getConference g >>= mapM_ (\c -> forM_ (Map.lookup pk (cfConns c)) $ \conn ->
+    unless (gcOnline conn) $ do
+      let theirs = getW16 payload
+      when (null (onlineConns c) || Set.member Introducer (gcReasons conn)) $ sendPeerQuery pk theirs
+      setOnline g pk theirs
+      sendOnline pk g c
+      when (Set.member Introducing (gcReasons conn)) $ do
+        forM_ (find ((== pk) . peerRealPk . snd) (Map.toList $ cfPeers c)) $ \(n, p) ->
+          sendNewPeer g n pk (peerDhtPk p)
+        modifyConference g $ \c' -> c' { cfNeedSendName = True }
+      ping g)
+
+handleRejoin :: ConferenceMonad m => PublicKey -> ByteString -> m [ConferenceEvent]
+handleRejoin pk payload
+  | BS.length payload < 1 + groupIdLength = return []
+  | otherwise = do
+      mg <- findConference (BS.index payload 0) (BS.take groupIdLength $ BS.drop 1 payload)
+      mDht <- Connection.getsConn (\cm -> Map.lookup pk (Connection.friends cm) >>= Connection.fcDhtPk)
+      case (mg, mDht) of
+        (Just g, Just dhtPk) -> getConference g >>= \case
+          Just c | Just n <- peerNumberOf c -> do
+            (_, events) <- addPeer g pk dhtPk n True
+            addConn g pk dhtPk Introducing
+            online <- isFriendConnected pk
+            -- As in toxcore, we say we are online, unless 'addConn' just did.
+            getConference g >>= mapM_ (\c' -> when (Map.member pk (cfConns c') && not (online && Map.notMember pk (cfConns c))) $
+              sendOnline pk g c')
+            return events
+          _ -> return []
+        _ -> return []
+  where
+    peerNumberOf c = fst <$> find ((== pk) . peerRealPk . snd) (Map.toList (cfPeers c) ++ Map.toList (cfFrozen c))
+
+handleDirect :: ConferenceMonad m => GroupNumber -> PublicKey -> GroupConn -> ByteString -> m [ConferenceEvent]
+handleDirect g pk conn payload = case BS.uncons payload of
+  Just (i, rest)
+    | i == peerIntroducedId -> [] <$ removeReason g pk Introducing
+    | i == peerQueryId -> do
+        when (gcOnline conn) $ getConference g >>= mapM_ (sendPeers pk (gcGroupNumber conn))
+        return []
+    | i == peerResponseId -> handlePeers g rest
+    | i == peerTitleId -> getConference g >>= \case
+        Just c | not (cfTitleFresh c) -> snd <$> setTitle g Nothing rest
+        _ -> return []
+  _ -> return []
+
+handlePeers :: ConferenceMonad m => GroupNumber -> ByteString -> m [ConferenceEvent]
+handlePeers g bytes = case runGetRest ((,) <$> getPeerKeys <*> getWord8) bytes of
+      Just (((n, realPk, dhtPk), len), rest) | fromIntegral len <= maxNameLength, BS.length rest >= fromIntegral len -> do
+        let (name, more) = BS.splitAt (fromIntegral len) rest
+        (ours, _) <- ourKeys
+        joined <- getConference g >>= \case
+          Just c | not (cfConnected c) && realPk == ours -> do
+            modifyConference g $ \c' -> c' { cfSelf = n, cfConnected = True, cfNeedSendName = True }
+            return [ConferenceConnected g]
+          _ -> return []
+        (added, events) <- addPeer g realPk dhtPk n False
+        case added of
+          Nothing -> return (joined ++ events)
+          Just _ -> do
+            updated <- maybe False peerNameUpdated . (>>= Map.lookup n . cfPeers) <$> getConference g
+            named <- if updated then return [] else snd <$> setName g n name
+            ((joined ++ events ++ named) ++) <$> handlePeers g more
+      _ -> return []
+
+-- | Whether a message is new: it is not one of the recent ones from its
+-- sender, and names and titles are not older than the last one.
+checkSeen :: Word32 -> Word8 -> [(Word32, Word8)] -> Maybe [(Word32, Word8)]
+checkSeen number ident = go []
+  where
+    ignoreOlder = ident == messageName || ident == messageTitle
+    go before [] = insertAt before []
+    go before rest@((n, i) : after)
+      | number - (n + 1) <= 2 ^ (31 :: Int) = insertAt before rest
+      | number == n = Nothing
+      | ignoreOlder && ident == i = Nothing
+      | otherwise = go ((n, i) : before) after
+    insertAt before rest
+      | length before >= maxMessageInfos = Nothing
+      | otherwise = Just . take maxMessageInfos $ reverse before ++ (number, ident) : rest
+
+handleMessage :: ConferenceMonad m => GroupNumber -> PublicKey -> GroupConn -> ByteString -> m [ConferenceEvent]
+handleMessage g from conn payload
+  | BS.length payload < 2 + 4 + 1 = return []
+  | otherwise = do
+      let n = getW16 payload
+          number = getW32 (BS.drop 2 payload)
+          ident = BS.index payload 6
+          bytes = BS.drop 7 payload
+      (mPeer, thawed) <- if ident == messageFreezePeer
+        then (\c -> (c >>= Map.lookup n . cfPeers, [])) <$> getConference g
+        else notePeerActive g n
+      case mPeer of
+        Nothing -> do
+          when (ident /= messageFreezePeer && gcOnline conn) $ sendPeerQuery from (gcGroupNumber conn)
+          return thawed
+        Just peer -> do
+          introduced g peer from
+          case checkSeen number ident (peerSeen peer) of
+            Nothing -> return thawed
+            Just seen -> do
+              modifyConference g $ \c -> c { cfPeers = Map.adjust (\p -> p { peerSeen = seen }) n (cfPeers c) }
+              (keep, events) <- handleKind g n ident bytes
+              when keep $ getConference g >>= mapM_ (\c ->
+                relay c (if peerRealPk peer == from then Nothing else Just from) payload)
+              return (thawed ++ events)
+
+-- | A message from a peer through another connection than its introducer's
+-- shows that the peer reaches us without it.
+introduced :: ConferenceMonad m => GroupNumber -> Peer -> PublicKey -> m ()
+introduced g peer from = getConference g >>= mapM_ (\c -> do
+  let introducers = [ pk | (pk, conn) <- Map.toList (cfConns c), Set.member Introducer (gcReasons conn) ]
+  when (not (null introducers) && length (onlineConns c) > desiredClosest) $
+    forM_ introducers $ \pk -> when (pk /= from && pk == peerRealPk peer) $ removeReason g pk Introducer)
+
+-- | Act on a message: whether to relay it, and what to report.
+handleKind :: ConferenceMonad m => GroupNumber -> PeerNumber -> Word8 -> ByteString -> m (Bool, [ConferenceEvent])
+handleKind g n ident bytes
+  | ident == messagePing = return (True, [])
+  | ident == messageNewPeer = case runGetRest getPeerKeys bytes of
+      Just ((number, realPk, dhtPk), rest) | BS.null rest -> (,) True . snd <$> addPeer g realPk dhtPk number True
+      _ -> return (False, [])
+  | ident == messageKillPeer || ident == messageFreezePeer =
+      if BS.length bytes /= 2 || getW16 bytes /= n then return (False, []) else
+        (,) True <$> (if ident == messageKillPeer then deletePeer g n else freezePeer g n)
+  | ident == messageName = setName g n bytes
+  | ident == messageTitle = setTitle g (Just n) bytes
+  -- Ours come back relayed by peers, which clients don't want to hear.
+  | (ident == messageChat || ident == messageAction) && not (BS.null bytes) = do
+      ours <- maybe False ((== n) . cfSelf) <$> getConference g
+      return (True, [ ConferenceMessage g n (if ident == messageChat then Messenger.MessageNormal else Messenger.MessageAction) bytes
+                    | not ours ])
+  | otherwise = return (False, [])
+
+ping :: ConferenceMonad m => GroupNumber -> m ()
+ping g = do
+  now <- askTime
+  due <- maybe False (Time.due now pingInterval . cfLastPing) <$> getConference g
+  when due $ do
+    sent <- sendMessage g messagePing BS.empty
+    when (sent > 0) $ modifyConference g $ \c -> c { cfLastPing = Just now }
+
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Periodic work.
+ -
+ ------------------------------------------------------------------------------}
+
+doConferences :: ConferenceMonad m => m [ConferenceEvent]
+doConferences = do
+  cs <- Map.toList . conferences <$> getConferences
+  concat <$> forM [ g | (g, c) <- cs, cfConnected c ] (\g -> do
+    connectToClosest g
+    ping g
+    events <- freezeTimedOut g
+    need <- maybe False cfNeedSendName <$> getConference g
+    when need $ do
+      sendName g
+      modifyConference g $ \c -> c { cfNeedSendName = False }
+    return events)
+
+connectToClosest :: ConferenceMonad m => GroupNumber -> m ()
+connectToClosest g = getConference g >>= mapM_ (\c -> do
+  (ours, _) <- ourKeys
+  let closest = closestPeers ours (Map.elems $ cfPeers c)
+      wanted = Set.fromList (map peerRealPk closest)
+  forM_ [ pk | (pk, conn) <- Map.toList (cfConns c), Set.member Closest (gcReasons conn), Set.notMember pk wanted ] $ \pk ->
+    removeReason g pk Closest
+  forM_ closest $ \p -> addConn g (peerRealPk p) (peerDhtPk p) Closest)
+
+freezeTimedOut :: ConferenceMonad m => GroupNumber -> m [ConferenceEvent]
+freezeTimedOut g = getConference g >>= \case
+  Nothing -> return []
+  Just c -> do
+    now <- askTime
+    events <- concat <$> mapM (freezePeer g)
+      [ n | (n, p) <- Map.toList (cfPeers c), n /= cfSelf c, Time.addTime (peerLastActive p) freezeTimeout < now ]
+    alone <- maybe True ((<= 1) . Map.size . cfPeers) <$> getConference g
+    when alone $ modifyConference g $ \c' -> c' { cfTitleFresh = False }
+    return events
+
+-- | Conferences from a save file, with everyone else frozen until they
+-- rejoin through our friend connections.
+restore :: ConferenceMonad m => [PC.Conference] -> m ()
+restore = mapM_ restoreConference
+
+-- | A saved conference under a new number, unless we are in it already or
+-- in too many.
+restoreConference :: ConferenceMonad m => PC.Conference -> m (Maybe GroupNumber)
+restoreConference sc = do
+  (realPk, dhtPk) <- ourKeys
+  name <- Messenger.getsMessenger Messenger.selfName
+  now <- askTime
+  existing <- findConference (PC.conferenceType sc) (keyBytes $ PC.conferenceId sc)
+  if isJust existing then return Nothing else freeNumber >>= mapM (\g -> do
+    let self = Peer realPk dhtPk True name True now []
+        frozen = Map.fromList
+          [ (PC.peerNumber p, Peer (PC.publicKey p) (PC.dhtPublicKey p) False (PC.name p) False now [])
+          | p <- PC.peers sc ]
+        c = Conference (PC.conferenceType sc) (keyBytes $ PC.conferenceId sc) True (PC.selfPeerNumber sc)
+          (Map.singleton (PC.selfPeerNumber sc) self) frozen (PC.title sc) False Map.empty (PC.messageNumber sc) Nothing False
+    getConferences >>= \(Conferences cs) -> putConferences (Conferences $ Map.insert g c cs)
+    return g)
+
+-- | Our name changed: tell our conferences.
+nameChanged :: ConferenceMonad m => m ()
+nameChanged = do
+  cs <- Map.toList . conferences <$> getConferences
+  forM_ [ g | (g, c) <- cs, cfConnected c ] sendName
+  name <- Messenger.getsMessenger Messenger.selfName
+  forM_ [ (g, c) | (g, c) <- cs, cfConnected c ] $ \(g, c) ->
+    modifyConference g $ \c' -> c' { cfPeers = Map.adjust (\p -> p { peerName = name }) (cfSelf c) (cfPeers c') }
 \end{code}
 
 \chapter{Group}

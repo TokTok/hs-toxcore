@@ -8,10 +8,10 @@ import           Test.QuickCheck
 
 import           Control.Monad               (when)
 import           Control.Monad.Identity      (runIdentity)
+import           Control.Monad.Logger        (runNoLoggingT)
 import           Control.Monad.Random        (evalRandT)
 import           Control.Monad.State         (runStateT)
 import           Control.Monad.Writer        (execWriterT)
-import           Data.List                   (isInfixOf)
 import qualified Data.Map                    as Map
 
 import qualified Tox.Core.Time               as Time
@@ -116,6 +116,7 @@ spec = do
             ((_, _), events) = runIdentity
               . Networked.runNetworkLogged
               . (`runStateT` dhtState)
+              . runNoLoggingT
               . (`evalRandT` Operation.unwrapArbStdGen seed)
               . (`TimedT.runTimedT` time)
               . (`KeyedT.evalKeyedT` Map.empty)
