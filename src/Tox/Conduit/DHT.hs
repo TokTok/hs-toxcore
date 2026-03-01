@@ -49,7 +49,10 @@ instance (Monad m) => Networked (DhtConduit i (NodeInfo, Packet BS.ByteString) m
 
 -- | 'DhtConduit' is a 'DhtNodeMonad' if the underlying monad 'm' provides state and other effects.
 instance (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m)
-    => DhtNodeMonad (DhtConduit i (NodeInfo, Packet BS.ByteString) m)
+    => DhtNodeMonad (DhtConduit i (NodeInfo, Packet BS.ByteString) m) where
+    getDhtState = get
+    putDhtState = put
+    handleDhtRequestPayload _ _ = return ()
 
 -- | Conduit that handles incoming DHT packets.
 dhtPacketHandler :: forall m. (Timed m, MonadRandomBytes m, MonadState DhtState m, Keyed m)

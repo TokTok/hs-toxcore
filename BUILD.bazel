@@ -92,7 +92,10 @@ haskell_library(
         "//third_party/haskell:base",
         "//third_party/haskell:binary",
         "//third_party/haskell:bytestring",
+        "//third_party/haskell:containers",
+        "//third_party/haskell:monad-validate",
         "//third_party/haskell:mtl",
+        "//third_party/haskell:saltine",
     ],
 )
 
@@ -109,7 +112,16 @@ haskell_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":tox-core",
+        ":tox-crypto",
+        ":tox-dht",
+        ":tox-network",
+        ":tox-onion",
+        ":tox-transport",
         "//third_party/haskell:base",
+        "//third_party/haskell:bytestring",
+        "//third_party/haskell:containers",
+        "//third_party/haskell:mtl",
     ],
 )
 
@@ -166,6 +178,7 @@ haskell_library(
         "//third_party/haskell:binary",
         "//third_party/haskell:bytestring",
         "//third_party/haskell:clock",
+        "//third_party/haskell:containers",
         "//third_party/haskell:mtl",
     ],
 )
@@ -301,6 +314,7 @@ haskell_library(
 haskell_library(
     name = "tox-application",
     srcs = glob([
+        "src/Tox/Application/*.hs",
         "src/Tox/Application/*.lhs",
     ]),
     ghcopts = ["-j4"],
@@ -311,14 +325,20 @@ haskell_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":tox-conduit",
         ":tox-core",
         ":tox-crypto",
+        ":tox-dht",
         ":tox-network",
+        ":tox-onion",
+        ":tox-session",
         "//third_party/haskell:QuickCheck",
         "//third_party/haskell:base",
         "//third_party/haskell:binary",
         "//third_party/haskell:bytestring",
         "//third_party/haskell:monad-validate",
+        "//third_party/haskell:mtl",
+        "//third_party/haskell:network",
     ],
 )
 

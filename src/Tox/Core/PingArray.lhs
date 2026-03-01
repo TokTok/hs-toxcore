@@ -1,6 +1,68 @@
 \begin{code}
 {-# LANGUAGE StrictData #-}
 module Tox.Core.PingArray where
+
+import           Data.Map                     (Map)
+import qualified Data.Map                     as Map
+import           Data.Word                    (Word64)
+import           Tox.Core.Time                (Timestamp, TimeDiff)
+import qualified Tox.Core.Time                as Time
+
+-- | A Ping Array stores data for a limited time, indexed by a 64-bit ID.
+data PingArray a = PingArray
+  { paSize    :: Int
+  , paTimeout :: TimeDiff
+  , paEntries :: Map Word64 (Timestamp, a)
+  , paLastId  :: Word64 -- Used for cyclical indices
+  } deriving (Eq, Show)
+
+-- | Initialize a new Ping Array.
+empty :: Int -> TimeDiff -> PingArray a
+empty size timeout = PingArray
+  { paSize    = size
+  , paTimeout = timeout
+  , paEntries = Map.empty
+  , paLastId  = 0
+  }
+
+-- | Add an entry to the array. Returns the ID and the updated array.
+-- IDs are generated to be random-looking but contain the internal index.
+addEntry :: Timestamp -> a -> Word64 -> PingArray a -> (Word64, PingArray a)
+addEntry now val seed state =
+  let
+    -- Cyclical index
+    idx = (paLastId state + 1) `mod` fromIntegral (paSize state)
+    -- Random-looking ID: (random_part * size) + index
+    pingId = (seed * fromIntegral (paSize state)) + idx
+
+    -- Insert new entry
+    newEntries = Map.insert pingId (now, val) (paEntries state)
+
+    -- If we hit the size limit, we should ideally remove the oldest.
+    -- Map doesn't track "oldest" easily, but we'll prune on 'takeEntry'.
+    newState = state
+      { paEntries = newEntries
+      , paLastId = idx
+      }
+  in
+    (pingId, newState)
+
+-- | Attempt to retrieve and remove an entry by its ID.
+-- Validates that the entry exists and hasn't timed out.
+takeEntry :: Timestamp -> Word64 -> PingArray a -> (Maybe a, PingArray a)
+takeEntry now pingId state =
+  case Map.lookup pingId (paEntries state) of
+    Nothing -> (Nothing, state)
+    Just (timestamp, val) ->
+      let
+        isExpired = now `Time.diffTime` timestamp > paTimeout state
+        newEntries = Map.delete pingId (paEntries state)
+        prunedEntries = Map.filter (\(t, _) -> now `Time.diffTime` t <= paTimeout state) newEntries
+        finalState = state { paEntries = prunedEntries }
+      in
+        if isExpired
+        then (Nothing, finalState)
+        else (Just val, finalState)
 \end{code}
 
 \chapter{Ping array}

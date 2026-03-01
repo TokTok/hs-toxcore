@@ -32,6 +32,7 @@ library
     Tox.Application.GroupChat
     Tox.Application.GroupChatPackets
     Tox.Application.LegacyGroup
+    Tox.Application.State
     Tox.Conduit.DHT
     Tox.Conduit.Encoding
     Tox.Conduit.Network
@@ -85,6 +86,7 @@ library
     Tox.Network.TCP.Client
     Tox.Network.TCP.Connections
     Tox.Network.TCP.Server
+    Tox.Onion.Operation
     Tox.Onion.Path
     Tox.Onion.RPC
     Tox.Onion.Tunnel
@@ -211,6 +213,7 @@ test-suite testsuite
     Tox.Network.Core.ProtocolSpec
     Tox.Network.Core.SocketAddressSpec
     Tox.Network.Core.TransportProtocolSpec
+    Tox.Onion.OperationSpec
     Tox.Onion.PathSpec
     Tox.Onion.RPCSpec
     Tox.Onion.TunnelSpec
