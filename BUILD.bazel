@@ -363,6 +363,7 @@ pandoc_doc(
 
 hspec_test(
     name = "testsuite",
+    size = "large",
     ghcopts = ["-j4"],
     deps = [
         ":hs-toxcore",
