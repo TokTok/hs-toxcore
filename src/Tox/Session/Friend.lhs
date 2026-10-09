@@ -1,6 +1,90 @@
 \begin{code}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE StrictData            #-}
+{-# LANGUAGE OverloadedStrings     #-}
 module Tox.Session.Friend where
+
+import           Control.Monad.State            (gets, modify)
+import           Data.Map                       (Map)
+import qualified Data.Map                       as Map
+import           Data.ByteString                (ByteString)
+import qualified Data.ByteString                as BS
+import           Data.Word                      (Word8, Word32)
+
+import           Tox.Crypto.Core.Key            (PublicKey)
+import           Tox.Session.Connection         (ConnectionManager, FriendStatus(..), FriendConnection(..))
+import qualified Tox.Session.Connection         as Connection
+import           Tox.Core.Timed                 (Timed)
+import           Tox.Crypto.Core.MonadRandomBytes (MonadRandomBytes)
+import           Tox.Crypto.Core.Keyed          (Keyed)
+import           Tox.Network.Core.Networked     (Networked)
+import           Tox.Crypto.Core.Box            (PlainText(..))
+import qualified Tox.Transport.SecureSession    as SecureSession
+
+{-------------------------------------------------------------------------------
+ -
+ - :: Implementation.
+ -
+ ------------------------------------------------------------------------------}
+
+data UserStatus = Online | Away | Busy
+  deriving (Eq, Show, Enum)
+
+data Friend = Friend
+  { friendRealPk :: PublicKey
+  , friendName   :: ByteString
+  , friendStatus :: UserStatus
+  , friendMsg    :: ByteString
+  } deriving (Show)
+
+data Messenger = Messenger
+  { messengerFriends :: Map PublicKey Friend
+  , selfName         :: ByteString
+  , selfStatus       :: UserStatus
+  , selfMsg          :: ByteString
+  }
+
+class (Monad m, Connection.ConnectionMonad m) => MessengerMonad m where
+  getMessenger :: m Messenger
+  putMessenger :: Messenger -> m ()
+
+getsMessenger :: MessengerMonad m => (Messenger -> a) -> m a
+getsMessenger f = f <$> getMessenger
+
+modifyMessenger :: MessengerMonad m => (Messenger -> Messenger) -> m ()
+modifyMessenger f = getMessenger >>= putMessenger . f
+
+
+-- | Initialize a new Messenger.
+initMessenger :: Messenger
+initMessenger = Messenger
+  { messengerFriends = Map.empty
+  , selfName         = ""
+  , selfStatus       = Online
+  , selfMsg          = ""
+  }
+
+-- | Add a friend to Messenger and initiate connection.
+addFriend :: MessengerMonad m => PublicKey -> m ()
+addFriend pk = do
+  modifyMessenger $ \s -> s { messengerFriends = Map.insert pk (Friend pk "" Online "") (messengerFriends s) }
+  Connection.addFriend pk
+
+-- | Send a text message to a friend.
+sendMessage :: MessengerMonad m => PublicKey -> ByteString -> m ()
+sendMessage pk msg = do
+  mFc <- Connection.getsConn (Map.lookup pk . Connection.friends)
+  case mFc of
+    Just FriendConnection{ fcStatus = FriendConnected _ss } -> do
+      -- Packet ID 0x40 for MESSAGE
+      let _payload = BS.singleton 0x40 <> msg
+      -- TODO: this needs to be integrated with SecureSession sending logic
+      return ()
+    _ -> return () -- Not connected
+
 \end{code}
 
 \chapter{Messenger}

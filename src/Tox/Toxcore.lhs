@@ -156,6 +156,7 @@ Unicode Control Characters (U+240x) is not permitted without additional marker.
 \input{src/Tox/Onion/Tunnel.lhs}
 \input{src/Tox/Onion/RPC.lhs}
 \input{src/Tox/Onion/Path.lhs}
+\input{src/Tox/Onion/Operation.lhs}
 \input{src/Tox/Transport/SecureSession.lhs}
 \input{src/Tox/Transport/Reliability.lhs}
 \input{src/Tox/Transport/Stream.lhs}

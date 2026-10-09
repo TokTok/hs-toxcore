@@ -20,7 +20,7 @@ import           Control.Monad.State          (MonadState, StateT, execStateT,
 import           Control.Monad.Trans          (lift)
 import           Control.Monad.Trans.Maybe    (MaybeT (..), runMaybeT)
 import           Control.Monad.Writer         (MonadWriter, WriterT,
-                                               execWriterT, tell)
+                                               execWriterT, runWriterT, tell)
 import           Data.Binary                  (Binary)
 import           Data.Foldable                (for_)
 import           Data.Functor                 (($>))
@@ -69,7 +69,6 @@ import qualified Tox.Network.Core.PacketKind       as PacketKind
 import           Tox.Network.Core.TimedT           (TimedT)
 import qualified Tox.Network.Core.TimedT           as TimedT
 
-
 {-------------------------------------------------------------------------------
  -
  - :: Implementation.
@@ -80,9 +79,17 @@ class
   ( Networked m
   , Timed m
   , MonadRandomBytes m
-  , MonadState DhtState m
   , Keyed m
-  ) => DhtNodeMonad m where {}
+  ) => DhtNodeMonad m where
+  getDhtState :: m DhtState
+  putDhtState :: DhtState -> m ()
+  -- | Handle a decrypted payload from a DHT Request packet addressed to us.
+  handleDhtRequestPayload :: NodeInfo -> DhtPacket.DhtPacket -> m ()
+
+instance (Monoid w, DhtNodeMonad m) => DhtNodeMonad (WriterT w m) where
+  getDhtState = lift getDhtState
+  putDhtState = lift . putDhtState
+  handleDhtRequestPayload from pkt = lift $ handleDhtRequestPayload from pkt
 
 data RequestInfo = RequestInfo
   { requestTo     :: NodeInfo
@@ -90,10 +97,23 @@ data RequestInfo = RequestInfo
   }
   deriving (Eq, Read, Show)
 
+getDht :: DhtNodeMonad m => m DhtState
+getDht = getDhtState
+
+getsDht :: DhtNodeMonad m => (DhtState -> a) -> m a
+getsDht f = f <$> getDht
+
+putDht :: DhtNodeMonad m => DhtState -> m ()
+putDht = putDhtState
+
+modifyDht :: DhtNodeMonad m => (DhtState -> DhtState) -> m ()
+modifyDht f = getDht >>= putDht . f
+
+
 sendDhtPacket :: (DhtNodeMonad m, Binary payload) =>
   NodeInfo -> PacketKind -> payload -> m ()
 sendDhtPacket to kind payload = do
-  keyPair <- gets DhtState.dhtKeyPair
+  keyPair <- getsDht DhtState.dhtKeyPair
   nonce <- MonadRandomBytes.randomNonce
   Networked.sendPacket to . Packet kind =<<
     DhtPacket.encodeKeyed keyPair (NodeInfo.publicKey to) nonce payload
@@ -103,7 +123,7 @@ sendRpcRequest :: (DhtNodeMonad m, Binary payload) =>
 sendRpcRequest to packetKind payload = do
   requestId <- RpcPacket.RequestId <$> MonadRandomBytes.randomWord64
   time <- Timed.askTime
-  DhtState._dhtPendingReplies %= PendingReplies.expectReply time to requestId
+  modifyDht $ \s -> s { DhtState.dhtPendingReplies = PendingReplies.expectReply time to requestId (DhtState.dhtPendingReplies s) }
   sendDhtPacket to packetKind $
     RpcPacket payload requestId
 
@@ -130,6 +150,9 @@ sendPingResponse to requestId =
 modifyM :: MonadState s m => (s -> m s) -> m ()
 modifyM = (put =<<) . (get >>=)
 
+modifyMDht :: DhtNodeMonad m => (DhtState -> m DhtState) -> m ()
+modifyMDht f = getDht >>= f >>= putDht
+
 -- | adapted from michaelt's lens-simple:
 -- zoom_ is like zoom but for convenience returns an mtl style
 -- abstracted MonadState state, rather than a concrete StateT, recapturing
@@ -145,6 +168,13 @@ zoom_ l f = abstract $ zoom l f
       (a,s') <- runStateT st =<< get
       put s'
       return a
+
+zoomDht :: DhtNodeMonad m => Lens' DhtState s -> StateT s m a -> m a
+zoomDht l f = do
+  s <- getsDht id
+  (a, s') <- runStateT (zoom l f) s
+  putDht s'
+  return a
 
 \end{code}
 
@@ -170,7 +200,7 @@ initDht = do
 bootstrapNode :: DhtNodeMonad m => NodeInfo -> m ()
 bootstrapNode nodeInfo =
   sendNodesRequest . RequestInfo nodeInfo =<<
-    KeyPair.publicKey <$> gets DhtState.dhtKeyPair
+    KeyPair.publicKey <$> getsDht DhtState.dhtKeyPair
 
 -- TODO
 --loadDHT :: ??
@@ -198,20 +228,27 @@ maxBootstrapTimes = 5
 
 randomRequests :: DhtNodeMonad m => WriterT [RequestInfo] m ()
 randomRequests = do
-  closeList <- gets DhtState.dhtCloseList
-  zoom_ DhtState._dhtCloseListStamp $ doList closeList
-  zoom_ DhtState._dhtSearchList .
-    modifyM . traverse . execStateT $ do
-      searchList <- gets DhtState.searchClientList
-      zoom_ DhtState._searchStamp $ doList searchList
+  s <- getDht
+  -- Close list maintenance
+  let closeList = DhtState.dhtCloseList s
+  ((), closeStamp') <- runStateT (doList closeList) (DhtState.dhtCloseListStamp s)
+
+  -- Search list maintenance
+  let searchList = DhtState.dhtSearchList s
+  searchList' <- traverse searchEntry searchList
+
+  putDht $ s { DhtState.dhtCloseListStamp = closeStamp', DhtState.dhtSearchList = searchList' }
   where
+    searchEntry entry = do
+      ((), entryStamp') <- runStateT (doList $ DhtState.searchClientList entry) (DhtState.searchStamp entry)
+      return $ entry { DhtState.searchStamp = entryStamp' }
     doList ::
       ( NodeList l
-      , Timed m
-      , MonadRandomBytes m
-      , MonadState DhtState.ListStamp m
-      , MonadWriter [RequestInfo] m
-      ) => l -> m ()
+      , Timed m'
+      , MonadRandomBytes m'
+      , MonadState DhtState.ListStamp m'
+      , MonadWriter [RequestInfo] m'
+      ) => l -> m' ()
     doList nodeList =
       case NodeList.nodeListList nodeList of
         [] -> return ()
@@ -265,7 +302,11 @@ maxChecks :: Int
 maxChecks = 2
 
 checkNodes :: forall m. DhtNodeMonad m => WriterT [RequestInfo] m ()
-checkNodes = modifyM $ DhtState.traverseClientLists checkNodes'
+checkNodes = do
+  s <- getDht
+  (s', requests) <- lift $ runWriterT $ DhtState.traverseClientLists checkNodes' s
+  putDht s'
+  tell requests
   where
     checkNodes' :: ClientList -> WriterT [RequestInfo] m ClientList
     checkNodes' clientList =
@@ -326,9 +367,9 @@ handleNodesResponse from (RpcPacket (NodesResponse nodes) requestId) = do
   isReply <- checkPending requireNodesResponseWithin from requestId
   when isReply $ do
     time <- Timed.askTime
-    modify $ DhtState.addNode time from
+    modifyDht $ DhtState.addNode time from
     for_ nodes $ \node ->
-      (>>= mapM_ sendNodesRequest) $ (<$> get) $ DhtState.foldMapNodeLists $
+      (>>= mapM_ sendNodesRequest) $ (<$> getDht) $ DhtState.foldMapNodeLists $
         \nodeList ->
           guard (isNothing (NodeList.lookupPublicKey
               (NodeInfo.publicKey node) nodeList)
@@ -354,9 +395,9 @@ responseMaxNodes = 4
 handleNodesRequest ::
   DhtNodeMonad m => NodeInfo -> RpcPacket NodesRequest -> m ()
 handleNodesRequest from (RpcPacket (NodesRequest key) requestId) = do
-  ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
+  ourPublicKey <- getsDht $ KeyPair.publicKey . DhtState.dhtKeyPair
   when (ourPublicKey /= NodeInfo.publicKey from) $ do
-    nodes <- gets (DhtState.takeClosestNodesTo responseMaxNodes key)
+    nodes <- getsDht (DhtState.takeClosestNodesTo responseMaxNodes key)
     unless (null nodes) $ sendNodesResponse from requestId nodes
     sendPingRequestIfAppropriate from
 
@@ -400,19 +441,21 @@ checkPending :: DhtNodeMonad m =>
   TimeDiff -> NodeInfo -> RpcPacket.RequestId -> m Bool
 checkPending timeLimit from requestId = do
   oldTime <- (`Time.addTime` negate maxPendingTime) <$> Timed.askTime
-  DhtState._dhtPendingReplies %= Stamped.dropOlder oldTime
+  modifyDht $ \s -> s { DhtState.dhtPendingReplies = Stamped.dropOlder oldTime (DhtState.dhtPendingReplies s) }
   recentCutoff <- (`Time.addTime` negate timeLimit) <$> Timed.askTime
-  DhtState._dhtPendingReplies %%=
-    PendingReplies.checkExpectedReply recentCutoff from requestId
+  s <- getDht
+  let (res, updated) = PendingReplies.checkExpectedReply recentCutoff from requestId (DhtState.dhtPendingReplies s)
+  putDht $ s { DhtState.dhtPendingReplies = updated }
+  return res
 
 handlePingResponse ::
   DhtNodeMonad m => NodeInfo -> RpcPacket PingPacket -> m ()
 handlePingResponse from (RpcPacket PingResponse requestId) = do
   isReply <- checkPending requirePingResponseWithin from requestId
-  ourPublicKey <- gets $ KeyPair.publicKey . DhtState.dhtKeyPair
+  ourPublicKey <- getsDht $ KeyPair.publicKey . DhtState.dhtKeyPair
   when (isReply && ourPublicKey /= NodeInfo.publicKey from) $ do
     time <- Timed.askTime
-    modify $ DhtState.addNode time from
+    modifyDht $ DhtState.addNode time from
 handlePingResponse _ _ = return ()
 
 \end{code}
@@ -430,7 +473,7 @@ Request.
 
 sendPingRequestIfAppropriate :: DhtNodeMonad m => NodeInfo -> m ()
 sendPingRequestIfAppropriate from = do
-  closeList <- gets DhtState.dhtCloseList
+  closeList <- getsDht DhtState.dhtCloseList
   when
     (isNothing (NodeList.lookupPublicKey (NodeInfo.publicKey from) closeList)
       && NodeList.viable from closeList) $
@@ -454,16 +497,13 @@ DHT request packets are used for DHT public key packets (see
 \begin{code}
 
 handleDhtRequestPacket :: DhtNodeMonad m => NodeInfo -> DhtRequestPacket -> m ()
-handleDhtRequestPacket _from packet@DhtRequestPacket{ addresseePublicKey, dhtPacket } = do
-  keyPair <- gets DhtState.dhtKeyPair
+handleDhtRequestPacket from packet@DhtRequestPacket{ addresseePublicKey, dhtPacket } = do
+  keyPair <- getsDht DhtState.dhtKeyPair
   if addresseePublicKey == KeyPair.publicKey keyPair
-  then void . runMaybeT $ msum
-    [ MaybeT (DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleNatPingPacket
-    , MaybeT (DhtPacket.decodeKeyed keyPair dhtPacket) >>= lift . handleDhtPKPacket
-    ]
+  then handleDhtRequestPayload from dhtPacket
   else void . runMaybeT $ do
     node :: NodeInfo <- MaybeT $
-      NodeList.lookupPublicKey addresseePublicKey <$> gets DhtState.dhtCloseList
+      NodeList.lookupPublicKey addresseePublicKey <$> getsDht DhtState.dhtCloseList
     lift . Networked.sendPacket node . Packet PacketKind.Crypto $ packet
 
 \end{code}
@@ -498,16 +538,6 @@ online and ready to do the hole punching.
 TODO: handling these packets.
 
 \begin{code}
-
--- | TODO
-type NatPingPacket = ()
-handleNatPingPacket :: DhtNodeMonad m => NatPingPacket -> m ()
-handleNatPingPacket _ = return ()
-
--- | TODO
-type DhtPKPacket = ()
-handleDhtPKPacket :: DhtNodeMonad m => DhtPKPacket -> m ()
-handleDhtPKPacket _ = return ()
 
 \end{code}
 
@@ -551,7 +581,10 @@ TODO: consider giving min and max values for the constants.
  ------------------------------------------------------------------------------}
 
 type TestDhtNodeMonad = KeyedT (TimedT (RandT StdGen (StateT DhtState (Networked.NetworkLogged Identity))))
-instance DhtNodeMonad TestDhtNodeMonad
+instance DhtNodeMonad TestDhtNodeMonad where
+  getDhtState = get
+  putDhtState = put
+  handleDhtRequestPayload _ _ = return ()
 
 runTestDhtNode :: ArbStdGen -> Timestamp -> DhtState -> TestDhtNodeMonad a -> (a, DhtState)
 runTestDhtNode seed time s =

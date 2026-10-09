@@ -10,8 +10,9 @@ import           Data.Foldable               (forM_)
 import           Tox.DHT.DhtPacket           as DhtPacket
 import           Tox.DHT.DhtRequestPacket    (DhtRequestPacket)
 import           Tox.DHT.DhtState            as DhtState
-import           Tox.DHT.Operation           (DhtNodeMonad, bootstrapNode,
-                                              doDHT, handleDhtRequestPacket,
+import           Tox.DHT.Operation           (DhtNodeMonad (..), bootstrapNode,
+                                              doDHT, getsDht,
+                                              handleDhtRequestPacket,
                                               handleNodesRequest,
                                               handleNodesResponse,
                                               handlePingRequest,
@@ -25,7 +26,7 @@ import           Tox.Network.Core.PacketKind as PacketKind
 -- Decrypts the DHT envelope and dispatches to the appropriate handler.
 handleIncomingPacket :: forall m. DhtNodeMonad m => NodeInfo -> Packet BS.ByteString -> m ()
 handleIncomingPacket from (Packet kind payload) = do
-    kp <- gets DhtState.dhtKeyPair
+    kp <- getsDht DhtState.dhtKeyPair
     let decodeDht :: forall a. Binary a => (NodeInfo -> a -> m ()) -> m ()
         decodeDht handler = case Encoding.decode payload of
             Nothing -> return ()
